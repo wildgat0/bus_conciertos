@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Editar Estado Pasajero{% endblock %}
+{% block content %}
+<section class="seccion" style="max-width:500px;">
+  <div class="form-card" style="max-width:none;">
+    <h2 style="margin-bottom:0.25rem;">Editar Estado del Pasajero</h2>
+    <p class="subtitulo">Reserva: {{ reserva.orden_compra }} — {{ reserva.usuario.get_full_name }}</p>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Estado de la Reserva</label>
+        {{ form.estado }}
+      </div>
+      <div style="display:flex;gap:1rem;">
+        <a href="{% url 'pasajeros_viaje' reserva.viaje.pk %}" class="btn btn-dark">Cancelar</a>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

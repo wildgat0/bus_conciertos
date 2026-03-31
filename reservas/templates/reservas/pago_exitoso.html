@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}¡Pago Exitoso!{% endblock %}
+{% block content %}
+<section class="seccion" style="max-width:600px;text-align:center;">
+  <div style="background:var(--blanco);border-radius:var(--radio-lg);padding:3rem;box-shadow:var(--sombra-fuerte);border-top:6px solid var(--exito);">
+    <div style="width:80px;height:80px;background:#d4edda;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto 1.5rem;">✅</div>
+    <h1 style="font-size:2rem;margin-bottom:0.5rem;color:#155724;">¡Reserva Confirmada!</h1>
+    <p style="color:var(--gris-medio);margin-bottom:2rem;">Tu pago fue procesado exitosamente. ¡Nos vemos en el bus!</p>
+
+    <div style="background:var(--gris-claro);border-radius:var(--radio);padding:1.5rem;text-align:left;margin-bottom:2rem;">
+      <h3 style="margin-bottom:1rem;font-size:1rem;text-transform:uppercase;letter-spacing:1px;">Detalle de tu reserva</h3>
+      <div style="display:grid;gap:0.5rem;font-size:0.9rem;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gris-medio);">N° Orden:</span>
+          <strong>{{ reserva.orden_compra }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gris-medio);">Viaje:</span>
+          <strong>{{ reserva.viaje.concierto.artista }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gris-medio);">Concierto:</span>
+          <strong>{{ reserva.viaje.concierto.nombre }}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--gris-medio);">Salida:</span>
+          <strong>{{ reserva.viaje.fecha_salida|date:"d/m/Y H:i" }} hrs</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:0.5rem;border-top:1px solid #ddd;margin-top:0.5rem;">
+          <span style="color:var(--gris-medio);">Monto pagado:</span>
+          <strong style="color:var(--exito);font-size:1.1rem;">${{ reserva.monto|floatformat:0 }} CLP</strong>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{% url 'mis_reservas' %}" class="btn btn-primary"><i class="fa fa-ticket-alt"></i> Mis Reservas</a>
+      <a href="{% url 'inicio' %}" class="btn btn-dark"><i class="fa fa-home"></i> Volver al Inicio</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

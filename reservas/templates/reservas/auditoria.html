@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% block title %}Auditoría de Ganancias{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1><i class="fa fa-chart-line"></i> Auditoría de Ganancias</h1>
+    <p>Módulo privado — Solo Administradores</p>
+  </div>
+</div>
+<section class="seccion" style="max-width:none;">
+
+  <!-- KPIs globales -->
+  <div class="kpi-grid" style="margin-bottom:2rem;">
+    <div class="kpi-card">
+      <div class="kpi-valor">$<span id="kpi-ganancia-total" class="fmt-clp">{{ total_combinado|floatformat:0 }}</span></div>
+      <div class="kpi-label">Ganancia Total (CLP)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-valor"><span id="kpi-total-viajes">{{ viajes.count|add:viajes_finalizados.count }}</span></div>
+      <div class="kpi-label">Total de Viajes</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-valor"><span id="kpi-viajes-registrados">{{ viajes.count|add:viajes_finalizados.count }}</span></div>
+      <div class="kpi-label">Viajes Registrados</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-valor"><span id="kpi-pasajeros" class="fmt-clp">{{ total_pasajeros }}</span></div>
+      <div class="kpi-label">Pasajeros Totales</div>
+    </div>
+  </div>
+
+  <!-- Filtros por mes y año -->
+  <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+    <select id="aud-filtro-mes" style="padding:0.45rem 1rem;border-radius:var(--radio);border:2px solid #ddd;background:#fff;color:var(--negro);font-size:0.85rem;font-weight:600;cursor:pointer;outline:none;">
+      <option value="todos">Todos los meses</option>
+    </select>
+    <select id="aud-filtro-anio" style="padding:0.45rem 1rem;border-radius:var(--radio);border:2px solid #ddd;background:#fff;color:var(--negro);font-size:0.85rem;font-weight:600;cursor:pointer;outline:none;">
+      <option value="todos">Todos los años</option>
+    </select>
+  </div>
+
+  <div class="tabla-wrapper">
+    <div class="tabla-header">
+      <h2>DETALLE POR VIAJE - EN CURSO</h2>
+    </div>
+    {% if viajes %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Concierto</th>
+            <th>Coordinador</th>
+            <th>Fecha Salida</th>
+            <th>Ruta</th>
+            <th>Cupos</th>
+            <th>Pasajeros Pagados</th>
+            <th>Precio Unit.</th>
+            <th>Ganancia</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for viaje in viajes %}
+          <tr class="aud-fila aud-fila-curso" data-mes="{{ viaje.fecha_salida|date:'Y-m' }}" data-ganancia="{{ viaje.ganancia_total|floatformat:0 }}" data-pasajeros="{{ viaje.cupos_ocupados }}">
+            <td>
+              <strong>{{ viaje.concierto.artista }}</strong><br>
+              <span style="font-size:0.8rem;color:var(--gris-medio);">{{ viaje.concierto.nombre }}</span>
+            </td>
+            <td>{{ viaje.coordinador.get_full_name|default:viaje.coordinador.username|default:"—" }}</td>
+            <td>{{ viaje.fecha_salida|date:"d/m/Y H:i" }}</td>
+            <td style="font-size:0.85rem;">{{ viaje.origen }}<br>→ {{ viaje.destino }}</td>
+            <td style="text-align:center;">{{ viaje.cupos_totales }}</td>
+            <td style="text-align:center;">
+              <strong style="{% if viaje.cupos_ocupados > 0 %}color:var(--exito);{% endif %}">{{ viaje.cupos_ocupados }}</strong>
+            </td>
+            <td>$<span class="fmt-clp">{{ viaje.precio|floatformat:0 }}</span></td>
+            <td style="font-weight:700;{% if viaje.ganancia_total > 0 %}color:var(--exito);{% endif %}">
+              $<span class="fmt-clp">{{ viaje.ganancia_total|floatformat:0 }}</span>
+            </td>
+            <td><span class="badge-estado badge-{{ viaje.estado }}">{{ viaje.get_estado_display }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr style="background:var(--negro);color:var(--blanco);">
+            <td colspan="7" style="padding:1rem;font-weight:700;text-align:right;font-size:1rem;">TOTAL GENERAL:</td>
+            <td style="padding:1rem;font-family:'Bebas Neue';font-size:1.5rem;color:var(--amarillo);">$<span id="total-curso">{{ total_general|floatformat:0 }}</span></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem;color:var(--gris-medio);">No hay viajes registrados.</div>
+    {% endif %}
+  </div>
+
+  <!-- Tabla Viajes Finalizados -->
+  <div class="tabla-wrapper" style="margin-top:2rem;">
+    <div class="tabla-header">
+      <h2>DETALLE POR VIAJE - FINALIZADO</h2>
+    </div>
+    {% if viajes_finalizados %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Concierto</th>
+            <th>Coordinador</th>
+            <th>Fecha Salida</th>
+            <th>Ruta</th>
+            <th>Cupos</th>
+            <th>Pasajeros Pagados</th>
+            <th>Precio Unit.</th>
+            <th>Ganancia</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for viaje in viajes_finalizados %}
+          <tr class="aud-fila aud-fila-fin" data-mes="{{ viaje.fecha_salida|date:'Y-m' }}" data-ganancia="{{ viaje.ganancia_total|floatformat:0 }}" data-pasajeros="{{ viaje.cupos_ocupados }}">
+            <td>
+              <strong>{{ viaje.concierto.artista }}</strong><br>
+              <span style="font-size:0.8rem;color:var(--gris-medio);">{{ viaje.concierto.nombre }}</span>
+            </td>
+            <td>{{ viaje.coordinador.get_full_name|default:viaje.coordinador.username|default:"—" }}</td>
+            <td>{{ viaje.fecha_salida|date:"d/m/Y H:i" }}</td>
+            <td style="font-size:0.85rem;">{{ viaje.origen }}<br>→ {{ viaje.destino }}</td>
+            <td style="text-align:center;">{{ viaje.cupos_totales }}</td>
+            <td style="text-align:center;">
+              <strong style="{% if viaje.cupos_ocupados > 0 %}color:var(--exito);{% endif %}">{{ viaje.cupos_ocupados }}</strong>
+            </td>
+            <td>$<span class="fmt-clp">{{ viaje.precio|floatformat:0 }}</span></td>
+            <td style="font-weight:700;{% if viaje.ganancia_total > 0 %}color:var(--exito);{% endif %}">
+              $<span class="fmt-clp">{{ viaje.ganancia_total|floatformat:0 }}</span>
+            </td>
+            <td><span class="badge-estado badge-{{ viaje.estado }}">{{ viaje.get_estado_display }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr style="background:var(--negro);color:var(--blanco);">
+            <td colspan="7" style="padding:1rem;font-weight:700;text-align:right;font-size:1rem;">TOTAL GENERAL:</td>
+            <td style="padding:1rem;font-family:'Bebas Neue';font-size:1.5rem;color:var(--amarillo);">$<span id="total-fin">{{ total_finalizados|floatformat:0 }}</span></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem;color:var(--gris-medio);">No hay viajes finalizados registrados.</div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.fmt-clp').forEach(function(el) {
+    const n = parseInt(el.textContent.replace(/\D/g, ''), 10);
+    if (!isNaN(n)) el.textContent = n.toLocaleString('es-CL');
+  });
+
+  // Filtros por mes y año
+  const filas      = document.querySelectorAll('.aud-fila');
+  const selectMes  = document.getElementById('aud-filtro-mes');
+  const selectAnio = document.getElementById('aud-filtro-anio');
+
+  const mesesNombre = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // Poblar meses únicos
+  const mesesUnicos = [...new Set([...filas].map(f => f.dataset.mes))].sort();
+  mesesUnicos.forEach(function(mes) {
+    const [, num] = mes.split('-');
+    const opt = document.createElement('option');
+    opt.value = mes;
+    opt.textContent = mesesNombre[parseInt(num, 10) - 1];
+    selectMes.appendChild(opt);
+  });
+
+  // Poblar años únicos
+  const aniosUnicos = [...new Set([...filas].map(f => f.dataset.mes.split('-')[0]))].sort();
+  aniosUnicos.forEach(function(anio) {
+    const opt = document.createElement('option');
+    opt.value = anio;
+    opt.textContent = anio;
+    selectAnio.appendChild(opt);
+  });
+
+  function recalcularTotal(selector, spanId) {
+    const total = [...document.querySelectorAll(selector)]
+      .filter(f => f.style.display !== 'none')
+      .reduce((sum, f) => sum + (parseInt(f.dataset.ganancia.replace(/\D/g, ''), 10) || 0), 0);
+    document.getElementById(spanId).textContent = total.toLocaleString('es-CL');
+  }
+
+  function aplicarFiltros() {
+    const filtroMes  = selectMes.value;
+    const filtroAnio = selectAnio.value;
+
+    filas.forEach(function(fila) {
+      const anioFila = fila.dataset.mes.split('-')[0];
+      const mesOk  = filtroMes  === 'todos' || fila.dataset.mes === filtroMes;
+      const anioOk = filtroAnio === 'todos' || anioFila === filtroAnio;
+      fila.style.display = (mesOk && anioOk) ? '' : 'none';
+    });
+
+    recalcularTotal('.aud-fila-curso', 'total-curso');
+    recalcularTotal('.aud-fila-fin', 'total-fin');
+
+    const visibles = [...filas].filter(f => f.style.display !== 'none');
+    const totalGanancia  = visibles.reduce((s, f) => s + (parseInt(f.dataset.ganancia.replace(/\D/g, ''), 10) || 0), 0);
+    const totalPasajeros = visibles.reduce((s, f) => s + (parseInt(f.dataset.pasajeros) || 0), 0);
+    const totalViajes    = visibles.length;
+
+    document.getElementById('kpi-ganancia-total').textContent     = totalGanancia.toLocaleString('es-CL');
+    document.getElementById('kpi-pasajeros').textContent          = totalPasajeros.toLocaleString('es-CL');
+    document.getElementById('kpi-total-viajes').textContent       = totalViajes;
+    document.getElementById('kpi-viajes-registrados').textContent = totalViajes;
+  }
+
+  selectMes.addEventListener('change', aplicarFiltros);
+  selectAnio.addEventListener('change', function() {
+    selectMes.value = 'todos';
+    aplicarFiltros();
+  });
+
+  // Formatear totales iniciales
+  ['total-curso', 'total-fin'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      const n = parseInt(el.textContent.replace(/\D/g, ''), 10);
+      if (!isNaN(n)) el.textContent = n.toLocaleString('es-CL');
+    }
+  });
+</script>
+{% endblock %}

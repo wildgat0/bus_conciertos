@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Pago no completado{% endblock %}
+{% block content %}
+<section class="seccion" style="max-width:500px;text-align:center;">
+  <div style="background:var(--blanco);border-radius:var(--radio-lg);padding:3rem;box-shadow:var(--sombra-fuerte);border-top:6px solid var(--peligro);">
+    <div style="font-size:4rem;margin-bottom:1rem;">❌</div>
+    <h1 style="font-size:2rem;margin-bottom:0.5rem;color:var(--peligro);">Pago no completado</h1>
+    <p style="color:var(--gris-medio);margin-bottom:2rem;">El pago fue rechazado o cancelado. Tu reserva no fue confirmada.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{% url 'lista_viajes' %}" class="btn btn-primary"><i class="fa fa-redo"></i> Intentar nuevamente</a>
+      <a href="{% url 'inicio' %}" class="btn btn-dark"><i class="fa fa-home"></i> Inicio</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

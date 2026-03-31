@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% block title %}Mis Reservas{% endblock %}
+
+{% block extra_css %}
+<style>
+  @keyframes mr-fadeUp {
+    from { opacity: 0; transform: translateY(35px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes mr-fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .mr-card-anim {
+    opacity: 0;
+    animation: mr-fadeUp 0.6s ease forwards;
+  }
+  .mr-empty-anim {
+    opacity: 0;
+    animation: mr-fadeIn 0.8s ease forwards;
+    animation-delay: 0.2s;
+  }
+
+  .mr-filtros {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .mr-filtro-btn {
+    padding: 0.45rem 1.1rem;
+    border-radius: 999px;
+    border: 2px solid #ddd;
+    background: var(--blanco);
+    color: var(--gris-medio);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mr-filtro-btn:hover { border-color: var(--amarillo); color: var(--negro); }
+  .mr-filtro-btn.activo { background: var(--amarillo); border-color: var(--amarillo); color: var(--negro); }
+
+  .mr-sin-resultados {
+    display: none;
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--gris-medio);
+  }
+
+  .mr-select {
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    border: 2px solid #ddd;
+    background: var(--blanco);
+    color: var(--negro);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .mr-select:focus { border-color: var(--amarillo); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Inicio</a><span>›</span> Mis Reservas</div>
+    <h1><i class="fa fa-ticket-alt"></i> Mis Reservas</h1>
+    <p>Historial de todos tus viajes reservados</p>
+  </div>
+</div>
+<section class="seccion">
+  {% if reservas %}
+
+  <!-- Filtros -->
+  <div class="mr-filtros">
+    <select id="mr-select-artista" class="mr-select">
+      <option value="">Todos los conciertos</option>
+    </select>
+    <button class="mr-filtro-btn activo" data-filtro="todos">Todos</button>
+    <button class="mr-filtro-btn" data-filtro="pagado">Pagado</button>
+    <button class="mr-filtro-btn" data-filtro="pendiente">Pendiente</button>
+    <button class="mr-filtro-btn" data-filtro="cancelado">Cancelado</button>
+  </div>
+
+  <div class="mr-sin-resultados" id="mr-sin-resultados">
+    <i class="fa fa-filter" style="font-size:2.5rem;margin-bottom:0.8rem;display:block;"></i>
+    No tienes reservas con ese estado.
+  </div>
+
+  <div style="display:grid;gap:1.2rem;" id="mr-lista">
+    {% for r in reservas %}
+    <div class="mr-card-anim mr-card" data-estado="{{ r.estado }}" data-artista="{{ r.viaje.concierto.artista }}" style="background:var(--blanco);border-radius:var(--radio-lg);box-shadow:var(--sombra);overflow:hidden;display:flex;border:1px solid #eee;animation-delay:{{ forloop.counter0 }}00ms;">
+      <div style="background:var(--negro);padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:120px;text-align:center;">
+        <div style="font-family:'Bebas Neue';font-size:2.8rem;color:var(--amarillo);line-height:1;">{{ r.viaje.fecha_salida|date:"d" }}</div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;">{{ r.viaje.fecha_salida|date:"M Y" }}</div>
+      </div>
+      <div style="padding:1.2rem 1.5rem;flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem;">
+          <div>
+            <h3 style="margin-bottom:0.2rem;">{{ r.viaje.concierto.artista }}</h3>
+            <p style="color:var(--gris-medio);font-size:0.9rem;font-weight:700;">{{ r.viaje.concierto.nombre }}</p>
+          </div>
+          <span class="badge-estado badge-{{ r.estado }}">{{ r.get_estado_display }}</span>
+        </div>
+        <div style="display:flex;gap:2rem;margin-top:0.8rem;font-size:0.85rem;flex-wrap:wrap;">
+          <span><i class="fa fa-bus" style="color:var(--amarillo);"></i> {{ r.viaje.origen }} → {{ r.viaje.destino }}</span>
+          <span><i class="fa fa-clock" style="color:var(--amarillo);"></i> {{ r.viaje.fecha_salida|time:"H:i" }} hrs</span>
+          <span><i class="fa fa-users" style="color:var(--amarillo);"></i> {{ r.cantidad }} cupo{{ r.cantidad|pluralize }}</span>
+          <span><i class="fa fa-hashtag" style="color:var(--amarillo);"></i> {{ r.orden_compra }}</span>
+          <span><i class="fa fa-dollar-sign" style="color:var(--amarillo);"></i> <span class="fmt-clp">{{ r.monto|floatformat:0 }}</span> CLP</span>
+        </div>
+        {% if r.estado == 'pendiente' and r.viaje.estado == 'disponible' %}
+        <div style="margin-top:0.8rem;">
+          <form method="POST" action="{% url 'iniciar_pago' r.viaje.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="cantidad" value="{{ r.cantidad }}">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-credit-card"></i> Pagar ahora</button>
+          </form>
+        </div>
+        {% elif r.estado == 'cancelado' and r.viaje.estado == 'disponible' and r.viaje.cupos_disponibles > 0 %}
+        <div style="margin-top:0.8rem;">
+          <form method="POST" action="{% url 'iniciar_pago' r.viaje.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="cantidad" value="{{ r.cantidad }}">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-credit-card"></i> Reintentar pago</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div><!-- #mr-lista -->
+  {% else %}
+  <div class="mr-empty-anim" style="text-align:center;padding:5rem 2rem;">
+    <div style="font-size:4rem;margin-bottom:1rem;">🎫</div>
+    <h2 style="margin-bottom:0.5rem;">Aún no tienes reservas</h2>
+    <p style="color:var(--amarillo);margin-bottom:1.5rem;">Explora los viajes disponibles y reserva tu cupo.</p>
+    <a href="{% url 'lista_viajes' %}" class="btn btn-primary btn-lg"><i class="fa fa-bus"></i> Ver Viajes Disponibles</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.fmt-clp').forEach(function(el) {
+    const n = parseInt(el.textContent.replace(/\D/g, ''), 10);
+    if (!isNaN(n)) el.textContent = n.toLocaleString('es-CL');
+  });
+
+  const cards      = document.querySelectorAll('.mr-card');
+  const selectEl   = document.getElementById('mr-select-artista');
+  const sinResults = document.getElementById('mr-sin-resultados');
+
+  // Poblar el select con artistas únicos
+  const artistas = [...new Set([...cards].map(c => c.dataset.artista))].sort();
+  artistas.forEach(function(a) {
+    const opt = document.createElement('option');
+    opt.value = a;
+    opt.textContent = a;
+    selectEl.appendChild(opt);
+  });
+
+  let filtroEstado   = 'todos';
+  let filtroArtista  = '';
+
+  function aplicarFiltros() {
+    let visibles = 0;
+    cards.forEach(function(card) {
+      const estadoOk   = filtroEstado  === 'todos' || card.dataset.estado   === filtroEstado;
+      const artistaOk  = filtroArtista === ''      || card.dataset.artista  === filtroArtista;
+      const mostrar = estadoOk && artistaOk;
+      card.style.display = mostrar ? 'flex' : 'none';
+      if (mostrar) visibles++;
+    });
+    sinResults.style.display = visibles === 0 ? 'block' : 'none';
+  }
+
+  document.querySelectorAll('.mr-filtro-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.mr-filtro-btn').forEach(b => b.classList.remove('activo'));
+      this.classList.add('activo');
+      filtroEstado = this.dataset.filtro;
+      aplicarFiltros();
+    });
+  });
+
+  selectEl.addEventListener('change', function() {
+    filtroArtista = this.value;
+    aplicarFiltros();
+  });
+</script>
+{% endblock %}

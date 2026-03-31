@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Eliminar Concierto{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="{% url 'calendario_conciertos' %}">Calendario</a><span>›</span> Eliminar</div>
+    <h1><i class="fa fa-trash"></i> Eliminar Concierto</h1>
+  </div>
+</div>
+
+<section class="seccion" style="max-width:550px;">
+  <div class="form-card" style="max-width:none;text-align:center;">
+    <i class="fa fa-exclamation-triangle" style="font-size:3rem;color:var(--peligro);margin-bottom:1rem;"></i>
+    <h2 style="margin-bottom:0.5rem;">¿Eliminar este concierto?</h2>
+    <p style="color:var(--gris-medio);margin-bottom:0.25rem;">
+      <strong style="color:var(--blanco);">{{ concierto.artista }}</strong> — {{ concierto.nombre }}
+    </p>
+    <p style="color:var(--gris-medio);font-size:0.9rem;margin-bottom:1.5rem;">
+      {{ concierto.fecha|date:"d/m/Y" }} · {{ concierto.lugar }}
+    </p>
+    <p style="color:var(--peligro);font-size:0.9rem;margin-bottom:2rem;">
+      Esta acción no se puede deshacer y eliminará el concierto del calendario.
+    </p>
+    <form method="POST" style="display:flex;gap:1rem;justify-content:center;">
+      {% csrf_token %}
+      <a href="{% url 'calendario_conciertos' %}" class="btn btn-dark">Cancelar</a>
+      <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Sí, eliminar</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

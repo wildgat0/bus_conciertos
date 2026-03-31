@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Redirigiendo a WebPay{% endblock %}
+{% block content %}
+<section class="seccion" style="max-width:500px;text-align:center;">
+  <div style="background:var(--blanco);border-radius:var(--radio-lg);padding:3rem;box-shadow:var(--sombra-fuerte);">
+    <div style="font-size:3rem;margin-bottom:1rem;">💳</div>
+    <h2 style="margin-bottom:0.5rem;">Redirigiendo a WebPay</h2>
+    <p style="color:var(--gris-medio);margin-bottom:2rem;">Serás redirigido al portal seguro de Transbank para completar tu pago.</p>
+    <form id="webpay-form" action="{{ url }}" method="POST">
+      <input type="hidden" name="token_ws" value="{{ token }}" />
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
+        <i class="fa fa-lock"></i> Ir a pagar con WebPay
+      </button>
+    </form>
+    <p style="font-size:0.8rem;color:var(--gris-medio);margin-top:1rem;">
+      <i class="fa fa-shield-alt" style="color:var(--exito);"></i> Pago 100% seguro con Transbank
+    </p>
+  </div>
+</section>
+{% block extra_js %}
+<script>
+  // Auto-submit el formulario al cargar
+  window.onload = () => document.getElementById('webpay-form').submit();
+</script>
+{% endblock %}
+{% endblock %}

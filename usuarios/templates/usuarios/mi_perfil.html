@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Mi Perfil{% endblock %}
+
+{% block extra_css %}
+<style>
+  @keyframes mp-slideLeft {
+    from { opacity: 0; transform: translateX(-50px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes mp-slideRight {
+    from { opacity: 0; transform: translateX(50px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes mp-fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .mp-sidebar { animation: mp-slideLeft 0.7s ease both; animation-delay: 0.1s; opacity: 0; }
+  .mp-form    { animation: mp-slideRight 0.7s ease both; animation-delay: 0.25s; opacity: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="animation: mp-fadeDown 0.6s ease both;">
+  <div class="container">
+    <h1><i class="fa fa-user"></i> Mi Perfil</h1>
+  </div>
+</div>
+<section class="seccion" style="max-width:800px;">
+  <div style="display:grid;grid-template-columns:280px 1fr;gap:2rem;align-items:start;">
+
+    <!-- Sidebar perfil -->
+    <div class="perfil-card mp-sidebar">
+      <div class="perfil-banner"></div>
+      <div class="perfil-avatar">
+        {% if perfil and perfil.foto %}
+          <img src="{{ perfil.foto.url }}" alt="Foto de perfil">
+        {% else %}
+          👤
+        {% endif %}
+      </div>
+      <div class="perfil-info">
+        <h3 style="margin-bottom:0.2rem;">{{ user.get_full_name|default:user.username }}</h3>
+        <p style="color:var(--gris-medio);font-size:0.9rem;">@{{ user.username }}</p>
+        <div style="margin-top:1rem;display:flex;flex-direction:column;gap:0.5rem;font-size:0.85rem;">
+          <div><i class="fa fa-envelope" style="color:var(--amarillo);width:18px;"></i> {{ user.email }}</div>
+          {% if perfil %}
+          <div><i class="fa fa-id-card" style="color:var(--amarillo);width:18px;"></i> {{ perfil.rut }}</div>
+          <div><i class="fa fa-phone" style="color:var(--amarillo);width:18px;"></i> {{ perfil.telefono }}</div>
+          <div><i class="fa fa-map-marker-alt" style="color:var(--amarillo);width:18px;"></i> {{ perfil.get_region_display }}</div>
+          {% endif %}
+        </div>
+        <div style="margin-top:1.2rem;">
+          <a href="{% url 'mis_reservas' %}" class="btn btn-dark btn-sm" style="width:100%;justify-content:center;"><i class="fa fa-ticket-alt"></i> Mis Reservas</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario edición -->
+    <div class="form-card mp-form" style="max-width:none;margin:0;">
+      <h2 style="margin-bottom:0.25rem;">Editar Perfil</h2>
+      <p class="subtitulo">Actualiza tu información personal</p>
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nombre</label>
+            {{ form.first_name }}
+          </div>
+          <div class="form-group">
+            <label>Apellido</label>
+            {{ form.last_name }}
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>Email</label>
+            {{ form.email }}
+          </div>
+          <div class="form-group">
+            <label>RUT</label>
+            {{ form.rut }}
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            {{ form.telefono }}
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>Dirección</label>
+            {{ form.direccion }}
+          </div>
+          <div class="form-group">
+            <label>Región</label>
+            {{ form.region }}
+          </div>
+          <div class="form-group">
+            <label>Fecha de Nacimiento</label>
+            {{ form.fecha_nacimiento }}
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>Foto de Perfil</label>
+            {{ form.foto }}
+          </div>
+        </div>
+        <div style="margin-top:1rem;">
+          <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

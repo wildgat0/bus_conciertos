@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Gestión de Usuarios{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1><i class="fa fa-users-cog"></i> Gestión de Usuarios</h1>
+    <p>Panel privado — Administrador del sistema</p>
+  </div>
+</div>
+<section class="seccion" style="max-width:none;">
+  <div class="tabla-wrapper">
+    <div class="tabla-header">
+      <h2>GESTIÓN BUS CONCIERTOS</h2>
+      <a href="{% url 'crear_usuario' %}" class="btn btn-primary"><i class="fa fa-user-plus"></i> Crear Usuario</a>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Nombre Completo</th>
+            <th>Email</th>
+            <th>Perfil / Rol</th>
+            <th>RUT</th>
+            <th>Estado</th>
+            <th>Fecha Registro</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in usuarios %}
+          <tr>
+            <td>
+              <strong>{{ u.username }}</strong>
+              {% if u.is_superuser %}<span class="badge-estado badge-pagado" style="margin-left:4px;">Superadmin</span>{% endif %}
+            </td>
+            <td>{{ u.get_full_name|default:"—" }}</td>
+            <td style="font-size:0.85rem;">{{ u.email }}</td>
+            <td>
+              {% if u.is_superuser %}
+                <span class="badge-estado badge-pagado">Administrador</span>
+              {% elif u.groups.all %}
+                {% for g in u.groups.all %}
+                  <span class="badge-estado badge-disponible">{{ g.name }}</span>
+                {% endfor %}
+              {% else %}
+                <span class="badge-estado badge-cancelado">Usuario</span>
+              {% endif %}
+            </td>
+            <td>{% if u.perfilusuario %}{{ u.perfilusuario.rut }}{% else %}—{% endif %}</td>
+            <td>
+              {% if u.is_active %}
+                <span class="badge-estado badge-disponible">Activo</span>
+              {% else %}
+                <span class="badge-estado badge-cancelado">Inactivo</span>
+              {% endif %}
+            </td>
+            <td style="font-size:0.85rem;">{{ u.date_joined|date:"d/m/Y" }}</td>
+            <td>
+              <div class="tabla-acciones">
+                <a href="{% url 'asignar_rol' u.pk %}" class="btn btn-primary btn-sm" title="Asignar Rol"><i class="fa fa-user-tag"></i></a>
+                <a href="{% url 'editar_usuario' u.pk %}" class="btn btn-dark btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
+                {% if u != request.user %}
+                <a href="{% url 'eliminar_usuario' u.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tabla-wrapper" style="margin-top:2rem;">
+    <div class="tabla-header">
+      <h2>USUARIOS BUS CONCIERTOS</h2>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Nombre Completo</th>
+            <th>Email</th>
+            <th>RUT</th>
+            <th>Teléfono</th>
+            <th>Estado</th>
+            <th>Fecha Registro</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in usuarios_pasajeros %}
+          <tr>
+            <td><strong>{{ u.username }}</strong></td>
+            <td>{{ u.get_full_name|default:"—" }}</td>
+            <td style="font-size:0.85rem;">{{ u.email }}</td>
+            <td>{% if u.perfilusuario %}{{ u.perfilusuario.rut }}{% else %}—{% endif %}</td>
+            <td>{% if u.perfilusuario %}{{ u.perfilusuario.telefono }}{% else %}—{% endif %}</td>
+            <td>
+              {% if u.is_active %}
+                <span class="badge-estado badge-disponible">Activo</span>
+              {% else %}
+                <span class="badge-estado badge-cancelado">Inactivo</span>
+              {% endif %}
+            </td>
+            <td style="font-size:0.85rem;">{{ u.date_joined|date:"d/m/Y" }}</td>
+            <td>
+              <div class="tabla-acciones">
+                <a href="{% url 'asignar_rol' u.pk %}" class="btn btn-primary btn-sm" title="Asignar Rol"><i class="fa fa-user-tag"></i></a>
+                <a href="{% url 'editar_usuario' u.pk %}" class="btn btn-dark btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
+                {% if u != request.user %}
+                <a href="{% url 'eliminar_usuario' u.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" style="text-align:center;color:var(--gris-medio);padding:2rem;">No hay usuarios registrados.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

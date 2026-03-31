@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+
+<!-- ═══ HERO ══════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-stripes"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><i class="fa fa-music"></i> Temporada de Conciertos</div>
+    <h1>VIAJA A <span class="highlight">LOS MEJORES</span><br>CONCIERTOS</h1>
+    <p>Bus directo desde la región de Valparaíso.<br>Reserva tu cupo, paga online y disfruta el viaje.</p>
+    <div class="hero-actions">
+      <a href="{% url 'lista_viajes' %}" class="btn btn-primary btn-lg"><i class="fa fa-ticket-alt"></i> Ver Viajes Disponibles</a>
+      <a href="https://wa.me/56912345678" target="_blank" class="btn btn-outline btn-lg"><i class="fab fa-whatsapp"></i> Consultas</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><div class="stat-num">150+</div><div class="stat-label">Viajes realizados</div></div>
+      <div class="stat-item"><div class="stat-num">5.000+</div><div class="stat-label">Pasajeros felices</div></div>
+      <div class="stat-item"><div class="stat-num">2</div><div class="stat-label">Regiones cubiertas</div></div>
+      <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">Pago seguro</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRÓXIMOS CONCIERTOS — SANTIAGO ═══════════════════════ -->
+<section class="seccion reveal">
+  <div class="seccion-header">
+    <div class="seccion-titulo">
+      <span style="font-size:2rem;">🏙️</span>
+      <div>
+        <h2>Próximos Conciertos</h2>
+        <span class="region-badge"><i class="fa fa-map-marker-alt"></i> Región Metropolitana — Santiago</span>
+      </div>
+    </div>
+    <a href="{% url 'lista_viajes' %}" class="btn btn-dark btn-sm"><i class="fa fa-bus"></i> Ver Viajes</a>
+  </div>
+
+  {% if conciertos_santiago %}
+  <div class="carrusel-wrapper" data-carrusel="santiago">
+    <button class="carrusel-btn carrusel-prev" aria-label="Anterior"><i class="fa fa-chevron-left"></i></button>
+    <div class="carrusel-outer">
+      <div class="carrusel-track">
+        {% for concierto in conciertos_santiago %}
+        <div class="card-concierto">
+          <div class="fecha-banner">
+            <i class="fa fa-calendar"></i>
+            {{ concierto.fecha|date:"l d \d\e F, Y" }} — {{ concierto.hora|time:"H:i" }} hrs
+          </div>
+          <div class="card-body">
+            <div class="artista">{{ concierto.artista }}</div>
+            <div class="evento">{{ concierto.nombre }}</div>
+            <div class="lugar"><i class="fa fa-map-pin"></i> {{ concierto.lugar }}</div>
+            {% if concierto.descripcion %}
+            <p style="margin-top:0.8rem;font-size:0.85rem;color:var(--gris-medio);">{{ concierto.descripcion|truncatechars:100 }}</p>
+            {% endif %}
+            <div style="margin-top:1rem;">
+              <a href="{% url 'lista_viajes' %}" class="btn btn-primary btn-sm"><i class="fa fa-bus"></i> Ver buses disponibles</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <button class="carrusel-btn carrusel-next" aria-label="Siguiente"><i class="fa fa-chevron-right"></i></button>
+  </div>
+  <div class="carrusel-dots" data-dots="santiago"></div>
+  {% else %}
+  <div style="text-align:center;padding:3rem;color:var(--gris-medio);">
+    <i class="fa fa-calendar-times" style="font-size:3rem;margin-bottom:1rem;display:block;"></i>
+    <p>No hay conciertos programados próximamente en Santiago.</p>
+  </div>
+  {% endif %}
+</section>
+
+<!-- ═══ PRÓXIMOS CONCIERTOS — VALPARAÍSO ════════════════════ -->
+<section class="reveal reveal-delay-1" style="background:var(--negro);padding:4rem 2rem;margin:0 0 2rem;">
+  <div style="max-width:1600px;margin:0 auto;">
+  <div class="seccion-header">
+    <div class="seccion-titulo">
+      <span style="font-size:2rem;">⛵</span>
+      <div>
+        <h2 style="color:var(--blanco);">Próximos Conciertos</h2>
+        <span class="region-badge"><i class="fa fa-map-marker-alt"></i> Región de Valparaíso</span>
+      </div>
+    </div>
+    <a href="{% url 'lista_viajes' %}" class="btn btn-primary btn-sm"><i class="fa fa-bus"></i> Ver Viajes</a>
+  </div>
+
+  {% if conciertos_valparaiso %}
+  <div class="carrusel-wrapper carrusel-dark" data-carrusel="valparaiso">
+    <button class="carrusel-btn carrusel-prev" aria-label="Anterior"><i class="fa fa-chevron-left"></i></button>
+    <div class="carrusel-outer">
+      <div class="carrusel-track">
+        {% for concierto in conciertos_valparaiso %}
+        <div class="card-concierto">
+          <div class="fecha-banner">
+            <i class="fa fa-calendar"></i>
+            {{ concierto.fecha|date:"l d \d\e F, Y" }} — {{ concierto.hora|time:"H:i" }} hrs
+          </div>
+          <div class="card-body">
+            <div class="artista">{{ concierto.artista }}</div>
+            <div class="evento">{{ concierto.nombre }}</div>
+            <div class="lugar"><i class="fa fa-map-pin"></i> {{ concierto.lugar }}</div>
+            <div style="margin-top:1rem;">
+              <a href="{% url 'lista_viajes' %}" class="btn btn-primary btn-sm"><i class="fa fa-bus"></i> Ver buses disponibles</a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <button class="carrusel-btn carrusel-next" aria-label="Siguiente"><i class="fa fa-chevron-right"></i></button>
+  </div>
+  <div class="carrusel-dots" data-dots="valparaiso"></div>
+  {% else %}
+  <div style="text-align:center;padding:3rem;color:rgba(255,255,255,0.5);">
+    <i class="fa fa-calendar-times" style="font-size:3rem;margin-bottom:1rem;display:block;"></i>
+    <p>No hay conciertos programados próximamente en Valparaíso.</p>
+  </div>
+  {% endif %}
+  </div>
+</section>
+
+<!-- ═══ CTA / CARACTERÍSTICAS ════════════════════════════════ -->
+<section class="seccion reveal" style="text-align:center;">
+  <h2 style="font-size:2.2rem;margin-bottom:0.5rem;">¿Por qué viajar con nosotros?</h2>
+  <p style="color:var(--gris-medio);margin-bottom:2.5rem;">La forma más simple y segura de llegar a tus conciertos favoritos</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;">
+    {% for item in features %}
+    {% empty %}
+    {% endfor %}
+    <div style="background:var(--blanco);border-radius:var(--radio-lg);padding:2rem;box-shadow:var(--sombra);border-top:4px solid var(--amarillo);">
+      <div style="font-size:2.5rem;margin-bottom:0.8rem;">🚌</div>
+      <h3 style="margin-bottom:0.5rem;">Buses Modernos</h3>
+      <p style="font-size:0.9rem;color:var(--gris-medio);">Flota de última generación, aire acondicionado y WiFi a bordo.</p>
+    </div>
+    <div style="background:var(--blanco);border-radius:var(--radio-lg);padding:2rem;box-shadow:var(--sombra);border-top:4px solid var(--amarillo);">
+      <div style="font-size:2.5rem;margin-bottom:0.8rem;">💳</div>
+      <h3 style="margin-bottom:0.5rem;">Pago Seguro Webpay</h3>
+      <p style="font-size:0.9rem;color:var(--gris-medio);">Reserva y paga con Transbank Webpay. 100% seguro y confiable.</p>
+    </div>
+    <div style="background:var(--blanco);border-radius:var(--radio-lg);padding:2rem;box-shadow:var(--sombra);border-top:4px solid var(--amarillo);">
+      <div style="font-size:2.5rem;margin-bottom:0.8rem;">📅</div>
+      <h3 style="margin-bottom:0.5rem;">Horarios Fijos</h3>
+      <p style="font-size:0.9rem;color:var(--gris-medio);">Salida y regreso coordinados con cada evento. Llega a tiempo.</p>
+    </div>
+    <div style="background:var(--blanco);border-radius:var(--radio-lg);padding:2rem;box-shadow:var(--sombra);border-top:4px solid var(--amarillo);">
+      <div style="font-size:2.5rem;margin-bottom:0.8rem;">💬</div>
+      <h3 style="margin-bottom:0.5rem;">Atención WhatsApp</h3>
+      <p style="font-size:0.9rem;color:var(--gris-medio);">Resolvemos todas tus dudas directo por WhatsApp en minutos.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+/* ── Carrusel ─────────────────────────────────────────────── */
+.carrusel-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.carrusel-outer {
+  overflow: hidden;
+  flex: 1;
+}
+.carrusel-track {
+  display: flex;
+  gap: 1.5rem;
+  transition: transform 0.4s ease;
+}
+.carrusel-track .card-concierto {
+  flex: 0 0 calc((100% - 3rem) / 3);
+  min-width: 0;
+}
+.carrusel-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--amarillo);
+  background: transparent;
+  color: var(--amarillo);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.carrusel-btn:hover { background: var(--amarillo); color: var(--negro); }
+.carrusel-btn:disabled { opacity: 0.25; cursor: default; }
+.carrusel-btn:disabled:hover { background: transparent; color: var(--amarillo); }
+.carrusel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+.carrusel-dots .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gris-medio);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.carrusel-dots .dot.active {
+  background: var(--amarillo);
+  transform: scale(1.3);
+}
+@media (max-width: 900px) {
+  .carrusel-track .card-concierto { flex: 0 0 calc((100% - 1.5rem) / 2); }
+}
+@media (max-width: 600px) {
+  .carrusel-track .card-concierto { flex: 0 0 100%; }
+}
+/* ── Animaciones de entrada ──────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Hero: animación inmediata al cargar */
+.hero-badge    { animation: fadeUp 0.5s ease both 0.1s; }
+.hero h1       { animation: fadeUp 0.6s ease both 0.25s; }
+.hero > .hero-content > p { animation: fadeUp 0.6s ease both 0.4s; }
+.hero-actions  { animation: fadeUp 0.6s ease both 0.55s; }
+.hero-stats    { animation: fadeUp 0.6s ease both 0.7s; }
+
+/* Secciones: aparecen al entrar en pantalla */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+</style>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-carrusel]').forEach(wrapper => {
+    const id      = wrapper.dataset.carrusel;
+    const track   = wrapper.querySelector('.carrusel-track');
+    const btnPrev = wrapper.querySelector('.carrusel-prev');
+    const btnNext = wrapper.querySelector('.carrusel-next');
+    const dotsEl  = document.querySelector(`[data-dots="${id}"]`);
+    const cards   = track.querySelectorAll('.card-concierto');
+
+    let current = 0;
+
+    function visibleCount() {
+      const ow = wrapper.querySelector('.carrusel-outer').offsetWidth;
+      const cw = cards[0] ? cards[0].offsetWidth : ow;
+      return Math.round(ow / (cw + 24)) || 1;
+    }
+
+    function maxIndex() {
+      return Math.max(0, cards.length - visibleCount());
+    }
+
+    function buildDots() {
+      if (!dotsEl) return;
+      dotsEl.innerHTML = '';
+      const pages = maxIndex() + 1;
+      if (pages <= 1) return;
+      for (let i = 0; i < pages; i++) {
+        const d = document.createElement('span');
+        d.className = 'dot' + (i === 0 ? ' active' : '');
+        d.addEventListener('click', () => goTo(i));
+        dotsEl.appendChild(d);
+      }
+    }
+
+    function goTo(idx) {
+      current = Math.min(Math.max(idx, 0), maxIndex());
+      const cardWidth = cards[0] ? cards[0].offsetWidth + 24 : 0;
+      track.style.transform = `translateX(-${current * cardWidth}px)`;
+      btnPrev.disabled = current === 0;
+      btnNext.disabled = current >= maxIndex();
+      if (dotsEl) {
+        dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      }
+    }
+
+    btnPrev.addEventListener('click', () => goTo(current - 1));
+    btnNext.addEventListener('click', () => goTo(current + 1));
+
+    buildDots();
+    goTo(0);
+
+    window.addEventListener('resize', () => { buildDots(); goTo(0); });
+  });
+
+  // ── Reveal al hacer scroll ────────────────────────────────
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+});
+</script>
+{% endblock %}
+
+{% endblock %}

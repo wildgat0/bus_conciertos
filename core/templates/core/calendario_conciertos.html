@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Calendario de Conciertos{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1><i class="fa fa-calendar-alt"></i> Calendario de Conciertos</h1>
+    <p>Gestión de próximas fechas — Coordinación</p>
+  </div>
+</div>
+
+<section class="seccion" style="max-width:none;">
+  <div class="tabla-wrapper">
+    <div class="tabla-header">
+      <h2>PRÓXIMOS CONCIERTOS</h2>
+      <a href="{% url 'crear_concierto' %}" class="btn btn-primary"><i class="fa fa-plus"></i> Nuevo Concierto</a>
+    </div>
+
+    {% if proximos %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Concierto / Artista</th>
+            <th>Lugar</th>
+            <th>Región</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in proximos %}
+          <tr>
+            <td><strong>{{ c.fecha|date:"d/m/Y" }}</strong></td>
+            <td>{{ c.hora|time:"H:i" }} hrs</td>
+            <td>
+              <strong>{{ c.artista }}</strong><br>
+              <span style="font-size:0.8rem;color:var(--gris-medio);">{{ c.nombre }}</span>
+            </td>
+            <td>{{ c.lugar }}</td>
+            <td>{{ c.get_region_display }}</td>
+            <td>
+              {% if c.activo %}
+                <span class="badge-estado badge-disponible">Activo</span>
+              {% else %}
+                <span class="badge-estado badge-cancelado">Inactivo</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="tabla-acciones">
+                <a href="{% url 'editar_concierto' c.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
+                <a href="{% url 'eliminar_concierto' c.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem;">
+      <p style="color:var(--gris-medio);">No hay conciertos próximos registrados.</p>
+      <a href="{% url 'crear_concierto' %}" class="btn btn-primary" style="margin-top:1rem;"><i class="fa fa-plus"></i> Agregar primer concierto</a>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if pasados %}
+  <div class="tabla-wrapper" style="margin-top:2rem;">
+    <div class="tabla-header">
+      <h2 style="color:var(--gris-medio);">CONCIERTOS PASADOS</h2>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Concierto / Artista</th>
+            <th>Lugar</th>
+            <th>Región</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in pasados %}
+          <tr style="opacity:0.6;">
+            <td>{{ c.fecha|date:"d/m/Y" }}</td>
+            <td>
+              <strong>{{ c.artista }}</strong><br>
+              <span style="font-size:0.8rem;color:var(--gris-medio);">{{ c.nombre }}</span>
+            </td>
+            <td>{{ c.lugar }}</td>
+            <td>{{ c.get_region_display }}</td>
+            <td>
+              <div class="tabla-acciones">
+                <a href="{% url 'editar_concierto' c.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
+                <a href="{% url 'eliminar_concierto' c.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Crear Cuenta{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1><i class="fa fa-user-plus"></i> Crear Cuenta</h1>
+    <p>Regístrate para reservar tus viajes a conciertos</p>
+  </div>
+</div>
+
+<section class="seccion" style="max-width:750px;">
+  <div class="form-card" style="max-width:none;">
+    <h2 style="margin-bottom:0.25rem;">Datos de Registro</h2>
+    <p class="subtitulo">Completa el formulario para crear tu cuenta</p>
+
+    <form method="POST" novalidate>
+      {% csrf_token %}
+
+      <h4 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid var(--amarillo);">Información Personal</h4>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>{{ form.first_name.label }}</label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.first_name.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>{{ form.last_name.label }}</label>
+          {{ form.last_name }}
+        </div>
+        <div class="form-group">
+          <label>{{ form.rut.label }}</label>
+          {{ form.rut }}
+          {% if form.rut.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.rut.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>{{ form.telefono.label }}</label>
+          {{ form.telefono }}
+        </div>
+        <div class="form-group">
+          <label>{{ form.email.label }}</label>
+          {{ form.email }}
+        </div>
+        <div class="form-group">
+          <label>{{ form.fecha_nacimiento.label }}</label>
+          {{ form.fecha_nacimiento }}
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>{{ form.direccion.label }}</label>
+          {{ form.direccion }}
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>{{ form.region.label }}</label>
+          {{ form.region }}
+        </div>
+      </div>
+
+      <h4 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);margin:1.5rem 0 1rem;padding-bottom:0.5rem;border-bottom:2px solid var(--amarillo);">Credenciales de Acceso</h4>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>{{ form.username.label }}</label>
+          {{ form.username }}
+          {% if form.username.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.username.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>{{ form.password1.label }}</label>
+          {{ form.password1 }}
+          {% if form.password1.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.password1.errors.0 }}</span>{% endif %}
+          <ul id="reg-pwd-rules" style="margin:0.5rem 0 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:0.25rem;">
+            <li id="reg-r1" style="font-size:0.78rem;color:var(--gris-medio);"><i class="fa fa-check-circle" style="width:14px;"></i> Mínimo 8 caracteres</li>
+            <li id="reg-r2" style="font-size:0.78rem;color:var(--gris-medio);"><i class="fa fa-check-circle" style="width:14px;"></i> No puede ser similar a tu nombre de usuario</li>
+            <li id="reg-r3" style="font-size:0.78rem;color:var(--gris-medio);"><i class="fa fa-check-circle" style="width:14px;"></i> No puede ser una contraseña común (ej: 12345678)</li>
+            <li id="reg-r4" style="font-size:0.78rem;color:var(--gris-medio);"><i class="fa fa-check-circle" style="width:14px;"></i> No puede ser solo números</li>
+          </ul>
+        </div>
+        <div class="form-group">
+          <label>{{ form.password2.label }}</label>
+          {{ form.password2 }}
+          {% if form.password2.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.password2.errors.0 }}</span>{% endif %}
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:1rem;">
+        <i class="fa fa-user-plus"></i> Crear Cuenta
+      </button>
+    </form>
+
+    <div style="text-align:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #eee;">
+      <p style="color:var(--gris-medio);font-size:0.9rem;">
+        ¿Ya tienes cuenta? <a href="{% url 'login' %}" style="color:var(--negro);font-weight:700;">Inicia sesión aquí</a>
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const COMMON = ['12345678','password','123456789','qwerty123','iloveyou','admin123','letmein1','welcome1','monkey12','dragon12'];
+  const pwdInput  = document.getElementById('id_password1');
+  const userInput = document.getElementById('id_username');
+  const rules = {
+    r1: document.getElementById('reg-r1'),
+    r2: document.getElementById('reg-r2'),
+    r3: document.getElementById('reg-r3'),
+    r4: document.getElementById('reg-r4'),
+  };
+
+  function setRule(el, ok, typing) {
+    const color = ok ? '#2e7d32' : (typing ? '#c62828' : 'var(--gris-medio)');
+    el.style.color = color;
+    el.querySelector('i').style.color = ok ? '#2e7d32' : (typing ? '#c62828' : '#ccc');
+  }
+
+  function validate() {
+    const pwd  = pwdInput.value;
+    const user = userInput ? userInput.value.toLowerCase() : '';
+    const typing = pwd.length > 0;
+    setRule(rules.r1, pwd.length >= 8, typing);
+    setRule(rules.r2, typing && user.length > 0 && !pwd.toLowerCase().includes(user) && !user.includes(pwd.toLowerCase()), typing);
+    setRule(rules.r3, typing && !COMMON.includes(pwd.toLowerCase()), typing);
+    setRule(rules.r4, typing && !/^\d+$/.test(pwd), typing);
+  }
+
+  if (pwdInput) {
+    pwdInput.addEventListener('input', validate);
+    if (userInput) userInput.addEventListener('input', validate);
+  }
+})();
+</script>
+{% endblock %}

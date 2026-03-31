@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(venv/Scripts/python manage.py makemigrations reservas --name=\"unique_reserva_por_usuario_viaje\")",
+      "Bash(venv/Scripts/python manage.py migrate)",
+      "Bash(venv/Scripts/python manage.py shell -c \":*)",
+      "Bash(venv/Scripts/python manage.py limpiar_reservas_pendientes)",
+      "Bash(schtasks /create /tn \"BusConciertos_LimpiarReservas\" /tr \"C:\\\\Users\\\\Pepperoni\\\\Desktop\\\\bus_conciertos\\\\limpiar_reservas.bat\" /sc daily /st 02:00 /f)",
+      "Bash(cmd /c \"schtasks /create /tn \"\"BusConciertos_LimpiarReservas\"\" /tr \"\"C:\\\\Users\\\\Pepperoni\\\\Desktop\\\\bus_conciertos\\\\limpiar_reservas.bat\"\" /sc daily /st 02:00 /f\")",
+      "Bash(powershell -Command \"$action = New-ScheduledTaskAction -Execute ''C:\\\\Users\\\\Pepperoni\\\\Desktop\\\\bus_conciertos\\\\limpiar_reservas.bat''; $trigger = New-ScheduledTaskTrigger -Daily -At ''02:00''; Register-ScheduledTask -TaskName ''BusConciertos_LimpiarReservas'' -Action $action -Trigger $trigger -Force\")",
+      "Bash(powershell -File:*)"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Asignar Rol{% endblock %}
+{% block content %}
+<section class="seccion" style="max-width:500px;">
+  <div class="form-card" style="max-width:none;">
+    <h2 style="margin-bottom:0.25rem;"><i class="fa fa-user-tag"></i> Asignar Rol</h2>
+    <p class="subtitulo">Usuario: <strong>{{ usuario.get_full_name|default:usuario.username }}</strong></p>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Perfil / Rol del Sistema</label>
+        {{ form.grupo }}
+        <small style="color:var(--gris-medio);font-size:0.82rem;margin-top:0.4rem;display:block;">
+          "Sin rol especial" = Usuario normal con acceso solo a reservas públicas.
+        </small>
+      </div>
+      <div style="display:flex;gap:1rem;">
+        <a href="{% url 'gestion_usuarios' %}" class="btn btn-dark">Cancelar</a>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar Rol</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

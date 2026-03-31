@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Confirmar eliminación{% endblock %}
+{% block content %}
+<section class="seccion" style="max-width:500px;">
+  <div class="form-card" style="text-align:center;max-width:none;">
+    <div style="font-size:4rem;margin-bottom:1rem;">⚠️</div>
+    <h2 style="color:var(--peligro);margin-bottom:0.5rem;">Confirmar eliminación</h2>
+    <p style="color:var(--gris-medio);margin-bottom:2rem;">
+      ¿Estás seguro de que deseas eliminar este {{ tipo }}?<br>
+      <strong>{{ objeto }}</strong><br>
+      Esta acción no se puede deshacer.
+    </p>
+    <form method="POST">
+      {% csrf_token %}
+      <div style="display:flex;gap:1rem;justify-content:center;">
+        <a href="javascript:history.back()" class="btn btn-dark">Cancelar</a>
+        <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Sí, eliminar</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

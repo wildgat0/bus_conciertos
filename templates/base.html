@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Bus Conciertos{% endblock %} — Bus Conciertos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════ -->
+<nav class="navbar-bc">
+  <div class="navbar-top">
+    <div class="navbar-inner">
+      <a href="{% url 'inicio' %}" class="brand">
+        <span class="icon-bus">🚌</span>
+        BUS <span>CONCIERTOS</span>
+      </a>
+      <button class="navbar-toggler" aria-label="Menú">☰</button>
+      <div class="nav-actions">
+        {% if user.is_authenticated %}
+          {% if user.is_superuser or user.groups.all.0.name == 'Administrador' or user.groups.all.0.name == 'Coordinador' %}
+            <a href="{% url 'gestion_viajes' %}" class="btn btn-outline btn-sm"><i class="fa fa-cog"></i> Gestión</a>
+            <a href="{% url 'calendario_conciertos' %}" class="btn btn-outline btn-sm"><i class="fa fa-calendar-alt"></i> Calendario</a>
+          {% endif %}
+          {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
+            <a href="{% url 'gestion_usuarios' %}" class="btn btn-outline btn-sm"><i class="fa fa-users-cog"></i> Usuarios</a>
+            <a href="{% url 'auditoria_ganancias' %}" class="btn btn-outline btn-sm"><i class="fa fa-chart-line"></i> Auditoría</a>
+          {% endif %}
+          <a href="{% url 'mi_perfil' %}" class="btn btn-outline btn-sm"><i class="fa fa-user"></i> {{ user.first_name|default:user.username }}</a>
+          <a href="{% url 'logout' %}" class="btn btn-primary btn-sm"><i class="fa fa-sign-out-alt"></i> Salir</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn btn-outline btn-sm"><i class="fa fa-sign-in-alt"></i> Ingresar</a>
+          <a href="{% url 'registro' %}" class="btn btn-primary btn-sm"><i class="fa fa-user-plus"></i> Registrarse</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="nav-collapse">
+    <ul class="nav-links">
+      <li><a href="{% url 'inicio' %}"><i class="fa fa-home"></i> Inicio</a></li>
+      <li><a href="{% url 'lista_viajes' %}"><i class="fa fa-ticket-alt"></i> Reservas</a></li>
+      {% if user.is_authenticated %}
+      <li><a href="{% url 'mis_reservas' %}"><i class="fa fa-list-alt"></i> Mis Reservas</a></li>
+      {% endif %}
+      <li><a href="{% url 'quienes_somos' %}"><i class="fa fa-users"></i> Quiénes Somos</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ═══ MENSAJES ══════════════════════════════════════════════ -->
+{% if messages %}
+<div style="max-width:1200px;margin:1rem auto;padding:0 1rem;">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags|default:'info' }}" data-auto-dismiss>
+    <i class="fa fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ═══ CONTENIDO PRINCIPAL ═══════════════════════════════════ -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">🚌 Bus Conciertos</div>
+      <p style="font-size:0.9rem;max-width:300px;line-height:1.7;">
+        Tu mejor compañero para llegar a los mejores conciertos de Santiago y Valparaíso. Viaja seguro, cómodo y a tiempo.
+      </p>
+      <div style="margin-top:1rem;display:flex;gap:0.8rem;">
+        <a href="#" style="color:rgba(255,255,255,0.5);font-size:1.3rem;"><i class="fab fa-instagram"></i></a>
+        <a href="#" style="color:rgba(255,255,255,0.5);font-size:1.3rem;"><i class="fab fa-facebook"></i></a>
+        <a href="#" style="color:rgba(255,255,255,0.5);font-size:1.3rem;"><i class="fab fa-twitter"></i></a>
+      </div>
+    </div>
+    <div>
+      <h4>Navegación</h4>
+      <ul>
+        <li><a href="{% url 'inicio' %}">Inicio</a></li>
+        <li><a href="{% url 'lista_viajes' %}">Reservas de viajes</a></li>
+        <li><a href="{% url 'quienes_somos' %}">Quiénes Somos</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contacto</h4>
+      <ul>
+        <li><i class="fa fa-phone"></i> +56 9 1234 5678</li>
+        <li><i class="fa fa-envelope"></i> contacto@busconciertos.cl</li>
+        <li><i class="fa fa-map-marker-alt"></i> Galería Paseo del Mar - Av. Valparaíso 554, local 96, Viña del Mar</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; {{ "now"|date:"Y" }} ETHOS Corp — Todos los derechos reservados.</p>
+  </div>
+</footer>
+
+<!-- ═══ WHATSAPP FAB ══════════════════════════════════════════ -->
+<a href="https://wa.me/56912345678?text=Hola,%20quiero%20información%20sobre%20los%20viajes%20a%20conciertos"
+   class="whatsapp-fab" target="_blank" rel="noopener" title="Consultas por WhatsApp">
+  <i class="fab fa-whatsapp"></i>
+  <span class="tooltip-wa">💬 Consultar por WhatsApp</span>
+</a>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

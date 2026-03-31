@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Pasajeros — {{ viaje.concierto.artista }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="{% url 'gestion_viajes' %}">Gestión</a><span>›</span> Pasajeros</div>
+    <h1><i class="fa fa-users"></i> Pasajeros del Viaje</h1>
+    <p>{{ viaje.concierto.artista }} — {{ viaje.fecha_salida|date:"d/m/Y H:i" }} hrs</p>
+  </div>
+</div>
+<section class="seccion" style="max-width:none;">
+
+  <!-- Resumen del viaje -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
+    <div class="kpi-card">
+      <div class="kpi-valor">{{ viaje.cupos_totales }}</div>
+      <div class="kpi-label">Cupos Totales</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-valor">{{ viaje.cupos_ocupados }}</div>
+      <div class="kpi-label">Pasajeros confirmados</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-valor">{{ viaje.cupos_disponibles }}</div>
+      <div class="kpi-label">Cupos disponibles</div>
+    </div>
+  </div>
+
+  <div class="tabla-wrapper">
+    <div class="tabla-header">
+      <h2>LISTA DE PASAJEROS</h2>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <span class="badge-estado badge-disponible">{{ viaje.cupos_ocupados }} pasajero{{ viaje.cupos_ocupados|pluralize }}</span>
+        {% if pasajeros %}
+        <a href="{% url 'exportar_pasajeros_excel' viaje.pk %}" class="btn btn-primary btn-sm"><i class="fa fa-file-excel"></i> Exportar a Excel</a>
+        {% endif %}
+      </div>
+    </div>
+    {% if pasajeros %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Pasajero</th>
+            <th>RUT</th>
+            <th>Contacto</th>
+            <th>Cupos</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in pasajeros %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>
+              <strong>{{ p.usuario.get_full_name|default:p.usuario.username }}</strong><br>
+              <span style="font-size:0.8rem;color:var(--gris-medio);">{{ p.usuario.email }}</span>
+            </td>
+            <td>{% if p.usuario.perfilusuario %}{{ p.usuario.perfilusuario.rut }}{% else %}—{% endif %}</td>
+            <td>{% if p.usuario.perfilusuario %}{{ p.usuario.perfilusuario.telefono }}{% else %}—{% endif %}</td>
+            <td style="text-align:center;font-weight:700;">{{ p.cantidad }}</td>
+            <td><span class="badge-estado badge-{{ p.estado }}">{{ p.estado|capfirst }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem;color:var(--gris-medio);">
+      <i class="fa fa-users" style="font-size:3rem;margin-bottom:1rem;display:block;"></i>
+      <p>No hay pasajeros registrados para este viaje todavía.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div style="margin-top:1.5rem;">
+    <a href="{% url 'gestion_viajes' %}" class="btn btn-dark"><i class="fa fa-arrow-left"></i> Volver a Gestión</a>
+  </div>
+</section>
+{% endblock %}

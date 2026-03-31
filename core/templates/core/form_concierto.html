@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="{% url 'calendario_conciertos' %}">Calendario</a><span>›</span> {{ titulo }}</div>
+    <h1><i class="fa fa-calendar-plus"></i> {{ titulo }}</h1>
+  </div>
+</div>
+
+<section class="seccion" style="max-width:750px;">
+  <div class="form-card" style="max-width:none;">
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Artista / Banda</label>
+          {{ form.artista }}
+          {% if form.artista.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.artista.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Nombre del Concierto</label>
+          {{ form.nombre }}
+          {% if form.nombre.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.nombre.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Fecha</label>
+          {{ form.fecha }}
+          {% if form.fecha.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.fecha.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Hora</label>
+          {{ form.hora }}
+          {% if form.hora.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.hora.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Lugar / Recinto</label>
+          {{ form.lugar }}
+          {% if form.lugar.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.lugar.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
+          <label>Región</label>
+          {{ form.region }}
+          {% if form.region.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.region.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Descripción</label>
+          {{ form.descripcion }}
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>URL Imagen (opcional)</label>
+          {{ form.imagen_url }}
+        </div>
+        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:0.6rem;">
+          {{ form.activo }}
+          <label style="margin:0;font-weight:500;">Concierto activo (visible en la página)</label>
+        </div>
+      </div>
+      <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+        <a href="{% url 'calendario_conciertos' %}" class="btn btn-dark">Cancelar</a>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar Concierto</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

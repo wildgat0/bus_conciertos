@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Gestión de Viajes{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1><i class="fa fa-cog"></i> Gestión de Viajes</h1>
+    <p>Panel de coordinación — Administra los viajes programados</p>
+  </div>
+</div>
+<section class="seccion" style="max-width:none;">
+  <div class="tabla-wrapper">
+    <div class="tabla-header">
+      <h2>VIAJES PROGRAMADOS</h2>
+      <a href="{% url 'crear_viaje' %}" class="btn btn-primary"><i class="fa fa-plus"></i> Nuevo Viaje</a>
+    </div>
+    {% if viajes %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Concierto</th>
+            <th>Ruta</th>
+            <th>Salida</th>
+            <th>Cupos</th>
+            <th>Precio</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for viaje in viajes %}
+          <tr>
+            <td>
+              <strong>{{ viaje.concierto.artista }}</strong><br>
+              <span style="font-size:0.8rem;color:var(--gris-medio);">{{ viaje.concierto.nombre }}</span>
+            </td>
+            <td>{{ viaje.origen }}<br><span style="color:var(--gris-medio);font-size:0.8rem;">→ {{ viaje.destino }}</span></td>
+            <td>{{ viaje.fecha_salida|date:"d/m/Y" }}<br><span style="font-size:0.85rem;">{{ viaje.fecha_salida|time:"H:i" }} hrs</span></td>
+            <td>
+              <strong>{{ viaje.cupos_disponibles }}</strong>/{{ viaje.cupos_totales }}
+              <div class="cupos-bar" style="margin-top:4px;width:80px;">
+                <div class="cupos-fill" style="width:{% if viaje.cupos_totales %}{% widthratio viaje.cupos_ocupados viaje.cupos_totales 100 %}{% else %}0{% endif %}%"></div>
+              </div>
+            </td>
+            <td>$<span class="fmt-clp">{{ viaje.precio|floatformat:0 }}</span></td>
+            <td><span class="badge-estado badge-{{ viaje.estado }}">{{ viaje.get_estado_display }}</span></td>
+            <td>
+              <div class="tabla-acciones">
+                <a href="{% url 'pasajeros_viaje' viaje.pk %}" class="btn btn-dark btn-sm" title="Ver pasajeros"><i class="fa fa-users"></i></a>
+                <a href="{% url 'editar_viaje' viaje.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
+                <a href="{% url 'eliminar_viaje' viaje.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem;">
+      <p style="color:var(--gris-medio);">No hay viajes registrados aún.</p>
+      <a href="{% url 'crear_viaje' %}" class="btn btn-primary" style="margin-top:1rem;"><i class="fa fa-plus"></i> Crear primer viaje</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Tabla Viajes Pasados -->
+  <div class="tabla-wrapper" style="margin-top:2rem;">
+    <div class="tabla-header">
+      <h2>VIAJES PASADOS</h2>
+    </div>
+    {% if viajes_pasados %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Concierto</th>
+            <th>Ruta</th>
+            <th>Cupos</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for viaje in viajes_pasados %}
+          <tr style="opacity:0.75;">
+            <td>
+              <strong>{{ viaje.concierto.artista }}</strong><br>
+              <span style="font-size:0.8rem;color:var(--gris-medio);">{{ viaje.concierto.nombre }}</span>
+            </td>
+            <td>{{ viaje.origen }}<br><span style="color:var(--gris-medio);font-size:0.8rem;">→ {{ viaje.destino }}</span></td>
+            <td>
+              <strong>{{ viaje.cupos_disponibles }}</strong>/{{ viaje.cupos_totales }}
+              <div class="cupos-bar" style="margin-top:4px;width:80px;">
+                <div class="cupos-fill" style="width:{% if viaje.cupos_totales %}{% widthratio viaje.cupos_ocupados viaje.cupos_totales 100 %}{% else %}0{% endif %}%"></div>
+              </div>
+            </td>
+            <td><span class="badge-estado badge-{{ viaje.estado }}">{{ viaje.get_estado_display }}</span></td>
+            <td>
+              <div class="tabla-acciones">
+                <a href="{% url 'pasajeros_viaje' viaje.pk %}" class="btn btn-dark btn-sm" title="Ver pasajeros"><i class="fa fa-users"></i></a>
+                <a href="{% url 'editar_viaje' viaje.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
+                <a href="{% url 'eliminar_viaje' viaje.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem;">
+      <p style="color:var(--gris-medio);">No hay viajes pasados registrados.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.fmt-clp').forEach(function(el) {
+    const n = parseInt(el.textContent.replace(/\D/g, ''), 10);
+    if (!isNaN(n)) el.textContent = n.toLocaleString('es-CL');
+  });
+</script>
+{% endblock %}

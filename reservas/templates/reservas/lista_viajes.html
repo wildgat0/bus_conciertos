@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% block title %}Reservas de Viajes{% endblock %}
+
+{% block content %}
+
+<style>
+  @keyframes lv-fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes lv-fadeUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .lv-alert-anim {
+    animation: lv-fadeDown 0.6s ease both;
+  }
+
+  .lv-card-anim {
+    opacity: 0;
+    transform: translateY(40px);
+    animation: lv-fadeUp 0.6s ease forwards;
+  }
+
+  .lv-empty-anim {
+    animation: lv-fadeUp 0.8s ease both;
+    animation-delay: 0.2s;
+    opacity: 0;
+  }
+
+  .lv-tooltip {
+    position: relative;
+    cursor: default;
+  }
+  .lv-tooltip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--negro);
+    color: var(--blanco);
+    font-size: 0.78rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--radio);
+    white-space: normal;
+    width: max-content;
+    max-width: 220px;
+    box-shadow: var(--sombra);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10;
+  }
+  .lv-tooltip:hover::after {
+    opacity: 1;
+  }
+</style>
+
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Inicio</a><span>›</span> Reservas</div>
+    <h1><i class="fa fa-bus"></i> Viajes Disponibles</h1>
+    <p>Reserva tu asiento y viaja seguro a tu concierto favorito</p>
+  </div>
+</div>
+
+<section class="seccion">
+  {% if not user.is_authenticated %}
+  <div class="alert alert-warning lv-alert-anim">
+    <i class="fa fa-info-circle"></i>
+    Debes <a href="{% url 'login' %}" style="color:inherit;text-decoration:underline;"><strong>iniciar sesión</strong></a> o
+    <a href="{% url 'registro' %}" style="color:inherit;text-decoration:underline;"><strong>registrarte</strong></a> para poder reservar un viaje.
+  </div>
+  {% endif %}
+
+  {% if viajes %}
+  <div class="conciertos-grid">
+    {% for viaje in viajes %}
+    <div class="card-viaje lv-card-anim" style="animation-delay: {{ forloop.counter0 }}00ms;">
+      <div class="viaje-header">
+        <div>
+          <div class="viaje-titulo">{{ viaje.concierto.artista }}</div>
+          <div style="font-size:0.85rem;color:rgba(255,255,255,0.7);margin-top:0.2rem;">{{ viaje.concierto.nombre }}</div>
+        </div>
+        <div class="viaje-precio">$<span class="fmt-clp">{{ viaje.precio|floatformat:0 }}</span></div>
+      </div>
+      <div class="viaje-body">
+        <div class="viaje-ruta">
+          <span>{{ viaje.origen }}</span>
+          <span class="flecha">→</span>
+          <span>{{ viaje.destino }}</span>
+        </div>
+        <div class="viaje-info-grid">
+          <div class="viaje-info-item">
+            <strong>Salida</strong>
+            {{ viaje.fecha_salida|date:"d/m/Y H:i" }} hrs
+          </div>
+          <div class="viaje-info-item">
+            <strong>Regreso</strong>
+            {{ viaje.fecha_regreso|date:"d/m/Y H:i" }} hrs
+          </div>
+          <div class="viaje-info-item">
+            <strong>Concierto</strong>
+            {{ viaje.concierto.fecha|date:"d/m/Y" }} — {{ viaje.concierto.hora|time:"H:i" }}
+          </div>
+          <div class="viaje-info-item">
+            <strong>Recinto</strong>
+            <span class="lv-tooltip" data-tip="{{ viaje.concierto.lugar }}">{{ viaje.concierto.lugar|truncatechars:25 }}</span>
+          </div>
+        </div>
+
+        <!-- Barra de cupos -->
+        {% with pct=viaje.cupos_ocupados|default:0 %}
+        <div style="margin-top:1rem;">
+          <div class="cupos-bar">
+            {% if viaje.cupos_totales > 0 %}
+            <div class="cupos-fill" style="width:{% widthratio viaje.cupos_ocupados viaje.cupos_totales 100 %}%"></div>
+            {% endif %}
+          </div>
+          <div class="cupos-info">
+            <span>{{ viaje.cupos_disponibles }} cupos disponibles</span>
+            <span>{{ viaje.cupos_totales }} total</span>
+          </div>
+        </div>
+        {% endwith %}
+
+        <div class="viaje-action" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+          <span class="badge-estado badge-{{ viaje.estado }}">
+            <i class="fa fa-circle" style="font-size:0.5rem;"></i>
+            {{ viaje.get_estado_display }}
+          </span>
+          {% if user.is_authenticated %}
+            {% if viaje.cupos_disponibles > 0 and viaje.estado == 'disponible' %}
+            <a href="{% url 'detalle_viaje' viaje.pk %}" class="btn btn-primary btn-sm"><i class="fa fa-ticket-alt"></i> Reservar</a>
+            {% else %}
+            <span class="btn btn-sm" style="background:#eee;color:#999;cursor:default;">Sin cupos</span>
+            {% endif %}
+          {% else %}
+          <a href="{% url 'login' %}?next={% url 'detalle_viaje' viaje.pk %}" class="btn btn-dark btn-sm"><i class="fa fa-lock"></i> Ingresar para reservar</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="lv-empty-anim" style="text-align:center;padding:5rem 2rem;">
+    <div style="font-size:4rem;margin-bottom:1rem;">🚌</div>
+    <h2 style="margin-bottom:0.5rem;">No hay viajes disponibles por el momento</h2>
+    <p style="color:var(--gris-medio);margin-bottom:1.5rem;">Próximamente se añadirán nuevos viajes. Síguenos en redes sociales o consúltanos por WhatsApp.</p>
+    <a href="https://wa.me/56912345678" target="_blank" class="btn btn-primary"><i class="fab fa-whatsapp"></i> Consultar por WhatsApp</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.fmt-clp').forEach(function(el) {
+    const n = parseInt(el.textContent.replace(/\D/g, ''), 10);
+    if (!isNaN(n)) el.textContent = n.toLocaleString('es-CL');
+  });
+</script>
+{% endblock %}
