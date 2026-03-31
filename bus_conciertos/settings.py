@@ -7,7 +7,7 @@ SECRET_KEY = 'django-insecure-bus-conciertos-key-change-in-production-2024'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['PepperoniW.pythonanywhere.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
