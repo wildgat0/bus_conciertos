@@ -51,6 +51,23 @@
       {% endif %}
       <li><a href="{% url 'quienes_somos' %}"><i class="fa fa-users"></i> Quiénes Somos</a></li>
     </ul>
+    <div class="nav-actions-mobile">
+      {% if user.is_authenticated %}
+        {% if user.is_superuser or user.groups.all.0.name == 'Administrador' or user.groups.all.0.name == 'Coordinador' %}
+          <a href="{% url 'gestion_viajes' %}" class="btn btn-outline btn-sm"><i class="fa fa-cog"></i> Gestión</a>
+          <a href="{% url 'calendario_conciertos' %}" class="btn btn-outline btn-sm"><i class="fa fa-calendar-alt"></i> Calendario</a>
+        {% endif %}
+        {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
+          <a href="{% url 'gestion_usuarios' %}" class="btn btn-outline btn-sm"><i class="fa fa-users-cog"></i> Usuarios</a>
+          <a href="{% url 'auditoria_ganancias' %}" class="btn btn-outline btn-sm"><i class="fa fa-chart-line"></i> Auditoría</a>
+        {% endif %}
+        <a href="{% url 'mi_perfil' %}" class="btn btn-outline btn-sm"><i class="fa fa-user"></i> {{ user.first_name|default:user.username }}</a>
+        <a href="{% url 'logout' %}" class="btn btn-primary btn-sm"><i class="fa fa-sign-out-alt"></i> Salir</a>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn btn-outline btn-sm"><i class="fa fa-sign-in-alt"></i> Ingresar</a>
+        <a href="{% url 'registro' %}" class="btn btn-primary btn-sm"><i class="fa fa-user-plus"></i> Registrarse</a>
+      {% endif %}
+    </div>
   </div>
 </nav>
 

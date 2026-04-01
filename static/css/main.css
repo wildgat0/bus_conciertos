@@ -125,6 +125,8 @@ a { text-decoration: none; color: inherit; }
   gap: 0.5rem;
 }
 
+.nav-actions-mobile { display: none; }
+
 .navbar-toggler {
   display: none;
   background: none;
@@ -828,7 +830,9 @@ footer ul li a:hover { color: var(--amarillo); }
   .nav-collapse.open { display: flex; }
   .navbar-bc .nav-links { flex-direction: column; width: 100%; }
   .navbar-bc .nav-links a { justify-content: center; }
-  .navbar-bc .nav-actions { flex-wrap: wrap; justify-content: center; }
+  .navbar-bc .nav-actions { display: none; }
+  .nav-actions-mobile { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); }
+  .nav-actions-mobile .btn { justify-content: center; text-align: center; }
   .hero { padding: 3rem 1rem; }
   .hero h1 { font-size: 3rem; }
   .hero-stats { gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
