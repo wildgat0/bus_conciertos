@@ -7,7 +7,7 @@ SECRET_KEY = 'django-insecure-bus-conciertos-key-change-in-production-2024'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['187.33.145.225', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
