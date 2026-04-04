@@ -67,7 +67,7 @@
               <span style="font-size:0.8rem;color:var(--gris-medio);">{{ viaje.concierto.nombre }}</span>
             </td>
             <td>{{ viaje.coordinador.get_full_name|default:viaje.coordinador.username|default:"—" }}</td>
-            <td>{{ viaje.fecha_salida|date:"d/m/Y H:i" }}</td>
+            <td>{{ viaje.fecha_salida|date:"d/m/Y" }}</td>
             <td style="font-size:0.85rem;">{{ viaje.origen }}<br>→ {{ viaje.destino }}</td>
             <td style="text-align:center;">{{ viaje.cupos_totales }}</td>
             <td style="text-align:center;">
@@ -124,7 +124,7 @@
               <span style="font-size:0.8rem;color:var(--gris-medio);">{{ viaje.concierto.nombre }}</span>
             </td>
             <td>{{ viaje.coordinador.get_full_name|default:viaje.coordinador.username|default:"—" }}</td>
-            <td>{{ viaje.fecha_salida|date:"d/m/Y H:i" }}</td>
+            <td>{{ viaje.fecha_salida|date:"d/m/Y" }}</td>
             <td style="font-size:0.85rem;">{{ viaje.origen }}<br>→ {{ viaje.destino }}</td>
             <td style="text-align:center;">{{ viaje.cupos_totales }}</td>
             <td style="text-align:center;">

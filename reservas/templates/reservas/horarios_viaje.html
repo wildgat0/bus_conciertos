@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}Horarios — {{ viaje.concierto.artista }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="{% url 'gestion_viajes' %}">Gestión</a><span>›</span>
+      <a href="{% url 'gestion_viajes' %}">{{ viaje.concierto.artista }}</a><span>›</span> Horarios
+    </div>
+    <h1><i class="fa fa-clock"></i> Horarios del Viaje</h1>
+    <p>{{ viaje.concierto.artista }} — {{ viaje.concierto.nombre }}</p>
+  </div>
+</div>
+
+<section class="seccion" style="max-width:1800px;">
+  <div style="display:grid;grid-template-columns:1fr 380px;gap:2rem;align-items:start;">
+
+    <!-- Lista de horarios -->
+    <div>
+      <div class="tabla-wrapper">
+        <div class="tabla-header">
+          <h2>HORARIOS REGISTRADOS</h2>
+          <span class="badge-estado badge-disponible">{{ horarios.count }} horario{{ horarios.count|pluralize }}</span>
+        </div>
+        {% if horarios %}
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Salida</th>
+                <th>Hora Salida</th>
+                <th>Solo Ida (CLP)</th>
+                <th>Solo Vuelta (CLP)</th>
+                <th>Ida y Vuelta (CLP)</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for h in horarios %}
+              <tr {% if editando and editando.pk == h.pk %}style="background:rgba(255,214,0,0.08);"{% endif %}>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <strong>{{ h.salida }}</strong>
+                </td>
+                <td>{{ h.hora_salida|time:"H:i" }} hrs</td>
+                <td>$<span class="fmt-clp">{{ h.precio_ida|floatformat:0 }}</span></td>
+                <td>$<span class="fmt-clp">{{ h.precio_vuelta|floatformat:0 }}</span></td>
+                <td>$<span class="fmt-clp">{{ h.precio|floatformat:0 }}</span></td>
+                <td>
+                  <div class="tabla-acciones">
+                    <a href="{% url 'editar_horario' h.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
+                    <a href="{% url 'eliminar_horario' h.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:3rem;color:var(--gris-medio);">
+          <i class="fa fa-clock" style="font-size:3rem;margin-bottom:1rem;display:block;"></i>
+          <p>No hay horarios registrados para este viaje.</p>
+          <p style="font-size:0.85rem;">Agrega el primero con el formulario.</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <div style="margin-top:1.5rem;display:flex;gap:1rem;">
+        <a href="{% url 'gestion_viajes' %}" class="btn btn-dark"><i class="fa fa-arrow-left"></i> Volver a Gestión</a>
+        <a href="{% url 'gestion_viajes' %}" class="btn btn-primary"><i class="fa fa-save"></i> Guardar Viaje</a>
+      </div>
+    </div>
+
+    <!-- Formulario agregar / editar -->
+    <div style="position:sticky;top:80px;">
+      <div class="tabla-wrapper" style="margin:0;">
+        <div class="tabla-header">
+          <h2>{% if editando %}<i class="fa fa-edit"></i> EDITAR HORARIO{% else %}<i class="fa fa-plus"></i> AGREGAR HORARIO{% endif %}</h2>
+        </div>
+        <div style="padding:1.5rem;">
+        <p class="subtitulo" style="margin-bottom:1rem;">{{ viaje.concierto.artista }} — {{ viaje.concierto.nombre }}</p>
+        <form method="POST" action="{% if editando %}{% url 'editar_horario' editando.pk %}{% else %}{% url 'horarios_viaje' viaje.pk %}{% endif %}">
+          {% csrf_token %}
+          {% if form.errors %}
+          <div class="alert alert-danger" style="margin-bottom:1rem;font-size:0.85rem;">
+            {% for field in form %}{% for error in field.errors %}<div><strong>{{ field.label }}:</strong> {{ error }}</div>{% endfor %}{% endfor %}
+          </div>
+          {% endif %}
+          <div class="form-group">
+            <label>Salida</label>
+            {{ form.salida }}
+          </div>
+          <div class="form-group">
+            <label>Hora de Salida</label>
+            {{ form.hora_salida }}
+          </div>
+          <div style="border-top:1px solid #eee;margin:1rem 0;padding-top:1rem;">
+            <p style="font-size:0.78rem;color:var(--gris-medio);margin-bottom:0.8rem;"><i class="fa fa-info-circle" style="color:var(--amarillo);"></i> Ingresa los tres precios de forma independiente.</p>
+            <div class="form-group">
+              <label><i class="fa fa-arrow-right" style="color:var(--amarillo);font-size:0.8rem;"></i> Precio Solo Ida (CLP)</label>
+              {{ form.precio_ida }}
+            </div>
+            <div class="form-group">
+              <label><i class="fa fa-arrow-left" style="color:var(--amarillo);font-size:0.8rem;"></i> Precio Solo Vuelta (CLP)</label>
+              {{ form.precio_vuelta }}
+            </div>
+            <div class="form-group">
+              <label><i class="fa fa-exchange-alt" style="color:var(--amarillo);font-size:0.8rem;"></i> Precio Ida y Vuelta (CLP)</label>
+              {{ form.precio }}
+            </div>
+          </div>
+          <div style="display:flex;gap:0.75rem;margin-top:1.2rem;">
+            {% if editando %}
+            <a href="{% url 'horarios_viaje' viaje.pk %}" class="btn btn-dark btn-sm">Cancelar</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;">
+              <i class="fa fa-save"></i> {% if editando %}Guardar Cambios{% else %}Agregar Horario{% endif %}
+            </button>
+          </div>
+        </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.fmt-clp').forEach(function(el) {
+    const n = parseInt(el.textContent.replace(/\D/g, ''), 10);
+    if (!isNaN(n)) el.textContent = n.toLocaleString('es-CL');
+  });
+</script>
+{% endblock %}

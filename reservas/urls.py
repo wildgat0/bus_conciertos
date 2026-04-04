@@ -21,6 +21,9 @@ urlpatterns = [
     path('gestion/<int:pk>/pasajeros/exportar/', views.exportar_pasajeros_excel, name='exportar_pasajeros_excel'),
     path('gestion/pasajero/<int:pk>/editar/', views.editar_pasajero, name='editar_pasajero'),
     path('gestion/pasajero/<int:pk>/eliminar/', views.eliminar_pasajero, name='eliminar_pasajero'),
+    path('gestion/<int:pk>/horarios/', views.horarios_viaje, name='horarios_viaje'),
+    path('gestion/horario/<int:pk>/editar/', views.editar_horario, name='editar_horario'),
+    path('gestion/horario/<int:pk>/eliminar/', views.eliminar_horario, name='eliminar_horario'),
 
     # Admin
     path('auditoria/', views.auditoria_ganancias, name='auditoria_ganancias'),

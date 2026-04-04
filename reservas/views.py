@@ -12,8 +12,8 @@ import json
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
-from .models import Viaje, Reserva
-from .forms import ViajeForm, PasajeroForm
+from .models import Viaje, Reserva, HorarioViaje
+from .forms import ViajeForm, PasajeroForm, HorarioViajeForm
 from usuarios.decorators import coordinador_required, admin_required
 
 
@@ -64,7 +64,7 @@ def es_admin(user):
 def lista_viajes(request):
     viajes = Viaje.objects.filter(
         estado='disponible',
-        fecha_salida__date__gte=timezone.now().date()
+        fecha_salida__gte=timezone.now().date()
     ).select_related('concierto').order_by('fecha_salida')
     return render(request, 'reservas/lista_viajes.html', {'viajes': viajes})
 
@@ -97,8 +97,10 @@ def detalle_viaje(request, pk):
         else:
             proximo_hito = cupos_base + (10 - ciclo)
             proximo_beneficio = '50% descuento'
+    horarios = viaje.horarios.order_by('salida', 'hora_salida')
     context = {
         'viaje': viaje,
+        'horarios': horarios,
         'reserva_pendiente': reserva_pendiente,
         'cupos_pagados': cupos_pagados,
         'perfil': perfil,
@@ -111,6 +113,17 @@ def detalle_viaje(request, pk):
 
 # ─── WEBPAY / TRANSBANK ──────────────────────────────────────────────────────
 
+def _precio_para_tipo(horario, tipo_pasaje):
+    """Devuelve el precio unitario según el tipo de pasaje y el horario seleccionado."""
+    if horario is None:
+        return 0
+    if tipo_pasaje == 'solo_ida':
+        return horario.precio_ida
+    if tipo_pasaje == 'solo_vuelta':
+        return horario.precio_vuelta
+    return horario.precio  # ida_vuelta o sin tipo
+
+
 @login_required
 def reservar_pendiente(request, pk):
     if request.method != 'POST':
@@ -118,21 +131,34 @@ def reservar_pendiente(request, pk):
 
     viaje = get_object_or_404(Viaje, pk=pk, estado='disponible')
 
-    if viaje.cupos_disponibles <= 0:
-        messages.error(request, 'Lo sentimos, este viaje ya no tiene cupos disponibles.')
-        return redirect('lista_viajes')
-
     try:
         cantidad = max(1, int(request.POST.get('cantidad', 1)))
     except (ValueError, TypeError):
         cantidad = 1
 
-    if cantidad > viaje.cupos_disponibles:
-        messages.error(request, f'Solo quedan {viaje.cupos_disponibles} cupos disponibles.')
-        return redirect('detalle_viaje', pk=pk)
+    # Horario seleccionado
+    horario_id = request.POST.get('horario_id')
+    horario = None
+    if horario_id:
+        horario = get_object_or_404(HorarioViaje, pk=horario_id, viaje=viaje)
+        if horario.cupos_disponibles <= 0:
+            messages.error(request, 'Lo sentimos, este horario ya no tiene cupos disponibles.')
+            return redirect('detalle_viaje', pk=pk)
+        if cantidad > horario.cupos_disponibles:
+            messages.error(request, f'Solo quedan {horario.cupos_disponibles} cupos en este horario.')
+            return redirect('detalle_viaje', pk=pk)
+    else:
+        if viaje.cupos_disponibles <= 0:
+            messages.error(request, 'Lo sentimos, este viaje ya no tiene cupos disponibles.')
+            return redirect('lista_viajes')
+        if cantidad > viaje.cupos_disponibles:
+            messages.error(request, f'Solo quedan {viaje.cupos_disponibles} cupos disponibles.')
+            return redirect('detalle_viaje', pk=pk)
 
+    tipo_pasaje = request.POST.get('tipo_pasaje', 'ida_vuelta')
+    precio_unitario = _precio_para_tipo(horario, tipo_pasaje)
     cupos_base_pend = cupos_pagados_usuario(request.user)
-    monto = calcular_monto_con_descuento(viaje.precio, cupos_base_pend, cantidad)
+    monto = calcular_monto_con_descuento(precio_unitario, cupos_base_pend, cantidad)
 
     # Reutilizar solo reserva pendiente (nunca cancelada) o crear nueva
     reserva = Reserva.objects.filter(
@@ -140,14 +166,18 @@ def reservar_pendiente(request, pk):
     ).first()
     if reserva:
         reserva.cantidad = cantidad
+        reserva.tipo_pasaje = tipo_pasaje
+        reserva.horario = horario
         reserva.monto = monto
         reserva.save()
     else:
         Reserva.objects.create(
             viaje=viaje,
+            horario=horario,
             usuario=request.user,
             estado='pendiente',
             cantidad=cantidad,
+            tipo_pasaje=tipo_pasaje,
             monto=monto,
         )
 
@@ -159,22 +189,35 @@ def reservar_pendiente(request, pk):
 def iniciar_pago(request, pk):
     viaje = get_object_or_404(Viaje, pk=pk, estado='disponible')
 
-    if viaje.cupos_disponibles <= 0:
-        messages.error(request, 'Lo sentimos, este viaje ya no tiene cupos disponibles.')
-        return redirect('lista_viajes')
-
     # Leer cantidad solicitada
     try:
         cantidad = max(1, int(request.POST.get('cantidad', 1)))
     except (ValueError, TypeError):
         cantidad = 1
 
-    if cantidad > viaje.cupos_disponibles:
-        messages.error(request, f'Solo quedan {viaje.cupos_disponibles} cupos disponibles.')
-        return redirect('detalle_viaje', pk=pk)
+    # Horario seleccionado
+    horario_id = request.POST.get('horario_id')
+    horario = None
+    if horario_id:
+        horario = get_object_or_404(HorarioViaje, pk=horario_id, viaje=viaje)
+        if horario.cupos_disponibles <= 0:
+            messages.error(request, 'Lo sentimos, este horario ya no tiene cupos disponibles.')
+            return redirect('detalle_viaje', pk=pk)
+        if cantidad > horario.cupos_disponibles:
+            messages.error(request, f'Solo quedan {horario.cupos_disponibles} cupos en este horario.')
+            return redirect('detalle_viaje', pk=pk)
+    else:
+        if viaje.cupos_disponibles <= 0:
+            messages.error(request, 'Lo sentimos, este viaje ya no tiene cupos disponibles.')
+            return redirect('lista_viajes')
+        if cantidad > viaje.cupos_disponibles:
+            messages.error(request, f'Solo quedan {viaje.cupos_disponibles} cupos disponibles.')
+            return redirect('detalle_viaje', pk=pk)
 
+    tipo_pasaje = request.POST.get('tipo_pasaje', 'ida_vuelta')
+    precio_unitario = _precio_para_tipo(horario, tipo_pasaje)
     cupos_base_pago = cupos_pagados_usuario(request.user)
-    monto_total = calcular_monto_con_descuento(viaje.precio, cupos_base_pago, cantidad)
+    monto_total = calcular_monto_con_descuento(precio_unitario, cupos_base_pago, cantidad)
 
     # Reutilizar solo reserva pendiente; nunca tocar pagadas ni canceladas
     reserva = Reserva.objects.filter(
@@ -183,6 +226,8 @@ def iniciar_pago(request, pk):
     if reserva:
         reserva.estado = 'pendiente'
         reserva.cantidad = cantidad
+        reserva.tipo_pasaje = tipo_pasaje
+        reserva.horario = horario
         reserva.monto = monto_total
         reserva.orden_compra = f'BC-{uuid.uuid4().hex[:10].upper()}'
         reserva.token_webpay = None
@@ -190,9 +235,11 @@ def iniciar_pago(request, pk):
     else:
         reserva = Reserva.objects.create(
             viaje=viaje,
+            horario=horario,
             usuario=request.user,
             estado='pendiente',
             cantidad=cantidad,
+            tipo_pasaje=tipo_pasaje,
             monto=monto_total,
         )
 
@@ -308,7 +355,7 @@ def mis_reservas(request):
 @login_required
 @user_passes_test(es_coordinador)
 def gestion_viajes(request):
-    hoy = timezone.now()
+    hoy = timezone.now().date()
     # Marcar como realizados todos los viajes pasados que aún no lo estén
     Viaje.objects.filter(fecha_salida__lt=hoy).exclude(estado='realizado').update(estado='realizado')
     if es_admin(request.user):
@@ -338,8 +385,8 @@ def crear_viaje(request):
                 viaje.concierto = concierto
                 viaje.coordinador = request.user
                 viaje.save()
-                messages.success(request, 'Viaje creado exitosamente.')
-                return redirect('gestion_viajes')
+                messages.success(request, 'Viaje creado. Ahora agrega los horarios.')
+                return redirect('horarios_viaje', pk=viaje.pk)
     else:
         form = ViajeForm()
     return render(request, 'reservas/form_viaje.html', {'form': form, 'titulo': 'Crear Nuevo Viaje'})
@@ -390,11 +437,13 @@ def pasajeros_viaje(request, pk):
     # Agrupar por (usuario, estado) sumando cantidad y monto
     agrupado = {}
     for r in reservas_qs:
-        key = (r.usuario_id, r.estado)
+        key = (r.usuario_id, r.estado, r.tipo_pasaje, r.horario_id)
         if key not in agrupado:
             agrupado[key] = {
                 'usuario': r.usuario,
                 'estado': r.estado,
+                'tipo_pasaje': r.tipo_pasaje,
+                'horario': r.horario,
                 'cantidad': 0,
                 'monto': 0,
             }
@@ -414,11 +463,12 @@ def exportar_pasajeros_excel(request, pk):
     # Agrupar igual que en la vista pasajeros_viaje
     agrupado = {}
     for r in reservas_qs:
-        key = (r.usuario_id, r.estado)
+        key = (r.usuario_id, r.estado, r.tipo_pasaje)
         if key not in agrupado:
             agrupado[key] = {
                 'usuario': r.usuario,
                 'estado': r.estado,
+                'tipo_pasaje': r.tipo_pasaje,
                 'cantidad': 0,
                 'monto': 0,
             }
@@ -434,7 +484,7 @@ def exportar_pasajeros_excel(request, pk):
     header_fill = PatternFill(fill_type='solid', fgColor='FFD600')
     header_align = Alignment(horizontal='center', vertical='center')
 
-    encabezados = ['#', 'Nombre', 'RUT', 'Teléfono', 'Cupos', 'Monto', 'Estado']
+    encabezados = ['#', 'Nombre', 'RUT', 'Teléfono', 'Tipo Pasaje', 'Cupos', 'Monto', 'Estado']
     for col, texto in enumerate(encabezados, start=1):
         celda = ws.cell(row=1, column=col, value=texto)
         celda.font = header_font
@@ -444,17 +494,19 @@ def exportar_pasajeros_excel(request, pk):
     for i, p in enumerate(pasajeros, start=1):
         perfil = getattr(p['usuario'], 'perfilusuario', None)
         estado_display = {'pagado': 'Pagado', 'pendiente': 'Pendiente de Pago', 'cancelado': 'Cancelado'}.get(p['estado'], p['estado'])
+        tipo_display = {'ida_vuelta': 'Ida y Vuelta', 'solo_ida': 'Solo Ida', 'solo_vuelta': 'Solo Vuelta'}.get(p['tipo_pasaje'], p['tipo_pasaje'])
         ws.append([
             i,
             p['usuario'].get_full_name() or p['usuario'].username,
             perfil.rut if perfil else '',
             perfil.telefono if perfil else '',
+            tipo_display,
             p['cantidad'],
             int(p['monto']),
             estado_display,
         ])
 
-    anchos = [5, 30, 15, 18, 8, 14, 20]
+    anchos = [5, 30, 15, 18, 16, 8, 14, 20]
     for col, ancho in enumerate(anchos, start=1):
         ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = ancho
 
@@ -495,6 +547,57 @@ def eliminar_pasajero(request, pk):
         messages.success(request, 'Pasajero eliminado del viaje.')
         return redirect('pasajeros_viaje', pk=viaje_pk)
     return render(request, 'reservas/confirmar_eliminar.html', {'objeto': reserva, 'tipo': 'pasajero'})
+
+
+# ─── HORARIOS DE VIAJE ───────────────────────────────────────────────────────
+
+@login_required
+@user_passes_test(es_coordinador)
+def horarios_viaje(request, pk):
+    viaje = get_object_or_404(Viaje, pk=pk)
+    horarios = viaje.horarios.all()
+    form = HorarioViajeForm()
+    if request.method == 'POST':
+        form = HorarioViajeForm(request.POST)
+        if form.is_valid():
+            horario = form.save(commit=False)
+            horario.viaje = viaje
+            horario.save()
+            messages.success(request, 'Horario agregado.')
+            return redirect('horarios_viaje', pk=pk)
+    return render(request, 'reservas/horarios_viaje.html', {'viaje': viaje, 'horarios': horarios, 'form': form})
+
+
+@login_required
+@user_passes_test(es_coordinador)
+def editar_horario(request, pk):
+    horario = get_object_or_404(HorarioViaje, pk=pk)
+    if request.method == 'POST':
+        form = HorarioViajeForm(request.POST, instance=horario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Horario actualizado.')
+            return redirect('horarios_viaje', pk=horario.viaje.pk)
+    else:
+        form = HorarioViajeForm(instance=horario)
+    return render(request, 'reservas/horarios_viaje.html', {
+        'viaje': horario.viaje,
+        'horarios': horario.viaje.horarios.all(),
+        'form': form,
+        'editando': horario,
+    })
+
+
+@login_required
+@user_passes_test(es_coordinador)
+def eliminar_horario(request, pk):
+    horario = get_object_or_404(HorarioViaje, pk=pk)
+    viaje_pk = horario.viaje.pk
+    if request.method == 'POST':
+        horario.delete()
+        messages.success(request, 'Horario eliminado.')
+        return redirect('horarios_viaje', pk=viaje_pk)
+    return render(request, 'reservas/confirmar_eliminar.html', {'objeto': horario, 'tipo': 'horario'})
 
 
 # ─── MÓDULO AUDITORÍA (ADMIN) ─────────────────────────────────────────────────

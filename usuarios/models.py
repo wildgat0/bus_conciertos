@@ -17,7 +17,6 @@ class PerfilUsuario(models.Model):
     direccion = models.CharField(max_length=300, verbose_name='Dirección')
     region = models.CharField(max_length=20, choices=REGION_CHOICES, default='santiago', verbose_name='Región')
     fecha_nacimiento = models.DateField(null=True, blank=True, verbose_name='Fecha de Nacimiento')
-    foto = models.ImageField(upload_to='perfiles/', null=True, blank=True, verbose_name='Foto de Perfil')
     creado_en = models.DateTimeField(auto_now_add=True)
 
     class Meta:

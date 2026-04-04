@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize %}
 {% block title %}¡Pago Exitoso!{% endblock %}
 {% block content %}
 <section class="seccion" style="max-width:600px;text-align:center;">
@@ -24,11 +25,11 @@
         </div>
         <div style="display:flex;justify-content:space-between;">
           <span style="color:var(--gris-medio);">Salida:</span>
-          <strong>{{ reserva.viaje.fecha_salida|date:"d/m/Y H:i" }} hrs</strong>
+          <strong>{{ reserva.viaje.fecha_salida|date:"d/m/Y" }} hrs</strong>
         </div>
         <div style="display:flex;justify-content:space-between;padding-top:0.5rem;border-top:1px solid #ddd;margin-top:0.5rem;">
           <span style="color:var(--gris-medio);">Monto pagado:</span>
-          <strong style="color:var(--exito);font-size:1.1rem;">${{ reserva.monto|floatformat:0 }} CLP</strong>
+          <strong style="color:var(--exito);font-size:1.1rem;">${{ reserva.monto|floatformat:0|intcomma }} CLP</strong>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Viaje, Reserva
+from .models import Viaje, Reserva, HorarioViaje
 from core.models import Concierto
 
 
@@ -15,28 +15,38 @@ class ViajeForm(forms.ModelForm):
 
     class Meta:
         model = Viaje
-        fields = ['origen', 'destino', 'fecha_salida', 'fecha_regreso',
-                  'cupos_totales', 'precio', 'estado', 'descripcion']
+        fields = ['origen', 'destino', 'fecha_salida', 'cupos_totales', 'estado']
         widgets = {
             'origen': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Terminal Alameda, Santiago'}),
             'destino': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Movistar Arena'}),
-            'fecha_salida': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
-            'fecha_regreso': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
+            'fecha_salida': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'cupos_totales': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
-            'precio': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
             'estado': forms.Select(attrs={'class': 'form-select'}),
-            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['fecha_salida'].input_formats = ['%Y-%m-%dT%H:%M']
-        self.fields['fecha_regreso'].input_formats = ['%Y-%m-%dT%H:%M']
         # Al editar, prellenar el campo con el concierto actual
         if self.instance and self.instance.pk:
             self.fields['concierto_nombre'].initial = (
                 f"{self.instance.concierto.artista} — {self.instance.concierto.nombre}"
             )
+
+
+class HorarioViajeForm(forms.ModelForm):
+    class Meta:
+        model = HorarioViaje
+        fields = ['salida', 'hora_salida', 'precio_ida', 'precio_vuelta', 'precio']
+        widgets = {
+            'salida': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Terminal Alameda, Santiago'}),
+            'hora_salida': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'precio_ida': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ej: 15000'}),
+            'precio_vuelta': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ej: 15000'}),
+            'precio': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ej: 25000'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class PasajeroForm(forms.ModelForm):

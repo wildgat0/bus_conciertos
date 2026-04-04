@@ -5,7 +5,7 @@
   <div class="container">
     <div class="breadcrumb"><a href="{% url 'gestion_viajes' %}">Gestión</a><span>›</span> Pasajeros</div>
     <h1><i class="fa fa-users"></i> Pasajeros del Viaje</h1>
-    <p>{{ viaje.concierto.artista }} — {{ viaje.fecha_salida|date:"d/m/Y H:i" }} hrs</p>
+    <p>{{ viaje.concierto.artista }} — {{ viaje.fecha_salida|date:"d/m/Y" }} hrs</p>
   </div>
 </div>
 <section class="seccion" style="max-width:none;">
@@ -45,6 +45,8 @@
             <th>Pasajero</th>
             <th>RUT</th>
             <th>Contacto</th>
+            <th>Horario</th>
+            <th>Tipo de Pasaje</th>
             <th>Cupos</th>
             <th>Estado</th>
           </tr>
@@ -59,6 +61,21 @@
             </td>
             <td>{% if p.usuario.perfilusuario %}{{ p.usuario.perfilusuario.rut }}{% else %}—{% endif %}</td>
             <td>{% if p.usuario.perfilusuario %}{{ p.usuario.perfilusuario.telefono }}{% else %}—{% endif %}</td>
+            <td style="font-size:0.82rem;">
+              {% if p.horario %}
+                <div style="font-weight:600;">{{ p.horario.salida }}</div>
+                <div style="color:var(--gris-medio);">Salida: {{ p.horario.hora_salida|time:"H:i" }} hrs</div>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if p.tipo_pasaje == 'solo_ida' %}
+                <span class="badge-estado" style="background:#e3f2fd;color:#0d47a1;"><i class="fa fa-arrow-right"></i> Solo Ida</span>
+              {% elif p.tipo_pasaje == 'solo_vuelta' %}
+                <span class="badge-estado" style="background:#f3e5f5;color:#6a1b9a;"><i class="fa fa-arrow-left"></i> Solo Vuelta</span>
+              {% else %}
+                <span class="badge-estado" style="background:#fff9c4;color:#5d4037;"><i class="fa fa-exchange-alt"></i> Ida y Vuelta</span>
+              {% endif %}
+            </td>
             <td style="text-align:center;font-weight:700;">{{ p.cantidad }}</td>
             <td><span class="badge-estado badge-{{ p.estado }}">{{ p.estado|capfirst }}</span></td>
           </tr>

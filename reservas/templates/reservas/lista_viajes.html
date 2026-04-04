@@ -84,7 +84,7 @@
           <div class="viaje-titulo">{{ viaje.concierto.artista }}</div>
           <div style="font-size:0.85rem;color:rgba(255,255,255,0.7);margin-top:0.2rem;">{{ viaje.concierto.nombre }}</div>
         </div>
-        <div class="viaje-precio">$<span class="fmt-clp">{{ viaje.precio|floatformat:0 }}</span></div>
+        <div></div>
       </div>
       <div class="viaje-body">
         <div class="viaje-ruta">
@@ -94,16 +94,8 @@
         </div>
         <div class="viaje-info-grid">
           <div class="viaje-info-item">
-            <strong>Salida</strong>
-            {{ viaje.fecha_salida|date:"d/m/Y H:i" }} hrs
-          </div>
-          <div class="viaje-info-item">
-            <strong>Regreso</strong>
-            {{ viaje.fecha_regreso|date:"d/m/Y H:i" }} hrs
-          </div>
-          <div class="viaje-info-item">
             <strong>Concierto</strong>
-            {{ viaje.concierto.fecha|date:"d/m/Y" }} — {{ viaje.concierto.hora|time:"H:i" }}
+            {{ viaje.concierto.fecha|date:"d/m/Y" }}
           </div>
           <div class="viaje-info-item">
             <strong>Recinto</strong>

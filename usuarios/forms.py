@@ -89,14 +89,13 @@ class EditarPerfilForm(forms.ModelForm):
 
     class Meta:
         model = PerfilUsuario
-        fields = ['rut', 'telefono', 'direccion', 'region', 'fecha_nacimiento', 'foto']
+        fields = ['rut', 'telefono', 'direccion', 'region', 'fecha_nacimiento']
         widgets = {
             'rut': forms.TextInput(attrs={'class': 'form-control'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
             'direccion': forms.TextInput(attrs={'class': 'form-control'}),
             'region': forms.Select(attrs={'class': 'form-select'}),
             'fecha_nacimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'foto': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
 

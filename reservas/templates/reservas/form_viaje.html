@@ -7,7 +7,7 @@
     <h1><i class="fa fa-bus"></i> {{ titulo }}</h1>
   </div>
 </div>
-<section class="seccion" style="max-width:750px;">
+<section class="seccion" style="max-width:1000px;">
   <div class="form-card" style="max-width:none;">
     <form method="POST">
       {% csrf_token %}
@@ -43,36 +43,27 @@
           {{ form.destino }}
         </div>
         <div class="form-group">
-          <label>Fecha y Hora de Salida</label>
+          <label>Fecha de Salida</label>
           {{ form.fecha_salida }}
           {% if form.fecha_salida.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.fecha_salida.errors.0 }}</span>{% endif %}
         </div>
-        <div class="form-group">
-          <label>Fecha y Hora de Regreso</label>
-          {{ form.fecha_regreso }}
-        </div>
+
         <div class="form-group">
           <label>Cupos Totales del Bus</label>
           {{ form.cupos_totales }}
         </div>
         <div class="form-group">
-          <label>Precio por Pasajero (CLP)</label>
-          {{ form.precio }}
-        </div>
-        <div class="form-group">
           <label>Estado</label>
           {{ form.estado }}
         </div>
-        <div class="form-group" style="grid-column:1/-1;">
-          <label>Descripción adicional</label>
-          {{ form.descripcion }}
-        </div>
+
       </div>
       <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
         <a href="{% url 'gestion_viajes' %}" class="btn btn-dark">Cancelar</a>
-        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar Viaje</button>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-arrow-right"></i> Continuar a Horarios</button>
       </div>
     </form>
   </div>
 </section>
 {% endblock %}
+

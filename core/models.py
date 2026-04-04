@@ -10,7 +10,6 @@ class Concierto(models.Model):
     nombre = models.CharField(max_length=200, verbose_name='Nombre del Concierto')
     artista = models.CharField(max_length=200, verbose_name='Artista / Banda')
     fecha = models.DateField(verbose_name='Fecha')
-    hora = models.TimeField(verbose_name='Hora')
     lugar = models.CharField(max_length=300, verbose_name='Lugar / Recinto')
     region = models.CharField(max_length=20, choices=REGION_CHOICES, verbose_name='Región')
     descripcion = models.TextField(blank=True, verbose_name='Descripción')

@@ -5,12 +5,11 @@ from .models import Concierto
 class ConciertoForm(forms.ModelForm):
     class Meta:
         model = Concierto
-        fields = ['nombre', 'artista', 'fecha', 'hora', 'lugar', 'region', 'descripcion', 'imagen_url', 'activo']
+        fields = ['nombre', 'artista', 'fecha', 'lugar', 'region', 'descripcion', 'imagen_url', 'activo']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Legends Tour'}),
             'artista': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Metallica'}),
             'fecha': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'hora': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
             'lugar': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Estadio Nacional'}),
             'region': forms.Select(attrs={'class': 'form-select'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),

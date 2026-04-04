@@ -4,7 +4,7 @@ from .models import Viaje, Reserva
 
 @admin.register(Viaje)
 class ViajeAdmin(admin.ModelAdmin):
-    list_display = ['concierto', 'origen', 'destino', 'fecha_salida', 'cupos_totales', 'cupos_disponibles', 'precio', 'estado']
+    list_display = ['concierto', 'origen', 'destino', 'fecha_salida', 'cupos_totales', 'cupos_disponibles', 'estado']
     list_filter = ['estado', 'concierto__region']
     search_fields = ['concierto__nombre', 'origen', 'destino']
 

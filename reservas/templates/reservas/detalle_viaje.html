@@ -21,6 +21,145 @@
   .dv-card-1 { animation: dv-fadeUp     0.6s ease both; animation-delay: 0.2s; opacity: 0; }
   .dv-card-2 { animation: dv-fadeUp     0.6s ease both; animation-delay: 0.35s; opacity: 0; }
   .dv-card-3 { animation: dv-fadeUp     0.6s ease both; animation-delay: 0.5s; opacity: 0; }
+
+  .dv-grid { display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: start; }
+
+  /* ── Selector de horario (tabla) ─────────────────────────── */
+  .horario-row { transition: background 0.2s; border-bottom: 1px solid #eee; }
+  .horario-row:hover { background: rgba(255,214,0,0.08); }
+  .horario-row.activo { background: var(--negro) !important; color: var(--blanco); }
+  .horario-row.activo td { color: var(--blanco); }
+  .horario-row-disabled { opacity: 0.5; }
+
+  /* ── Selector de tipo de pasaje ───────────────────────────── */
+  .tipo-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    margin-bottom: 0;
+    animation: dv-fadeUp 0.5s ease both;
+  }
+
+  .tipo-btn {
+    background: var(--blanco);
+    border: 2px solid #ddd;
+    border-radius: var(--radio-lg);
+    padding: 1.8rem 1.2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.22s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: var(--sombra);
+  }
+
+  .tipo-btn:hover {
+    border-color: var(--amarillo);
+    transform: translateY(-3px);
+    box-shadow: var(--sombra-fuerte);
+  }
+
+  .tipo-btn.activo {
+    border-color: var(--amarillo);
+    background: var(--negro);
+    color: var(--blanco);
+    transform: translateY(-3px);
+    box-shadow: var(--sombra-fuerte);
+  }
+
+  .tipo-btn .tipo-icono {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .tipo-btn .tipo-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .tipo-btn .tipo-desc {
+    font-size: 0.78rem;
+    color: var(--gris-medio);
+    line-height: 1.3;
+  }
+
+  .tipo-btn.activo .tipo-desc { color: rgba(255,255,255,0.6); }
+  .tipo-btn.activo .tipo-icono { filter: none; }
+
+  .tipo-btn .tipo-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: transparent;
+    border: 2px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: transparent;
+    transition: all 0.2s;
+  }
+
+  .tipo-btn.activo .tipo-check {
+    background: var(--amarillo);
+    border-color: var(--amarillo);
+    color: var(--negro);
+  }
+
+  /* ── Contenido del viaje (oculto hasta selección) ─────────── */
+  #dv-contenido {
+    display: none;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    margin-top: 2rem;
+  }
+
+  #dv-contenido.visible {
+    display: block;
+  }
+
+  #dv-contenido.animado {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .tipo-seleccionado-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--negro);
+    color: var(--amarillo);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .tipo-selector { grid-template-columns: 1fr; }
+    .dv-grid { grid-template-columns: 1fr; }
+    .dv-panel {
+      position: static !important;
+      flex-direction: column !important;
+    }
+    .dv-panel > div:last-child {
+      min-width: unset !important;
+      max-width: unset !important;
+      flex-direction: row !important;
+      flex-wrap: wrap;
+    }
+    .dv-pasajero-grid { grid-template-columns: 1fr !important; }
+  }
 </style>
 {% endblock %}
 
@@ -33,300 +172,406 @@
 </div>
 
 <section class="seccion" style="max-width:1100px;">
-  <div style="display:grid;grid-template-columns:1fr auto;gap:2rem;align-items:start;">
 
-    <!-- Info del viaje -->
-    <div class="dv-info">
-      <div class="dv-card-1" style="background:var(--negro);color:var(--blanco);border-radius:var(--radio-lg);padding:2rem;margin-bottom:1.5rem;">
-        <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:0.5rem;">Concierto</div>
-        <h2 style="font-size:2rem;color:var(--amarillo);margin-bottom:0.25rem;">{{ viaje.concierto.artista }}</h2>
-        <p style="color:rgba(255,255,255,0.8);">{{ viaje.concierto.nombre }}</p>
-        <p style="color:rgba(255,255,255,0.6);margin-top:0.3rem;font-size:0.9rem;"><i class="fa fa-map-pin"></i> {{ viaje.concierto.lugar }}</p>
-        <p style="color:rgba(255,255,255,0.6);font-size:0.9rem;"><i class="fa fa-calendar"></i> {{ viaje.concierto.fecha|date:"l d \d\e F, Y" }} — {{ viaje.concierto.hora|time:"H:i" }} hrs</p>
-      </div>
-
-      <div class="dv-card-2" style="background:var(--blanco);border-radius:var(--radio-lg);padding:1.5rem;box-shadow:var(--sombra);margin-bottom:1.5rem;">
-        <h3 style="margin-bottom:1.2rem;border-bottom:2px solid var(--amarillo);padding-bottom:0.5rem;">Detalles del Recorrido</h3>
-        <div style="display:grid;gap:1rem;">
-          <div style="display:flex;gap:1rem;align-items:center;">
-            <div style="width:40px;height:40px;background:var(--amarillo);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🚌</div>
-            <div>
-              <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);">Salida</div>
-              <div style="font-weight:700;">{{ viaje.origen }}</div>
-              <div style="color:var(--gris-medio);font-size:0.9rem;">{{ viaje.fecha_salida|date:"d/m/Y" }} a las {{ viaje.fecha_salida|time:"H:i" }} hrs</div>
-            </div>
-          </div>
-          <div style="border-left:3px dashed var(--amarillo);margin-left:20px;padding-left:20px;height:30px;"></div>
-          <div style="display:flex;gap:1rem;align-items:center;">
-            <div style="width:40px;height:40px;background:var(--negro);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🏠</div>
-            <div>
-              <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);">Regreso</div>
-              <div style="font-weight:700;">{{ viaje.destino }}</div>
-              <div style="color:var(--gris-medio);font-size:0.9rem;">{{ viaje.fecha_regreso|date:"d/m/Y" }} a las {{ viaje.fecha_regreso|time:"H:i" }} hrs</div>
-            </div>
-          </div>
+  <!-- ── PASO 1: Selección de horario ────────────────────────── -->
+  {% if horarios %}
+  <div style="margin-bottom:1.5rem;">
+    <h2 style="font-size:1.4rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.4rem;">
+      <i class="fa fa-clock" style="color:var(--amarillo);"></i> Selecciona un horario
+    </h2>
+    <p style="color:var(--gris-medio);font-size:0.9rem;margin-bottom:1.5rem;">
+      Elige el horario de tu preferencia para continuar.
+    </p>
+    {% regroup horarios by salida as grupos_horario %}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+      {% for grupo in grupos_horario %}
+      <div style="border:2px solid #ddd;border-radius:var(--radio-lg);overflow:hidden;min-width:220px;flex:1;">
+        <div style="background:var(--negro);color:var(--blanco);padding:0.5rem 0.8rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.9rem;text-transform:uppercase;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;">
+          {{ grupo.grouper }}
+          <i class="fa fa-bus" style="color:var(--amarillo);"></i>
         </div>
-        {% if viaje.descripcion %}
-        <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid #eee;font-size:0.9rem;color:var(--gris-medio);">
-          <strong>Información adicional:</strong> {{ viaje.descripcion }}
-        </div>
-        {% endif %}
-      </div>
-
-      <!-- Datos del pasajero (si está logueado) -->
-      {% if perfil %}
-      <div class="dv-card-3" style="background:var(--amarillo-light);border-radius:var(--radio-lg);padding:1.5rem;border:2px solid var(--amarillo);">
-        <h4 style="margin-bottom:1rem;"><i class="fa fa-user"></i> Tus datos de pasajero</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.9rem;">
-          <div><strong>Nombre:</strong> {{ user.get_full_name }}</div>
-          <div><strong>RUT:</strong> {{ perfil.rut }}</div>
-          <div><strong>Email:</strong> {{ user.email }}</div>
-          <div><strong>Teléfono:</strong> {{ perfil.telefono }}</div>
-        </div>
-        <p style="margin-top:0.8rem;font-size:0.82rem;color:var(--gris-medio);">Estos datos se usarán para tu reserva. <a href="{% url 'mi_perfil' %}">Actualizar perfil</a></p>
-      </div>
-      {% endif %}
-    </div>
-
-    <!-- Panel de reserva -->
-    <div class="dv-panel" style="position:sticky;top:80px;display:flex;flex-direction:row;gap:1rem;align-items:flex-start;">
-
-      {# Panel principal de precio y compra #}
-      <div style="background:var(--blanco);border-radius:var(--radio-lg);box-shadow:var(--sombra-fuerte);overflow:hidden;border:2px solid var(--amarillo);">
-        <div style="background:var(--negro);padding:1.2rem 1.5rem;text-align:center;">
-          <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;">Precio por pasajero</div>
-          <div style="font-family:'Bebas Neue';font-size:3rem;color:var(--amarillo);line-height:1;">$<span class="fmt-clp">{{ viaje.precio|floatformat:0 }}</span></div>
-          <div style="font-size:0.8rem;color:rgba(255,255,255,0.5);">CLP — IVA incluido</div>
-        </div>
-        <div style="padding:1.5rem;">
-          <div style="margin-bottom:1rem;">
-            <div class="cupos-bar">
-              {% if viaje.cupos_totales > 0 %}
-              <div class="cupos-fill" style="width:{% widthratio viaje.cupos_ocupados viaje.cupos_totales 100 %}%"></div>
-              {% endif %}
-            </div>
-            <div class="cupos-info">
-              <span><strong>{{ viaje.cupos_disponibles }}</strong> cupos disponibles</span>
-              <span>de {{ viaje.cupos_totales }}</span>
-            </div>
-          </div>
-
-          {# Formulario de compra #}
-          {% if viaje.estado == 'disponible' and viaje.cupos_disponibles > 0 %}
-            {% if user.is_authenticated %}
-              {% if perfil %}
-
-              {# Widget de fidelidad #}
-              {% if user.is_authenticated %}
-              <div style="border:1px solid #e0e0e0;border-radius:var(--radio);padding:0.8rem 1rem;margin-bottom:1rem;background:#fafafa;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
-                  <span style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gris-medio);">Cupos comprados</span>
-                  <span id="fidelidad-contador" style="font-family:'Bebas Neue';font-size:1.1rem;color:var(--negro);">{{ cupos_base }}</span>
-                </div>
-                {# Barra de progreso — el ancho lo calcula el JS #}
-                <div style="background:#e9ecef;border-radius:999px;height:8px;overflow:hidden;margin-bottom:0.4rem;">
-                  <div id="fidelidad-barra" style="height:100%;border-radius:999px;background:linear-gradient(90deg,var(--amarillo),#ffc200);width:0%;transition:width 0.4s;"></div>
-                </div>
-                <div id="fidelidad-msg" style="font-size:0.75rem;color:var(--gris-medio);text-align:center;">
-                  Próximo beneficio en cupo N°{{ proximo_hito }}: <strong>{{ proximo_beneficio }}</strong>
-                </div>
-              </div>
-              {% endif %}
-
-              {# Selector de cantidad (compartido) #}
-              <div style="margin-bottom:1rem;">
-                <label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:0.4rem;">Cantidad de cupos</label>
-                <input type="number" id="cantidad-input" value="1" min="1" max="{{ viaje.cupos_disponibles }}" class="form-control" style="text-align:center;font-size:1.1rem;font-weight:700;">
-              </div>
-              <div style="background:var(--gris-claro);border-radius:var(--radio);padding:0.7rem 1rem;margin-bottom:1.2rem;display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:0.85rem;color:var(--gris-medio);">Total a pagar</span>
-                <span id="total-precio" style="font-family:'Bebas Neue';font-size:1.6rem;color:var(--negro);">$<span id="total-numero">{{ viaje.precio|floatformat:0 }}</span></span>
-              </div>
-
-              {# Opción 1: Pagar ahora #}
-              <form id="form-pagar" method="POST" action="{% url 'iniciar_pago' viaje.pk %}" style="margin-bottom:0.75rem;">
-                {% csrf_token %}
-                <input type="hidden" name="cantidad" id="cantidad-pagar" value="1">
-                <div style="font-size:0.78rem;color:var(--gris-medio);margin-bottom:0.5rem;background:var(--gris-claro);padding:0.6rem 0.8rem;border-radius:var(--radio);">
-                  <i class="fa fa-shield-alt" style="color:var(--exito);"></i> Pago seguro con <strong>WebPay Transbank</strong>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.9rem;">
-                  <i class="fa fa-credit-card"></i> Pagar Reserva
-                </button>
-              </form>
-
-              {# Opción 2: Reservar con pago pendiente #}
-              <form id="form-pendiente" method="POST" action="{% url 'reservar_pendiente' viaje.pk %}">
-                {% csrf_token %}
-                <input type="hidden" name="cantidad" id="cantidad-pendiente" value="1">
-                <button type="submit" class="btn btn-dark" style="width:100%;justify-content:center;font-size:0.95rem;padding:0.9rem;">
-                  <i class="fa fa-clock"></i> Reservar con Pago Pendiente
-                </button>
-              </form>
-              <p style="font-size:0.75rem;color:var(--gris-medio);margin-top:0.5rem;text-align:center;">
-                <i class="fa fa-info-circle"></i> Si no pagas, la reserva se cancelará 2 días antes del evento.
-              </p>
-
-              <script>
-                (function(){
-                  const input    = document.getElementById('cantidad-input');
-                  const totalEl  = document.getElementById('total-numero');
-                  const hidPagar = document.getElementById('cantidad-pagar');
-                  const hidPend  = document.getElementById('cantidad-pendiente');
-                  const precio    = {{ viaje.precio|floatformat:0 }};
-                  const maxCupos  = {{ viaje.cupos_disponibles }};
-                  const cuposBase = {{ cupos_base }};
-
-                  const fidContador = document.getElementById('fidelidad-contador');
-                  const fidBarra    = document.getElementById('fidelidad-barra');
-                  const fidMsg      = document.getElementById('fidelidad-msg');
-
-                  function formatCLP(n) { return n.toLocaleString('es-CL'); }
-
-                  // Calcula el monto total cupo a cupo
-                  function calcularTotal(cant) {
-                    let total = 0;
-                    for (let i = 1; i <= cant; i++) {
-                      const cupoNum = cuposBase + i;
-                      if (cupoNum % 10 === 0)      total += 0;          // gratis
-                      else if (cupoNum % 5 === 0)  total += precio * 0.5; // 50%
-                      else                         total += precio;
-                    }
-                    return Math.round(total);
-                  }
-
-                  function proximoHito(total) {
-                    const ciclo = total % 10;
-                    if (ciclo < 4) return { cupo: total + (4 - ciclo), ben: '50% descuento' };
-                    if (ciclo < 9) return { cupo: total + (9 - ciclo), ben: 'Cupo GRATIS' };
-                    return { cupo: total + (10 - ciclo), ben: '50% descuento' };
-                  }
-
-                  function mensajeDescuento(cant) {
-                    let gratis = false, mitad = false;
-                    for (let i = 1; i <= cant; i++) {
-                      const n = cuposBase + i;
-                      if (n % 10 === 0) gratis = true;
-                      else if (n % 5 === 0) mitad = true;
-                    }
-                    if (gratis) return { texto: '🎉 ¡Incluye cupo(s) GRATIS!', color: '#155724', bg: '#d4edda', border: '#a5d6a7' };
-                    if (mitad)  return { texto: '🎊 ¡Incluye cupo(s) con 50% de descuento!', color: '#856404', bg: '#fff8e1', border: '#ffe082' };
-                    return null;
-                  }
-
-                  function actualizar(cant) {
-                    totalEl.textContent = formatCLP(calcularTotal(cant));
-
-                    if (!fidContador) return;
-                    const proyectado = cuposBase + cant;
-                    const ciclo      = proyectado % 10;
-
-                    fidContador.textContent = cuposBase + ' → ' + proyectado;
-
-                    if (fidBarra) {
-                      const pct = Math.round((ciclo / 10) * 100);
-                      const lleno = ciclo === 0 && proyectado > 0;
-                      fidBarra.style.width = (lleno ? 100 : pct) + '%';
-                      fidBarra.style.background = (ciclo >= 9 || lleno)
-                        ? 'linear-gradient(90deg,#28a745,#20c997)'
-                        : 'linear-gradient(90deg,var(--amarillo),#ffc200)';
-                    }
-
-                    if (fidMsg) {
-                      const desc = mensajeDescuento(cant);
-                      if (desc) {
-                        fidMsg.innerHTML = desc.texto;
-                        fidMsg.style.cssText = `font-size:0.82rem;font-weight:700;text-align:center;padding:0.4rem 0.6rem;border-radius:var(--radio);background:${desc.bg};border:1px solid ${desc.border};color:${desc.color};`;
-                      } else {
-                        const h = proximoHito(proyectado);
-                        fidMsg.innerHTML = 'Próximo beneficio en cupo N°' + h.cupo + ': <strong>' + h.ben + '</strong>';
-                        fidMsg.style.cssText = 'font-size:0.75rem;color:var(--gris-medio);text-align:center;padding:0;background:none;border:none;';
-                      }
-                    }
-                  }
-
-                  actualizar(1);
-
-                  input.addEventListener('input', function(){
-                    const cant = Math.max(1, Math.min(parseInt(this.value) || 1, maxCupos));
-                    this.value = cant;
-                    hidPagar.value = cant;
-                    hidPend.value  = cant;
-                    actualizar(cant);
-                  });
-                })();
-              </script>
-
-              {% else %}
-              <div class="alert alert-warning" style="font-size:0.85rem;margin-bottom:0.8rem;">
-                Completa tu perfil antes de reservar.
-              </div>
-              <a href="{% url 'mi_perfil' %}" class="btn btn-dark" style="width:100%;justify-content:center;">Completar perfil</a>
-              {% endif %}
-            {% else %}
-            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary" style="width:100%;justify-content:center;">
-              <i class="fa fa-sign-in-alt"></i> Ingresar para reservar
-            </a>
-            {% endif %}
-          {% elif not reserva_pendiente %}
-            <div class="alert alert-danger"><i class="fa fa-times-circle"></i> Este viaje no está disponible.</div>
+        {% for h in grupo.list %}
+        <div class="horario-row{% if h.cupos_disponibles == 0 %} horario-row-disabled{% endif %}"
+             data-horario-id="{{ h.pk }}"
+             data-salida-txt="{{ h.salida }}"
+             data-salida="{{ h.hora_salida|time:'H:i' }}"
+             data-cupos="{{ h.cupos_disponibles }}"
+             data-precio-iv="{{ h.precio|floatformat:0 }}"
+             data-precio-ida="{{ h.precio_ida|floatformat:0 }}"
+             data-precio-vuelta="{{ h.precio_vuelta|floatformat:0 }}"
+             onclick="{% if h.cupos_disponibles > 0 %}seleccionarHorario(this){% endif %}"
+             style="display:flex;align-items:center;gap:0.75rem;padding:0.45rem 0.8rem;border-top:1px solid #eee;cursor:{% if h.cupos_disponibles > 0 %}pointer{% else %}not-allowed{% endif %};">
+          <input type="checkbox" name="horario_radio" class="horario-radio" value="{{ h.pk }}"
+                 style="accent-color:var(--amarillo);width:18px;height:18px;flex-shrink:0;"
+                 {% if h.cupos_disponibles == 0 %}disabled{% endif %}>
+          <span style="font-weight:700;font-size:0.95rem;">{{ h.hora_salida|time:"H:i" }} HRS</span>
+          {% if h.cupos_disponibles == 0 %}
+            <span class="badge-estado badge-completo" style="margin-left:auto;">Sin cupos</span>
           {% endif %}
-
-          <div style="margin-top:1rem;text-align:center;">
-            <a href="https://wa.me/56912345678" target="_blank" style="font-size:0.85rem;color:var(--gris-medio);">
-              <i class="fab fa-whatsapp" style="color:#25D366;"></i> ¿Dudas? Consulta por WhatsApp
-            </a>
-          </div>
         </div>
+        {% endfor %}
       </div>
-
-      {# Cards de estado — a la derecha del panel de precio #}
-      {% if cupos_pagados or reserva_pendiente %}
-      <div style="display:flex;flex-direction:column;gap:1rem;min-width:190px;max-width:220px;">
-        {% if cupos_pagados %}
-        <div style="background:#d4edda;border-radius:var(--radio-lg);padding:1.2rem 1.4rem;border:2px solid #a5d6a7;box-shadow:var(--sombra);text-align:center;">
-          <div style="width:36px;height:36px;background:#28a745;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.5rem;">
-            <i class="fa fa-check" style="color:#fff;font-size:0.85rem;"></i>
-          </div>
-          <div style="font-weight:700;color:#155724;font-size:0.9rem;margin-bottom:0.4rem;">Cupos confirmados</div>
-          <div style="font-family:'Bebas Neue';font-size:2.4rem;color:#155724;line-height:1;">{{ cupos_pagados }}</div>
-          <div style="font-size:0.78rem;color:#2e7d32;">cupo{{ cupos_pagados|pluralize }} pagado{{ cupos_pagados|pluralize }}</div>
-        </div>
-        {% endif %}
-
-        {% if reserva_pendiente %}
-        <div style="background:#fff8e1;border-radius:var(--radio-lg);padding:1.2rem 1.4rem;border:2px solid #ffe082;box-shadow:var(--sombra);text-align:center;">
-          <div style="width:36px;height:36px;background:#ffc107;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.5rem;">
-            <i class="fa fa-clock" style="color:#fff;font-size:0.85rem;"></i>
-          </div>
-          <div style="font-weight:700;color:#856404;font-size:0.9rem;margin-bottom:0.4rem;">Pago pendiente</div>
-          <div style="font-family:'Bebas Neue';font-size:2.4rem;color:#856404;line-height:1;">{{ reserva_pendiente.cantidad }}</div>
-          <div style="font-size:0.78rem;color:#856404;margin-bottom:0.8rem;">cupo{{ reserva_pendiente.cantidad|pluralize }} sin pagar</div>
-          <form method="POST" action="{% url 'iniciar_pago' viaje.pk %}">
-            {% csrf_token %}
-            <input type="hidden" name="cantidad" value="{{ reserva_pendiente.cantidad }}">
-            <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;font-size:0.8rem;">
-              <i class="fa fa-credit-card"></i> Pagar $<span class="fmt-clp">{{ reserva_pendiente.monto|floatformat:0 }}</span>
-            </button>
-          </form>
-        </div>
-        {% endif %}
-      </div>
-      {% endif %}
-
+      {% endfor %}
     </div>
   </div>
+  {% endif %}
+
+  <!-- ── PASO 2: Selección de tipo de pasaje (oculto hasta elegir horario) ── -->
+  <div id="paso-tipo" {% if horarios %}style="display:none;opacity:0;transform:translateY(16px);transition:opacity 0.35s,transform 0.35s;"{% endif %}>
+    <div style="margin-bottom:1.5rem;">
+      {% if horarios %}
+      <div class="tipo-seleccionado-badge" id="badge-horario" style="margin-bottom:1rem;">
+        <i class="fa fa-clock"></i> <span id="badge-horario-texto"></span>
+      </div>
+      {% endif %}
+      <h2 style="font-size:1.4rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.4rem;">
+        <i class="fa fa-ticket-alt" style="color:var(--amarillo);"></i> Selecciona el tipo de pasaje
+      </h2>
+      <p style="color:var(--gris-medio);font-size:0.9rem;margin-bottom:1.5rem;">
+        Elige una opción para ver los detalles y precio del viaje.
+      </p>
+      <div class="tipo-selector">
+
+        <button class="tipo-btn" data-tipo="ida_vuelta" onclick="seleccionarTipo(this)">
+          <span class="tipo-check"><i class="fa fa-check"></i></span>
+          <span class="tipo-icono">🔄</span>
+          <span class="tipo-label">Ida y Vuelta</span>
+          <span class="tipo-desc">Incluye salida al concierto<br>y regreso a origen</span>
+        </button>
+
+        <button class="tipo-btn" data-tipo="solo_ida" onclick="seleccionarTipo(this)">
+          <span class="tipo-check"><i class="fa fa-check"></i></span>
+          <span class="tipo-icono">➡️</span>
+          <span class="tipo-label">Solo Ida</span>
+          <span class="tipo-desc">Solo el viaje de salida<br>al concierto</span>
+        </button>
+
+        <button class="tipo-btn" data-tipo="solo_vuelta" onclick="seleccionarTipo(this)">
+          <span class="tipo-check"><i class="fa fa-check"></i></span>
+          <span class="tipo-icono">⬅️</span>
+          <span class="tipo-label">Solo Vuelta</span>
+          <span class="tipo-desc">Solo el regreso<br>desde el concierto</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PASO 3: Detalle del viaje (oculto hasta selección de tipo) ──── -->
+  <div id="dv-contenido">
+
+    <div class="tipo-seleccionado-badge" id="badge-tipo">
+      <i class="fa fa-check-circle"></i>
+      <span id="badge-tipo-texto"></span>
+    </div>
+
+    <div class="dv-grid">
+
+      <!-- Info del viaje -->
+      <div class="dv-info">
+        <div class="dv-card-1" style="background:var(--negro);color:var(--blanco);border-radius:var(--radio-lg);padding:2rem;margin-bottom:1.5rem;">
+          <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:0.5rem;">Concierto</div>
+          <h2 style="font-size:2rem;color:var(--amarillo);margin-bottom:0.25rem;">{{ viaje.concierto.artista }}</h2>
+          <p style="color:rgba(255,255,255,0.8);">{{ viaje.concierto.nombre }}</p>
+          <p style="color:rgba(255,255,255,0.6);margin-top:0.3rem;font-size:0.9rem;"><i class="fa fa-map-pin"></i> {{ viaje.concierto.lugar }}</p>
+          <p style="color:rgba(255,255,255,0.6);font-size:0.9rem;"><i class="fa fa-calendar"></i> {{ viaje.concierto.fecha|date:"l d \d\e F, Y" }} — {{ viaje.concierto.hora|time:"H:i" }} hrs</p>
+        </div>
+
+        <div class="dv-card-2" style="background:var(--blanco);border-radius:var(--radio-lg);padding:1.5rem;box-shadow:var(--sombra);margin-bottom:1.5rem;">
+          <h3 style="margin-bottom:1.2rem;border-bottom:2px solid var(--amarillo);padding-bottom:0.5rem;">Detalles del Recorrido</h3>
+          <div style="display:grid;gap:1rem;">
+            <!-- Salida (visible en ida y vuelta / solo ida) -->
+            <div id="tramo-ida" style="display:flex;gap:1rem;align-items:center;">
+              <div style="width:40px;height:40px;background:var(--amarillo);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🚌</div>
+              <div>
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);">Salida</div>
+                <div style="font-weight:700;">{{ viaje.origen }}</div>
+                <div style="color:var(--gris-medio);font-size:0.9rem;">{{ viaje.fecha_salida|date:"d/m/Y" }}</div>
+              </div>
+            </div>
+            <div id="separador-tramos" style="border-left:3px dashed var(--amarillo);margin-left:20px;padding-left:20px;height:30px;"></div>
+            <!-- Regreso (visible en ida y vuelta / solo vuelta) -->
+            <div id="tramo-vuelta" style="display:flex;gap:1rem;align-items:center;">
+              <div style="width:40px;height:40px;background:var(--negro);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🏠</div>
+              <div>
+                <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);">Regreso</div>
+                <div style="font-weight:700;">{{ viaje.destino }}</div>
+                <div style="color:var(--gris-medio);font-size:0.9rem;">{{ viaje.fecha_regreso|date:"d/m/Y" }} a las {{ viaje.fecha_regreso|time:"H:i" }} hrs</div>
+              </div>
+            </div>
+          </div>
+          {% if viaje.descripcion %}
+          <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid #eee;font-size:0.9rem;color:var(--gris-medio);">
+            <strong>Información adicional:</strong> {{ viaje.descripcion }}
+          </div>
+          {% endif %}
+        </div>
+
+        {% if perfil %}
+        <div class="dv-card-3" style="background:var(--amarillo-light);border-radius:var(--radio-lg);padding:1.5rem;border:2px solid var(--amarillo);">
+          <h4 style="margin-bottom:1rem;"><i class="fa fa-user"></i> Tus datos de pasajero</h4>
+          <div class="dv-pasajero-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.9rem;">
+            <div><strong>Nombre:</strong> {{ user.get_full_name }}</div>
+            <div><strong>RUT:</strong> {{ perfil.rut }}</div>
+            <div><strong>Email:</strong> {{ user.email }}</div>
+            <div><strong>Teléfono:</strong> {{ perfil.telefono }}</div>
+          </div>
+          <p style="margin-top:0.8rem;font-size:0.82rem;color:var(--gris-medio);">Estos datos se usarán para tu reserva. <a href="{% url 'mi_perfil' %}">Actualizar perfil</a></p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Panel de reserva -->
+      <div class="dv-panel" style="position:sticky;top:80px;display:flex;flex-direction:row;gap:1rem;align-items:flex-start;width:100%;">
+
+        <div style="background:var(--blanco);border-radius:var(--radio-lg);box-shadow:var(--sombra-fuerte);overflow:hidden;border:2px solid var(--amarillo);flex:1;min-width:0;">
+          <div style="background:var(--negro);padding:1.2rem 1.5rem;text-align:center;">
+            <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;">Precio por pasajero</div>
+            <div style="font-family:'Bebas Neue';font-size:3rem;color:var(--amarillo);line-height:1;">$<span id="precio-display">—</span></div>
+            <div style="font-size:0.8rem;color:rgba(255,255,255,0.5);">CLP — IVA incluido</div>
+          </div>
+          <div style="padding:1.5rem;">
+            <div style="margin-bottom:1rem;">
+              <div class="cupos-bar">
+                {% if viaje.cupos_totales > 0 %}
+                <div class="cupos-fill" style="width:{% widthratio viaje.cupos_ocupados viaje.cupos_totales 100 %}%"></div>
+                {% endif %}
+              </div>
+              <div class="cupos-info">
+                <span><strong>{{ viaje.cupos_disponibles }}</strong> cupos disponibles</span>
+                <span>de {{ viaje.cupos_totales }}</span>
+              </div>
+            </div>
+
+            {% if viaje.estado == 'disponible' and viaje.cupos_disponibles > 0 %}
+              {% if user.is_authenticated %}
+                {% if perfil %}
+
+                {% if user.is_authenticated %}
+                <div style="border:1px solid #e0e0e0;border-radius:var(--radio);padding:0.8rem 1rem;margin-bottom:1rem;background:#fafafa;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+                    <span style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gris-medio);">Cupos comprados</span>
+                    <span id="fidelidad-contador" style="font-family:'Bebas Neue';font-size:1.1rem;color:var(--negro);">{{ cupos_base }}</span>
+                  </div>
+                  <div style="background:#e9ecef;border-radius:999px;height:8px;overflow:hidden;margin-bottom:0.4rem;">
+                    <div id="fidelidad-barra" style="height:100%;border-radius:999px;background:linear-gradient(90deg,var(--amarillo),#ffc200);width:0%;transition:width 0.4s;"></div>
+                  </div>
+                  <div id="fidelidad-msg" style="font-size:0.75rem;color:var(--gris-medio);text-align:center;">
+                    Próximo beneficio en cupo N°{{ proximo_hito }}: <strong>{{ proximo_beneficio }}</strong>
+                  </div>
+                </div>
+                {% endif %}
+
+                <div style="margin-bottom:1rem;">
+                  <label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:0.4rem;">Cantidad de cupos</label>
+                  <input type="number" id="cantidad-input" value="1" min="1" max="{{ viaje.cupos_disponibles }}" class="form-control" style="text-align:center;font-size:1.1rem;font-weight:700;">
+                </div>
+                <div style="background:var(--gris-claro);border-radius:var(--radio);padding:0.7rem 1rem;margin-bottom:1.2rem;display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:0.85rem;color:var(--gris-medio);">Total a pagar</span>
+                  <span id="total-precio" style="font-family:'Bebas Neue';font-size:1.6rem;color:var(--negro);">$<span id="total-numero">—</span></span>
+                </div>
+
+                <form id="form-pagar" method="POST" action="{% url 'iniciar_pago' viaje.pk %}" style="margin-bottom:0.75rem;">
+                  {% csrf_token %}
+                  <input type="hidden" name="cantidad" id="cantidad-pagar" value="1">
+                  <input type="hidden" name="tipo_pasaje" id="tipo-pagar" value="">
+                  <input type="hidden" name="horario_id" id="horario-pagar" value="">
+                  <div style="font-size:0.78rem;color:var(--gris-medio);margin-bottom:0.5rem;background:var(--gris-claro);padding:0.6rem 0.8rem;border-radius:var(--radio);">
+                    <i class="fa fa-shield-alt" style="color:var(--exito);"></i> Pago seguro con <strong>WebPay Transbank</strong>
+                  </div>
+                  <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.9rem;">
+                    <i class="fa fa-credit-card"></i> Pagar Reserva
+                  </button>
+                </form>
+
+                <form id="form-pendiente" method="POST" action="{% url 'reservar_pendiente' viaje.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="cantidad" id="cantidad-pendiente" value="1">
+                  <input type="hidden" name="tipo_pasaje" id="tipo-pendiente" value="">
+                  <input type="hidden" name="horario_id" id="horario-pendiente" value="">
+                  <button type="submit" class="btn btn-dark" style="width:100%;justify-content:center;font-size:0.95rem;padding:0.9rem;">
+                    <i class="fa fa-clock"></i> Reservar con Pago Pendiente
+                  </button>
+                </form>
+                <p style="font-size:0.75rem;color:var(--gris-medio);margin-top:0.5rem;text-align:center;">
+                  <i class="fa fa-info-circle"></i> Si no pagas, la reserva se cancelará 2 días antes del evento.
+                </p>
+
+                <script>
+                  (function(){
+                    const input    = document.getElementById('cantidad-input');
+                    const totalEl  = document.getElementById('total-numero');
+                    const hidPagar = document.getElementById('cantidad-pagar');
+                    const hidPend  = document.getElementById('cantidad-pendiente');
+                    const maxCupos  = {{ viaje.cupos_disponibles }};
+                    const cuposBase = {{ cupos_base }};
+
+                    // Precios: se inicializan al seleccionar el horario
+                    if (!window._PRECIO_IV) window._PRECIO_IV = 0;
+                    if (!window._PRECIO_IDA) window._PRECIO_IDA = 0;
+                    if (!window._PRECIO_VUELTA) window._PRECIO_VUELTA = 0;
+                    if (!window._precioBase) window._precioBase = 0;
+
+                    const fidContador = document.getElementById('fidelidad-contador');
+                    const fidBarra    = document.getElementById('fidelidad-barra');
+                    const fidMsg      = document.getElementById('fidelidad-msg');
+
+                    function formatCLP(n) { return n.toLocaleString('es-CL'); }
+
+                    function calcularTotal(cant) {
+                      const precio = window._precioBase;
+                      let total = 0;
+                      for (let i = 1; i <= cant; i++) {
+                        const cupoNum = cuposBase + i;
+                        if (cupoNum % 10 === 0)      total += 0;
+                        else if (cupoNum % 5 === 0)  total += precio * 0.5;
+                        else                         total += precio;
+                      }
+                      return Math.round(total);
+                    }
+
+                    function proximoHito(total) {
+                      const ciclo = total % 10;
+                      if (ciclo < 4) return { cupo: total + (4 - ciclo), ben: '50% descuento' };
+                      if (ciclo < 9) return { cupo: total + (9 - ciclo), ben: 'Cupo GRATIS' };
+                      return { cupo: total + (10 - ciclo), ben: '50% descuento' };
+                    }
+
+                    function mensajeDescuento(cant) {
+                      let gratis = false, mitad = false;
+                      for (let i = 1; i <= cant; i++) {
+                        const n = cuposBase + i;
+                        if (n % 10 === 0) gratis = true;
+                        else if (n % 5 === 0) mitad = true;
+                      }
+                      if (gratis) return { texto: '🎉 ¡Incluye cupo(s) GRATIS!', color: '#155724', bg: '#d4edda', border: '#a5d6a7' };
+                      if (mitad)  return { texto: '🎊 ¡Incluye cupo(s) con 50% de descuento!', color: '#856404', bg: '#fff8e1', border: '#ffe082' };
+                      return null;
+                    }
+
+                    // Expuesta globalmente para que seleccionarTipo() la llame
+                    window.actualizarPanel = function(cant) {
+                      if (!totalEl) return;
+                      totalEl.textContent = formatCLP(calcularTotal(cant));
+                      if (!fidContador) return;
+                      const proyectado = cuposBase + cant;
+                      const ciclo      = proyectado % 10;
+                      fidContador.textContent = cuposBase + ' → ' + proyectado;
+                      if (fidBarra) {
+                        const pct = Math.round((ciclo / 10) * 100);
+                        const lleno = ciclo === 0 && proyectado > 0;
+                        fidBarra.style.width = (lleno ? 100 : pct) + '%';
+                        fidBarra.style.background = (ciclo >= 9 || lleno)
+                          ? 'linear-gradient(90deg,#28a745,#20c997)'
+                          : 'linear-gradient(90deg,var(--amarillo),#ffc200)';
+                      }
+                      if (fidMsg) {
+                        const desc = mensajeDescuento(cant);
+                        if (desc) {
+                          fidMsg.innerHTML = desc.texto;
+                          fidMsg.style.cssText = `font-size:0.82rem;font-weight:700;text-align:center;padding:0.4rem 0.6rem;border-radius:var(--radio);background:${desc.bg};border:1px solid ${desc.border};color:${desc.color};`;
+                        } else {
+                          const h = proximoHito(proyectado);
+                          fidMsg.innerHTML = 'Próximo beneficio en cupo N°' + h.cupo + ': <strong>' + h.ben + '</strong>';
+                          fidMsg.style.cssText = 'font-size:0.75rem;color:var(--gris-medio);text-align:center;padding:0;background:none;border:none;';
+                        }
+                      }
+                    };
+
+                    window.actualizarPanel(1);
+
+                    input.addEventListener('input', function(){
+                      const raw = parseInt(this.value);
+                      if (isNaN(raw)) return;
+                      const cant = Math.max(1, Math.min(raw, maxCupos));
+                      if (raw !== cant) this.value = cant;
+                      hidPagar.value = cant;
+                      hidPend.value  = cant;
+                      window.actualizarPanel(cant);
+                    });
+
+                    input.addEventListener('change', function(){
+                      const cant = Math.max(1, Math.min(parseInt(this.value) || 1, maxCupos));
+                      this.value = cant;
+                      hidPagar.value = cant;
+                      hidPend.value  = cant;
+                      window.actualizarPanel(cant);
+                    });
+                  })();
+                </script>
+
+                {% else %}
+                <div class="alert alert-warning" style="font-size:0.85rem;margin-bottom:0.8rem;">
+                  Completa tu perfil antes de reservar.
+                </div>
+                <a href="{% url 'mi_perfil' %}" class="btn btn-dark" style="width:100%;justify-content:center;">Completar perfil</a>
+                {% endif %}
+              {% else %}
+              <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary" style="width:100%;justify-content:center;">
+                <i class="fa fa-sign-in-alt"></i> Ingresar para reservar
+              </a>
+              {% endif %}
+            {% elif not reserva_pendiente %}
+              <div class="alert alert-danger"><i class="fa fa-times-circle"></i> Este viaje no está disponible.</div>
+            {% endif %}
+
+            <div style="margin-top:1rem;text-align:center;">
+              <a href="https://wa.me/56912345678" target="_blank" style="font-size:0.85rem;color:var(--gris-medio);">
+                <i class="fab fa-whatsapp" style="color:#25D366;"></i> ¿Dudas? Consulta por WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {% if cupos_pagados or reserva_pendiente %}
+        <div style="display:flex;flex-direction:column;gap:1rem;min-width:190px;max-width:220px;">
+          {% if cupos_pagados %}
+          <div style="background:#d4edda;border-radius:var(--radio-lg);padding:1.2rem 1.4rem;border:2px solid #a5d6a7;box-shadow:var(--sombra);text-align:center;">
+            <div style="width:36px;height:36px;background:#28a745;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.5rem;">
+              <i class="fa fa-check" style="color:#fff;font-size:0.85rem;"></i>
+            </div>
+            <div style="font-weight:700;color:#155724;font-size:0.9rem;margin-bottom:0.4rem;">Cupos confirmados</div>
+            <div style="font-family:'Bebas Neue';font-size:2.4rem;color:#155724;line-height:1;">{{ cupos_pagados }}</div>
+            <div style="font-size:0.78rem;color:#2e7d32;">cupo{{ cupos_pagados|pluralize }} pagado{{ cupos_pagados|pluralize }}</div>
+          </div>
+          {% endif %}
+
+          {% if reserva_pendiente %}
+          <div style="background:#fff8e1;border-radius:var(--radio-lg);padding:1.2rem 1.4rem;border:2px solid #ffe082;box-shadow:var(--sombra);text-align:center;">
+            <div style="width:36px;height:36px;background:#ffc107;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.5rem;">
+              <i class="fa fa-clock" style="color:#fff;font-size:0.85rem;"></i>
+            </div>
+            <div style="font-weight:700;color:#856404;font-size:0.9rem;margin-bottom:0.4rem;">Pago pendiente</div>
+            <div style="font-family:'Bebas Neue';font-size:2.4rem;color:#856404;line-height:1;">{{ reserva_pendiente.cantidad }}</div>
+            <div style="font-size:0.78rem;color:#856404;margin-bottom:0.8rem;">cupo{{ reserva_pendiente.cantidad|pluralize }} sin pagar</div>
+            <form method="POST" action="{% url 'iniciar_pago' viaje.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="cantidad" value="{{ reserva_pendiente.cantidad }}">
+              <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;font-size:0.8rem;">
+                <i class="fa fa-credit-card"></i> Pagar $<span class="fmt-clp">{{ reserva_pendiente.monto|floatformat:0 }}</span>
+              </button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div><!-- /dv-contenido -->
+
 </section>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+  /* ── Formateo de precios ──────────────────────────────────── */
   document.querySelectorAll('.fmt-clp').forEach(function(el) {
     const n = parseInt(el.textContent.replace(/\D/g, ''), 10);
     if (!isNaN(n)) el.textContent = n.toLocaleString('es-CL');
   });
 
-  // Barra de progreso fidelidad (estado inicial con 1 cupo)
+  /* ── Barra fidelidad inicial ─────────────────────────────── */
   const barra = document.getElementById('fidelidad-barra');
   if (barra) {
     const ciclo = ({{ cupos_base }} + 1) % 10;
@@ -334,6 +579,133 @@
     barra.style.width = (ciclo === 0 ? 100 : pct) + '%';
     if (ciclo === 0 || ciclo === 9)
       barra.style.background = 'linear-gradient(90deg,#28a745,#20c997)';
+  }
+
+  /* ── Selector de horario ─────────────────────────────────── */
+  document.querySelectorAll('.horario-radio').forEach(function(chk) {
+    chk.addEventListener('change', function() {
+      const fila = this.closest('.horario-row');
+      if (fila) seleccionarHorario(fila, this.checked);
+    });
+  });
+
+  function seleccionarHorario(btn, checked) {
+    if (checked === undefined) checked = true;
+    if (checked) {
+      btn.classList.add('activo');
+    } else {
+      btn.classList.remove('activo');
+    }
+
+    // Recoger todos los horarios seleccionados
+    const seleccionados = [...document.querySelectorAll('.horario-radio:checked')]
+      .map(c => c.closest('.horario-row'));
+
+    const horarioId = btn.dataset.horarioId;
+
+    // Badge horario: listar todos los seleccionados
+    const badgeHorario = document.getElementById('badge-horario-texto');
+    if (badgeHorario) {
+      if (seleccionados.length > 0) {
+        badgeHorario.textContent = seleccionados.map(r => r.dataset.salidaTxt + ' ' + r.dataset.salida + ' hrs').join(' · ');
+      } else {
+        badgeHorario.textContent = '';
+      }
+    }
+
+    // Usar precios del último horario clickeado (o primero seleccionado)
+    const ref = seleccionados.length > 0 ? seleccionados[0] : btn;
+    window._PRECIO_IV     = parseFloat(ref.dataset.precioIv)    || 0;
+    window._PRECIO_IDA    = parseFloat(ref.dataset.precioIda)   || 0;
+    window._PRECIO_VUELTA = parseFloat(ref.dataset.precioVuelta) || 0;
+    window._precioBase    = window._PRECIO_IV;
+
+    // Resetear selección de tipo
+    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('activo'));
+    const precioEl = document.getElementById('precio-display');
+    if (precioEl) precioEl.textContent = window._PRECIO_IV.toLocaleString('es-CL');
+
+    // Propagar horario_id del primero seleccionado a los formularios
+    const primerHorarioId = seleccionados.length > 0 ? seleccionados[0].dataset.horarioId : horarioId;
+    ['horario-pagar', 'horario-pendiente'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = primerHorarioId;
+    });
+
+    // Mostrar paso 2 si hay al menos uno seleccionado, ocultar si no hay ninguno
+    const pasotipo = document.getElementById('paso-tipo');
+    if (pasotipo) {
+      if (seleccionados.length > 0) {
+        pasotipo.style.display = 'block';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            pasotipo.style.opacity = '1';
+            pasotipo.style.transform = 'translateY(0)';
+            pasotipo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        });
+      } else {
+        pasotipo.style.opacity = '0';
+        pasotipo.style.transform = 'translateY(16px)';
+        setTimeout(() => { pasotipo.style.display = 'none'; }, 350);
+      }
+    }
+  }
+
+  const TIPOS = {
+    ida_vuelta:  { label: 'Pasajes Ida y Vuelta', ida: true,  vuelta: true  },
+    solo_ida:    { label: 'Pasajes Solo Ida',     ida: true,  vuelta: false },
+    solo_vuelta: { label: 'Pasajes Solo Vuelta',  ida: false, vuelta: true  },
+  };
+
+  function seleccionarTipo(btn) {
+    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+
+    const tipo = btn.dataset.tipo;
+    const cfg  = TIPOS[tipo];
+
+    // Badge
+    document.getElementById('badge-tipo-texto').textContent = cfg.label;
+
+    // Actualizar precio base según tipo
+    if (tipo === 'solo_ida')    window._precioBase = window._PRECIO_IDA;
+    else if (tipo === 'solo_vuelta') window._precioBase = window._PRECIO_VUELTA;
+    else                             window._precioBase = window._PRECIO_IV;
+
+    // Actualizar precio unitario mostrado en el panel
+    const precioEl = document.getElementById('precio-display');
+    if (precioEl) precioEl.textContent = window._precioBase.toLocaleString('es-CL');
+
+    // Recalcular total a pagar con el nuevo precio
+    const cant = parseInt(document.getElementById('cantidad-input')?.value) || 1;
+    if (window.actualizarPanel) window.actualizarPanel(cant);
+
+    // Actualizar campos ocultos de tipo en los formularios
+    ['tipo-pagar', 'tipo-pendiente'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = tipo;
+    });
+
+    // Mostrar/ocultar tramos
+    const tramIda    = document.getElementById('tramo-ida');
+    const tramVuelta = document.getElementById('tramo-vuelta');
+    const separador  = document.getElementById('separador-tramos');
+    if (tramIda)    tramIda.style.display    = cfg.ida    ? 'flex' : 'none';
+    if (tramVuelta) tramVuelta.style.display = cfg.vuelta ? 'flex' : 'none';
+    if (separador)  separador.style.display  = (cfg.ida && cfg.vuelta) ? 'block' : 'none';
+
+    // Revelar contenido
+    const contenido = document.getElementById('dv-contenido');
+    if (!contenido.classList.contains('visible')) {
+      contenido.classList.add('visible');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          contenido.classList.add('animado');
+          contenido.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+    }
   }
 </script>
 {% endblock %}

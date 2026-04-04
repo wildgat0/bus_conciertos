@@ -18,6 +18,12 @@
 
   .mp-sidebar { animation: mp-slideLeft 0.7s ease both; animation-delay: 0.1s; opacity: 0; }
   .mp-form    { animation: mp-slideRight 0.7s ease both; animation-delay: 0.25s; opacity: 0; }
+
+  .mp-grid { display: grid; grid-template-columns: 280px 1fr; gap: 2rem; align-items: start; }
+
+  @media (max-width: 768px) {
+    .mp-grid { grid-template-columns: 1fr; }
+  }
 </style>
 {% endblock %}
 
@@ -28,18 +34,12 @@
   </div>
 </div>
 <section class="seccion" style="max-width:800px;">
-  <div style="display:grid;grid-template-columns:280px 1fr;gap:2rem;align-items:start;">
+  <div class="mp-grid">
 
     <!-- Sidebar perfil -->
     <div class="perfil-card mp-sidebar">
       <div class="perfil-banner"></div>
-      <div class="perfil-avatar">
-        {% if perfil and perfil.foto %}
-          <img src="{{ perfil.foto.url }}" alt="Foto de perfil">
-        {% else %}
-          👤
-        {% endif %}
-      </div>
+      <div class="perfil-avatar">👤</div>
       <div class="perfil-info">
         <h3 style="margin-bottom:0.2rem;">{{ user.get_full_name|default:user.username }}</h3>
         <p style="color:var(--gris-medio);font-size:0.9rem;">@{{ user.username }}</p>
@@ -61,7 +61,7 @@
     <div class="form-card mp-form" style="max-width:none;margin:0;">
       <h2 style="margin-bottom:0.25rem;">Editar Perfil</h2>
       <p class="subtitulo">Actualiza tu información personal</p>
-      <form method="POST" enctype="multipart/form-data">
+      <form method="POST">
         {% csrf_token %}
         <div class="form-grid">
           <div class="form-group">
@@ -95,10 +95,6 @@
           <div class="form-group">
             <label>Fecha de Nacimiento</label>
             {{ form.fecha_nacimiento }}
-          </div>
-          <div class="form-group" style="grid-column:1/-1;">
-            <label>Foto de Perfil</label>
-            {{ form.foto }}
           </div>
         </div>
         <div style="margin-top:1rem;">

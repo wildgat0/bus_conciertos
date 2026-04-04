@@ -18,10 +18,8 @@ class Viaje(models.Model):
     )
     origen = models.CharField(max_length=200, verbose_name='Punto de Origen')
     destino = models.CharField(max_length=200, verbose_name='Destino')
-    fecha_salida = models.DateTimeField(verbose_name='Fecha y Hora de Salida')
-    fecha_regreso = models.DateTimeField(verbose_name='Fecha y Hora de Regreso')
+    fecha_salida = models.DateField(verbose_name='Fecha de Salida')
     cupos_totales = models.PositiveIntegerField(verbose_name='Cupos Totales')
-    precio = models.DecimalField(max_digits=10, decimal_places=0, verbose_name='Precio por Pasajero (CLP)')
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='disponible')
     descripcion = models.TextField(blank=True, verbose_name='Descripción adicional')
     creado_en = models.DateTimeField(auto_now_add=True)
@@ -32,7 +30,8 @@ class Viaje(models.Model):
         ordering = ['fecha_salida']
 
     def __str__(self):
-        return f'Viaje a {self.concierto.nombre} - {self.fecha_salida.strftime("%d/%m/%Y %H:%M")}'
+        fecha = self.fecha_salida.strftime("%d/%m/%Y") if self.fecha_salida else 'sin fecha'
+        return f'Viaje a {self.concierto.nombre} - {fecha}'
 
     @property
     def cupos_disponibles(self):
@@ -52,6 +51,24 @@ class Viaje(models.Model):
         return total
 
 
+class HorarioViaje(models.Model):
+    viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='horarios', verbose_name='Viaje')
+    salida = models.CharField(max_length=200, verbose_name='Salida')
+    hora_salida = models.TimeField(verbose_name='Hora de Salida')
+    precio_ida = models.DecimalField(max_digits=10, decimal_places=0, default=0, verbose_name='Precio Solo Ida (CLP)')
+    precio_vuelta = models.DecimalField(max_digits=10, decimal_places=0, default=0, verbose_name='Precio Solo Vuelta (CLP)')
+    precio = models.DecimalField(max_digits=10, decimal_places=0, default=0, verbose_name='Precio Ida y Vuelta (CLP)')
+
+    class Meta:
+        verbose_name = 'Horario'
+        verbose_name_plural = 'Horarios'
+        ordering = ['hora_salida']
+
+    def __str__(self):
+        return f'{self.salida} | {self.hora_salida.strftime("%H:%M")}'
+
+
+
 class Reserva(models.Model):
     ESTADO_CHOICES = [
         ('pendiente', 'Pendiente de Pago'),
@@ -59,9 +76,17 @@ class Reserva(models.Model):
         ('cancelado', 'Cancelado'),
     ]
 
+    TIPO_PASAJE_CHOICES = [
+        ('ida_vuelta', 'Ida y Vuelta'),
+        ('solo_ida',   'Solo Ida'),
+        ('solo_vuelta','Solo Vuelta'),
+    ]
+
     viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, verbose_name='Viaje')
+    horario = models.ForeignKey(HorarioViaje, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservas', verbose_name='Horario')
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Pasajero')
     cantidad = models.PositiveIntegerField(default=1, verbose_name='Cantidad de cupos')
+    tipo_pasaje = models.CharField(max_length=20, choices=TIPO_PASAJE_CHOICES, default='ida_vuelta', verbose_name='Tipo de pasaje')
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
     fecha_reserva = models.DateTimeField(auto_now_add=True)
     token_webpay = models.CharField(max_length=255, blank=True, null=True)

@@ -8,7 +8,25 @@
       "Bash(schtasks /create /tn \"BusConciertos_LimpiarReservas\" /tr \"C:\\\\Users\\\\Pepperoni\\\\Desktop\\\\bus_conciertos\\\\limpiar_reservas.bat\" /sc daily /st 02:00 /f)",
       "Bash(cmd /c \"schtasks /create /tn \"\"BusConciertos_LimpiarReservas\"\" /tr \"\"C:\\\\Users\\\\Pepperoni\\\\Desktop\\\\bus_conciertos\\\\limpiar_reservas.bat\"\" /sc daily /st 02:00 /f\")",
       "Bash(powershell -Command \"$action = New-ScheduledTaskAction -Execute ''C:\\\\Users\\\\Pepperoni\\\\Desktop\\\\bus_conciertos\\\\limpiar_reservas.bat''; $trigger = New-ScheduledTaskTrigger -Daily -At ''02:00''; Register-ScheduledTask -TaskName ''BusConciertos_LimpiarReservas'' -Action $action -Trigger $trigger -Force\")",
-      "Bash(powershell -File:*)"
+      "Bash(powershell -File:*)",
+      "Bash(python manage.py makemigrations usuarios --name=\"remove_foto_perfil\")",
+      "Bash(python manage.py migrate usuarios)",
+      "Bash(python manage.py makemigrations reservas --name precio_ida_vuelta)",
+      "Bash(python manage.py migrate)",
+      "Bash(python manage.py check)",
+      "Bash(python manage.py runserver)",
+      "Bash(python -c ':*)",
+      "Bash(python manage.py makemigrations reservas --name tipo_pasaje_reserva)",
+      "Bash(python manage.py makemigrations reservas --name horario_viaje)",
+      "Bash(python manage.py makemigrations reservas --name remove_fecha_regreso_horario)",
+      "Bash(python manage.py makemigrations reservas --name viaje_fecha_salida_datefield)",
+      "Bash(python manage.py makemigrations reservas --name precios_a_horario)",
+      "Bash(python manage.py makemigrations reservas --name horario_hora_salida)",
+      "Bash(python manage.py makemigrations reservas --name remove_fecha_regreso_viaje)",
+      "Bash(python manage.py makemigrations reservas --name horario_salida_sin_destino)",
+      "Bash(python manage.py makemigrations reservas --name remove_cupos_horario)",
+      "Bash(python manage.py shell -c \"from reservas.models import Reserva; count = Reserva.objects.count\\(\\); Reserva.objects.all\\(\\).delete\\(\\); print\\(f'Eliminados {count} registros.'\\)\")",
+      "Bash(python manage.py makemigrations core --name remove_hora_concierto)"
     ]
   }
 }

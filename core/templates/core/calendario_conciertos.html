@@ -21,7 +21,6 @@
         <thead>
           <tr>
             <th>Fecha</th>
-            <th>Hora</th>
             <th>Concierto / Artista</th>
             <th>Lugar</th>
             <th>Región</th>
@@ -33,7 +32,6 @@
           {% for c in proximos %}
           <tr>
             <td><strong>{{ c.fecha|date:"d/m/Y" }}</strong></td>
-            <td>{{ c.hora|time:"H:i" }} hrs</td>
             <td>
               <strong>{{ c.artista }}</strong><br>
               <span style="font-size:0.8rem;color:var(--gris-medio);">{{ c.nombre }}</span>

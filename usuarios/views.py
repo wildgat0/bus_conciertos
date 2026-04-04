@@ -50,7 +50,7 @@ def logout_view(request):
 def mi_perfil(request):
     perfil = getattr(request.user, 'perfilusuario', None)
     if request.method == 'POST':
-        form = EditarPerfilForm(request.POST, request.FILES, instance=perfil)
+        form = EditarPerfilForm(request.POST, instance=perfil)
         if form.is_valid():
             perfil_obj = form.save(commit=False)
             perfil_obj.usuario = request.user

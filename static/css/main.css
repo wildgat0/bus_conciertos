@@ -24,6 +24,16 @@
   --radio-lg:       16px;
 }
 
+/* ─── SCROLLBAR PERSONALIZADO ──────────────────────────────── */
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: var(--amarillo) var(--gris-oscuro); }
+
+/* Chrome / Edge / Safari */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--gris-oscuro); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--amarillo); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--amarillo-hover); }
+
 /* ─── RESET & BASE ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

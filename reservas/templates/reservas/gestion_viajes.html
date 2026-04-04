@@ -22,7 +22,6 @@
             <th>Ruta</th>
             <th>Salida</th>
             <th>Cupos</th>
-            <th>Precio</th>
             <th>Estado</th>
             <th>Acciones</th>
           </tr>
@@ -35,18 +34,18 @@
               <span style="font-size:0.8rem;color:var(--gris-medio);">{{ viaje.concierto.nombre }}</span>
             </td>
             <td>{{ viaje.origen }}<br><span style="color:var(--gris-medio);font-size:0.8rem;">→ {{ viaje.destino }}</span></td>
-            <td>{{ viaje.fecha_salida|date:"d/m/Y" }}<br><span style="font-size:0.85rem;">{{ viaje.fecha_salida|time:"H:i" }} hrs</span></td>
+            <td>{{ viaje.fecha_salida|date:"d/m/Y" }}</td>
             <td>
               <strong>{{ viaje.cupos_disponibles }}</strong>/{{ viaje.cupos_totales }}
               <div class="cupos-bar" style="margin-top:4px;width:80px;">
                 <div class="cupos-fill" style="width:{% if viaje.cupos_totales %}{% widthratio viaje.cupos_ocupados viaje.cupos_totales 100 %}{% else %}0{% endif %}%"></div>
               </div>
             </td>
-            <td>$<span class="fmt-clp">{{ viaje.precio|floatformat:0 }}</span></td>
             <td><span class="badge-estado badge-{{ viaje.estado }}">{{ viaje.get_estado_display }}</span></td>
             <td>
               <div class="tabla-acciones">
                 <a href="{% url 'pasajeros_viaje' viaje.pk %}" class="btn btn-dark btn-sm" title="Ver pasajeros"><i class="fa fa-users"></i></a>
+                <a href="{% url 'horarios_viaje' viaje.pk %}" class="btn btn-outline btn-sm" title="Horarios"><i class="fa fa-clock"></i></a>
                 <a href="{% url 'editar_viaje' viaje.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
                 <a href="{% url 'eliminar_viaje' viaje.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
               </div>
@@ -99,6 +98,7 @@
             <td>
               <div class="tabla-acciones">
                 <a href="{% url 'pasajeros_viaje' viaje.pk %}" class="btn btn-dark btn-sm" title="Ver pasajeros"><i class="fa fa-users"></i></a>
+                <a href="{% url 'horarios_viaje' viaje.pk %}" class="btn btn-outline btn-sm" title="Horarios"><i class="fa fa-clock"></i></a>
                 <a href="{% url 'editar_viaje' viaje.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
                 <a href="{% url 'eliminar_viaje' viaje.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
               </div>
