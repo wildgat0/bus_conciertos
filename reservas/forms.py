@@ -15,12 +15,13 @@ class ViajeForm(forms.ModelForm):
 
     class Meta:
         model = Viaje
-        fields = ['origen', 'destino', 'fecha_salida', 'cupos_totales', 'estado']
+        fields = ['origen', 'destino', 'fecha_salida', 'cupos_totales', 'precio_vuelta', 'estado']
         widgets = {
             'origen': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Terminal Alameda, Santiago'}),
             'destino': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Movistar Arena'}),
             'fecha_salida': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'cupos_totales': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'precio_vuelta': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ej: 15000'}),
             'estado': forms.Select(attrs={'class': 'form-select'}),
         }
 
@@ -36,12 +37,11 @@ class ViajeForm(forms.ModelForm):
 class HorarioViajeForm(forms.ModelForm):
     class Meta:
         model = HorarioViaje
-        fields = ['salida', 'hora_salida', 'precio_ida', 'precio_vuelta', 'precio']
+        fields = ['salida', 'hora_salida', 'precio_ida', 'precio']
         widgets = {
             'salida': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Terminal Alameda, Santiago'}),
             'hora_salida': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
             'precio_ida': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ej: 15000'}),
-            'precio_vuelta': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ej: 15000'}),
             'precio': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ej: 25000'}),
         }
 

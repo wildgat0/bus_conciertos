@@ -97,16 +97,12 @@
             {{ form.hora_salida }}
           </div>
           <div style="border-top:1px solid #eee;margin:1rem 0;padding-top:1rem;">
-            <p style="font-size:0.78rem;color:var(--gris-medio);margin-bottom:0.8rem;"><i class="fa fa-info-circle" style="color:var(--amarillo);"></i> Ingresa los tres precios de forma independiente.</p>
+            <p style="font-size:0.78rem;color:var(--gris-medio);margin-bottom:0.8rem;"><i class="fa fa-info-circle" style="color:var(--amarillo);"></i> Ingresa los precios de forma independiente.</p>
             <div class="form-group">
               <label><i class="fa fa-arrow-right" style="color:var(--amarillo);font-size:0.8rem;"></i> Precio Solo Ida (CLP)</label>
               {{ form.precio_ida }}
             </div>
-            <div class="form-group">
-              <label><i class="fa fa-arrow-left" style="color:var(--amarillo);font-size:0.8rem;"></i> Precio Solo Vuelta (CLP)</label>
-              {{ form.precio_vuelta }}
-            </div>
-            <div class="form-group">
+<div class="form-group">
               <label><i class="fa fa-exchange-alt" style="color:var(--amarillo);font-size:0.8rem;"></i> Precio Ida y Vuelta (CLP)</label>
               {{ form.precio }}
             </div>

@@ -20,6 +20,7 @@ class Viaje(models.Model):
     destino = models.CharField(max_length=200, verbose_name='Destino')
     fecha_salida = models.DateField(verbose_name='Fecha de Salida')
     cupos_totales = models.PositiveIntegerField(verbose_name='Cupos Totales')
+    precio_vuelta = models.DecimalField(max_digits=10, decimal_places=0, default=0, verbose_name='Precio Solo Vuelta (CLP)')
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='disponible')
     descripcion = models.TextField(blank=True, verbose_name='Descripción adicional')
     creado_en = models.DateTimeField(auto_now_add=True)

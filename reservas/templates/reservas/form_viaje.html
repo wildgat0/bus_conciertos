@@ -53,6 +53,11 @@
           {{ form.cupos_totales }}
         </div>
         <div class="form-group">
+          <label>Precio Solo Vuelta (CLP)</label>
+          {{ form.precio_vuelta }}
+          {% if form.precio_vuelta.errors %}<span style="color:var(--peligro);font-size:0.82rem;">{{ form.precio_vuelta.errors.0 }}</span>{% endif %}
+        </div>
+        <div class="form-group">
           <label>Estado</label>
           {{ form.estado }}
         </div>

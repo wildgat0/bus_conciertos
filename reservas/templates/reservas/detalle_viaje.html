@@ -173,11 +173,48 @@
 
 <section class="seccion" style="max-width:1100px;">
 
-  <!-- ── PASO 1: Selección de horario ────────────────────────── -->
-  {% if horarios %}
-  <div style="margin-bottom:1.5rem;">
+  <!-- ── PASO 1: Selección de tipo de pasaje ──────────────────── -->
+  <div id="paso-tipo" style="margin-bottom:1.5rem;">
     <h2 style="font-size:1.4rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.4rem;">
-      <i class="fa fa-clock" style="color:var(--amarillo);"></i> Selecciona un horario
+      <i class="fa fa-ticket-alt" style="color:var(--amarillo);"></i> Selecciona el tipo de pasaje
+    </h2>
+    <p style="color:var(--gris-medio);font-size:0.9rem;margin-bottom:1.5rem;">
+      Elige una opción para ver los detalles y precio del viaje.
+    </p>
+    <div class="tipo-selector">
+
+      <button class="tipo-btn" data-tipo="ida_vuelta" onclick="seleccionarTipo(this)">
+        <span class="tipo-check"><i class="fa fa-check"></i></span>
+        <span class="tipo-icono">🔄</span>
+        <span class="tipo-label">Ida y Vuelta</span>
+        <span class="tipo-desc">Incluye salida al concierto<br>y regreso a origen</span>
+      </button>
+
+      <button class="tipo-btn" data-tipo="solo_ida" onclick="seleccionarTipo(this)">
+        <span class="tipo-check"><i class="fa fa-check"></i></span>
+        <span class="tipo-icono">➡️</span>
+        <span class="tipo-label">Solo Ida</span>
+        <span class="tipo-desc">Solo el viaje de salida<br>al concierto</span>
+      </button>
+
+      <button class="tipo-btn" data-tipo="solo_vuelta" onclick="seleccionarTipo(this)">
+        <span class="tipo-check"><i class="fa fa-check"></i></span>
+        <span class="tipo-icono">⬅️</span>
+        <span class="tipo-label">Solo Vuelta</span>
+        <span class="tipo-desc">Solo el regreso<br>desde el concierto</span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ── PASO 2: Selección de horario (oculto hasta elegir tipo) ── -->
+  {% if horarios %}
+  <div id="paso-horario" style="display:none;opacity:0;transform:translateY(16px);transition:opacity 0.35s,transform 0.35s;margin-bottom:1.5rem;">
+    <div class="tipo-seleccionado-badge" id="badge-tipo-en-horario" style="margin-bottom:1rem;">
+      <i class="fa fa-ticket-alt"></i> <span id="badge-tipo-en-horario-texto"></span>
+    </div>
+    <h2 style="font-size:1.4rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.4rem;">
+      <i class="fa fa-clock" style="color:var(--amarillo);"></i> Selecciona un horario de recogida
     </h2>
     <p style="color:var(--gris-medio);font-size:0.9rem;margin-bottom:1.5rem;">
       Elige el horario de tu preferencia para continuar.
@@ -199,7 +236,6 @@
              data-precio-iv="{{ h.precio|floatformat:0 }}"
              data-precio-ida="{{ h.precio_ida|floatformat:0 }}"
              data-precio-vuelta="{{ h.precio_vuelta|floatformat:0 }}"
-             onclick="{% if h.cupos_disponibles > 0 %}seleccionarHorario(this){% endif %}"
              style="display:flex;align-items:center;gap:0.75rem;padding:0.45rem 0.8rem;border-top:1px solid #eee;cursor:{% if h.cupos_disponibles > 0 %}pointer{% else %}not-allowed{% endif %};">
           <input type="checkbox" name="horario_radio" class="horario-radio" value="{{ h.pk }}"
                  style="accent-color:var(--amarillo);width:18px;height:18px;flex-shrink:0;"
@@ -215,47 +251,6 @@
     </div>
   </div>
   {% endif %}
-
-  <!-- ── PASO 2: Selección de tipo de pasaje (oculto hasta elegir horario) ── -->
-  <div id="paso-tipo" {% if horarios %}style="display:none;opacity:0;transform:translateY(16px);transition:opacity 0.35s,transform 0.35s;"{% endif %}>
-    <div style="margin-bottom:1.5rem;">
-      {% if horarios %}
-      <div class="tipo-seleccionado-badge" id="badge-horario" style="margin-bottom:1rem;">
-        <i class="fa fa-clock"></i> <span id="badge-horario-texto"></span>
-      </div>
-      {% endif %}
-      <h2 style="font-size:1.4rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.4rem;">
-        <i class="fa fa-ticket-alt" style="color:var(--amarillo);"></i> Selecciona el tipo de pasaje
-      </h2>
-      <p style="color:var(--gris-medio);font-size:0.9rem;margin-bottom:1.5rem;">
-        Elige una opción para ver los detalles y precio del viaje.
-      </p>
-      <div class="tipo-selector">
-
-        <button class="tipo-btn" data-tipo="ida_vuelta" onclick="seleccionarTipo(this)">
-          <span class="tipo-check"><i class="fa fa-check"></i></span>
-          <span class="tipo-icono">🔄</span>
-          <span class="tipo-label">Ida y Vuelta</span>
-          <span class="tipo-desc">Incluye salida al concierto<br>y regreso a origen</span>
-        </button>
-
-        <button class="tipo-btn" data-tipo="solo_ida" onclick="seleccionarTipo(this)">
-          <span class="tipo-check"><i class="fa fa-check"></i></span>
-          <span class="tipo-icono">➡️</span>
-          <span class="tipo-label">Solo Ida</span>
-          <span class="tipo-desc">Solo el viaje de salida<br>al concierto</span>
-        </button>
-
-        <button class="tipo-btn" data-tipo="solo_vuelta" onclick="seleccionarTipo(this)">
-          <span class="tipo-check"><i class="fa fa-check"></i></span>
-          <span class="tipo-icono">⬅️</span>
-          <span class="tipo-label">Solo Vuelta</span>
-          <span class="tipo-desc">Solo el regreso<br>desde el concierto</span>
-        </button>
-
-      </div>
-    </div>
-  </div>
 
   <!-- ── PASO 3: Detalle del viaje (oculto hasta selección de tipo) ──── -->
   <div id="dv-contenido">
@@ -411,6 +406,8 @@
                     if (!window._PRECIO_IDA) window._PRECIO_IDA = 0;
                     if (!window._PRECIO_VUELTA) window._PRECIO_VUELTA = 0;
                     if (!window._precioBase) window._precioBase = 0;
+                    // Precio Solo Vuelta definido en el viaje (sin horario)
+                    window._PRECIO_SOLO_VUELTA_VIAJE = {{ viaje.precio_vuelta|default:0 }};
 
                     const fidContador = document.getElementById('fidelidad-contador');
                     const fidBarra    = document.getElementById('fidelidad-barra');
@@ -461,7 +458,7 @@
                         const pct = Math.round((ciclo / 10) * 100);
                         const lleno = ciclo === 0 && proyectado > 0;
                         fidBarra.style.width = (lleno ? 100 : pct) + '%';
-                        fidBarra.style.background = (ciclo >= 9 || lleno)
+                        fidBarra.style.background = lleno
                           ? 'linear-gradient(90deg,#28a745,#20c997)'
                           : 'linear-gradient(90deg,var(--amarillo),#ffc200)';
                       }
@@ -478,7 +475,7 @@
                       }
                     };
 
-                    window.actualizarPanel(1);
+                    // No llamar actualizarPanel al inicio: el precio depende del tipo/horario elegido
 
                     input.addEventListener('input', function(){
                       const raw = parseInt(this.value);
@@ -582,72 +579,71 @@
   }
 
   /* ── Selector de horario ─────────────────────────────────── */
-  document.querySelectorAll('.horario-radio').forEach(function(chk) {
-    chk.addEventListener('change', function() {
-      const fila = this.closest('.horario-row');
-      if (fila) seleccionarHorario(fila, this.checked);
+  document.querySelectorAll('.horario-row').forEach(function(fila) {
+    fila.addEventListener('click', function(e) {
+      const chk = fila.querySelector('.horario-radio');
+      if (!chk || chk.disabled) return;
+      if (e.target !== chk) {
+        chk.checked = !chk.checked;
+      }
+      seleccionarHorario(fila, chk.checked);
     });
   });
 
   function seleccionarHorario(btn, checked) {
-    if (checked === undefined) checked = true;
     if (checked) {
       btn.classList.add('activo');
     } else {
       btn.classList.remove('activo');
     }
 
-    // Recoger todos los horarios seleccionados
     const seleccionados = [...document.querySelectorAll('.horario-radio:checked')]
       .map(c => c.closest('.horario-row'));
 
     const horarioId = btn.dataset.horarioId;
 
-    // Badge horario: listar todos los seleccionados
-    const badgeHorario = document.getElementById('badge-horario-texto');
-    if (badgeHorario) {
-      if (seleccionados.length > 0) {
-        badgeHorario.textContent = seleccionados.map(r => r.dataset.salidaTxt + ' ' + r.dataset.salida + ' hrs').join(' · ');
-      } else {
-        badgeHorario.textContent = '';
-      }
-    }
-
-    // Usar precios del último horario clickeado (o primero seleccionado)
+    // Precios del primer horario seleccionado
     const ref = seleccionados.length > 0 ? seleccionados[0] : btn;
     window._PRECIO_IV     = parseFloat(ref.dataset.precioIv)    || 0;
     window._PRECIO_IDA    = parseFloat(ref.dataset.precioIda)   || 0;
     window._PRECIO_VUELTA = parseFloat(ref.dataset.precioVuelta) || 0;
-    window._precioBase    = window._PRECIO_IV;
 
-    // Resetear selección de tipo
-    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('activo'));
+    // Aplicar precio según tipo ya seleccionado
+    const tipo = window._TIPO || 'ida_vuelta';
+    if (tipo === 'solo_ida')         window._precioBase = window._PRECIO_IDA;
+    else if (tipo === 'solo_vuelta') window._precioBase = window._PRECIO_VUELTA;
+    else                             window._precioBase = window._PRECIO_IV;
+
     const precioEl = document.getElementById('precio-display');
-    if (precioEl) precioEl.textContent = window._PRECIO_IV.toLocaleString('es-CL');
+    if (precioEl) precioEl.textContent = window._precioBase.toLocaleString('es-CL');
+    const cantActual = parseInt(document.getElementById('cantidad-input')?.value) || 1;
+    if (window.actualizarPanel) window.actualizarPanel(cantActual);
 
-    // Propagar horario_id del primero seleccionado a los formularios
+    // Propagar horario_id a los formularios
     const primerHorarioId = seleccionados.length > 0 ? seleccionados[0].dataset.horarioId : horarioId;
     ['horario-pagar', 'horario-pendiente'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = primerHorarioId;
     });
 
-    // Mostrar paso 2 si hay al menos uno seleccionado, ocultar si no hay ninguno
-    const pasotipo = document.getElementById('paso-tipo');
-    if (pasotipo) {
+    // Mostrar dv-contenido si hay al menos un horario seleccionado
+    const contenido = document.getElementById('dv-contenido');
+    if (contenido) {
       if (seleccionados.length > 0) {
-        pasotipo.style.display = 'block';
-        requestAnimationFrame(() => {
+        if (!contenido.classList.contains('visible')) {
+          contenido.classList.add('visible');
           requestAnimationFrame(() => {
-            pasotipo.style.opacity = '1';
-            pasotipo.style.transform = 'translateY(0)';
-            pasotipo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            requestAnimationFrame(() => {
+              contenido.classList.add('animado');
+              contenido.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
           });
-        });
+        } else {
+          const cant = parseInt(document.getElementById('cantidad-input')?.value) || 1;
+          if (window.actualizarPanel) window.actualizarPanel(cant);
+        }
       } else {
-        pasotipo.style.opacity = '0';
-        pasotipo.style.transform = 'translateY(16px)';
-        setTimeout(() => { pasotipo.style.display = 'none'; }, 350);
+        contenido.classList.remove('visible', 'animado');
       }
     }
   }
@@ -664,28 +660,15 @@
 
     const tipo = btn.dataset.tipo;
     const cfg  = TIPOS[tipo];
+    window._TIPO = tipo;
 
-    // Badge
-    document.getElementById('badge-tipo-texto').textContent = cfg.label;
+    // Badge en dv-contenido
+    const badgeTipoTexto = document.getElementById('badge-tipo-texto');
+    if (badgeTipoTexto) badgeTipoTexto.textContent = cfg.label;
 
-    // Actualizar precio base según tipo
-    if (tipo === 'solo_ida')    window._precioBase = window._PRECIO_IDA;
-    else if (tipo === 'solo_vuelta') window._precioBase = window._PRECIO_VUELTA;
-    else                             window._precioBase = window._PRECIO_IV;
-
-    // Actualizar precio unitario mostrado en el panel
-    const precioEl = document.getElementById('precio-display');
-    if (precioEl) precioEl.textContent = window._precioBase.toLocaleString('es-CL');
-
-    // Recalcular total a pagar con el nuevo precio
-    const cant = parseInt(document.getElementById('cantidad-input')?.value) || 1;
-    if (window.actualizarPanel) window.actualizarPanel(cant);
-
-    // Actualizar campos ocultos de tipo en los formularios
-    ['tipo-pagar', 'tipo-pendiente'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = tipo;
-    });
+    // Badge en la sección de horario
+    const badgeTipoEnHorario = document.getElementById('badge-tipo-en-horario-texto');
+    if (badgeTipoEnHorario) badgeTipoEnHorario.textContent = cfg.label;
 
     // Mostrar/ocultar tramos
     const tramIda    = document.getElementById('tramo-ida');
@@ -695,17 +678,73 @@
     if (tramVuelta) tramVuelta.style.display = cfg.vuelta ? 'flex' : 'none';
     if (separador)  separador.style.display  = (cfg.ida && cfg.vuelta) ? 'block' : 'none';
 
-    // Revelar contenido
-    const contenido = document.getElementById('dv-contenido');
-    if (!contenido.classList.contains('visible')) {
-      contenido.classList.add('visible');
-      requestAnimationFrame(() => {
+    // Actualizar campos ocultos de tipo
+    ['tipo-pagar', 'tipo-pendiente'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = tipo;
+    });
+
+    // Si no hay horarios, revelar dv-contenido directamente
+    const pasoHorario = document.getElementById('paso-horario');
+    if (!pasoHorario) {
+      const contenido = document.getElementById('dv-contenido');
+      if (contenido && !contenido.classList.contains('visible')) {
+        contenido.classList.add('visible');
         requestAnimationFrame(() => {
-          contenido.classList.add('animado');
-          contenido.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          requestAnimationFrame(() => {
+            contenido.classList.add('animado');
+            contenido.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
         });
-      });
+      }
+      return;
     }
+
+    // Solo Vuelta: no necesita horario de recogida, ir directo al detalle
+    if (tipo === 'solo_vuelta') {
+      document.querySelectorAll('.horario-radio:checked').forEach(chk => {
+        chk.checked = false;
+        chk.closest('.horario-row')?.classList.remove('activo');
+      });
+      pasoHorario.style.opacity = '0';
+      pasoHorario.style.transform = 'translateY(16px)';
+      setTimeout(() => { pasoHorario.style.display = 'none'; }, 350);
+
+      // Usar precio solo vuelta definido en el viaje
+      window._precioBase = window._PRECIO_SOLO_VUELTA_VIAJE || 0;
+      const precioEl = document.getElementById('precio-display');
+      if (precioEl) precioEl.textContent = window._precioBase.toLocaleString('es-CL');
+      const cant = parseInt(document.getElementById('cantidad-input')?.value) || 1;
+      if (window.actualizarPanel) window.actualizarPanel(cant);
+
+      const contenido = document.getElementById('dv-contenido');
+      if (contenido && !contenido.classList.contains('visible')) {
+        contenido.classList.add('visible');
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            contenido.classList.add('animado');
+            contenido.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        });
+      }
+      return;
+    }
+
+    // Hay horarios: resetear selecciones previas y mostrar paso-horario
+    document.querySelectorAll('.horario-radio:checked').forEach(chk => {
+      chk.checked = false;
+      chk.closest('.horario-row')?.classList.remove('activo');
+    });
+    document.getElementById('dv-contenido')?.classList.remove('visible', 'animado');
+
+    pasoHorario.style.display = 'block';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        pasoHorario.style.opacity = '1';
+        pasoHorario.style.transform = 'translateY(0)';
+        pasoHorario.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
   }
 </script>
 {% endblock %}
