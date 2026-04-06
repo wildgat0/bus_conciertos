@@ -111,6 +111,7 @@
           <span><i class="fa fa-bus" style="color:var(--amarillo);"></i> {{ r.viaje.origen }} → {{ r.viaje.destino }}</span>
           <span><i class="fa fa-calendar" style="color:var(--amarillo);"></i> {{ r.viaje.fecha_salida|date:"d/m/Y" }}</span>
           <span><i class="fa fa-users" style="color:var(--amarillo);"></i> {{ r.cantidad }} cupo{{ r.cantidad|pluralize }}</span>
+          <span><i class="fa fa-ticket-alt" style="color:var(--amarillo);"></i> {{ r.get_tipo_pasaje_display }}</span>
           <span><i class="fa fa-hashtag" style="color:var(--amarillo);"></i> {{ r.orden_compra }}</span>
           <span><i class="fa fa-dollar-sign" style="color:var(--amarillo);"></i> <span class="fmt-clp">{{ r.monto|floatformat:0 }}</span> CLP</span>
         </div>

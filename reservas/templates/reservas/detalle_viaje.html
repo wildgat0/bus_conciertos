@@ -342,7 +342,7 @@
               {% if user.is_authenticated %}
                 {% if perfil %}
 
-                {% if user.is_authenticated %}
+                <!-- Fidelidad -->
                 <div style="border:1px solid #e0e0e0;border-radius:var(--radio);padding:0.8rem 1rem;margin-bottom:1rem;background:#fafafa;">
                   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
                     <span style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gris-medio);">Cupos comprados</span>
@@ -355,144 +355,289 @@
                     Próximo beneficio en cupo N°{{ proximo_hito }}: <strong>{{ proximo_beneficio }}</strong>
                   </div>
                 </div>
-                {% endif %}
 
+                <!-- Selector de cantidad y botón agregar al carrito -->
                 <div style="margin-bottom:1rem;">
                   <label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:0.4rem;">Cantidad de cupos</label>
                   <input type="number" id="cantidad-input" value="1" min="1" max="{{ viaje.cupos_disponibles }}" class="form-control" style="text-align:center;font-size:1.1rem;font-weight:700;">
-                </div>
-                <div style="background:var(--gris-claro);border-radius:var(--radio);padding:0.7rem 1rem;margin-bottom:1.2rem;display:flex;justify-content:space-between;align-items:center;">
-                  <span style="font-size:0.85rem;color:var(--gris-medio);">Total a pagar</span>
-                  <span id="total-precio" style="font-family:'Bebas Neue';font-size:1.6rem;color:var(--negro);">$<span id="total-numero">—</span></span>
+                  <div id="total-momentaneo" style="display:none;margin-top:0.5rem;background:var(--gris-claro);border-radius:var(--radio);padding:0.5rem 0.8rem;justify-content:space-between;align-items:center;">
+                    <span style="font-size:0.82rem;color:var(--gris-medio);">Subtotal este ítem</span>
+                    <span style="font-family:'Bebas Neue';font-size:1.3rem;color:var(--negro);">$<span id="total-momentaneo-numero">0</span></span>
+                  </div>
                 </div>
 
-                <form id="form-pagar" method="POST" action="{% url 'iniciar_pago' viaje.pk %}" style="margin-bottom:0.75rem;">
+                <button type="button" id="btn-agregar-carrito" onclick="agregarAlCarrito()" class="btn btn-dark" style="width:100%;justify-content:center;margin-bottom:1rem;">
+                  <i class="fa fa-plus"></i> Agregar al carrito
+                </button>
+
+                <!-- Carrito -->
+                <div id="carrito-contenedor" style="display:none;margin-bottom:1rem;">
+                  <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gris-medio);margin-bottom:0.5rem;">Carrito</div>
+                  <div id="carrito-lista" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
+                  <div style="border-top:2px solid var(--amarillo);margin-top:0.7rem;padding-top:0.7rem;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:0.85rem;color:var(--gris-medio);">Total a pagar</span>
+                    <span style="font-family:'Bebas Neue';font-size:1.6rem;color:var(--negro);">$<span id="total-numero">0</span></span>
+                  </div>
+                </div>
+
+                <form id="form-pagar" method="POST" action="{% url 'iniciar_pago' viaje.pk %}" style="margin-bottom:0.75rem;display:none;">
                   {% csrf_token %}
-                  <input type="hidden" name="cantidad" id="cantidad-pagar" value="1">
-                  <input type="hidden" name="tipo_pasaje" id="tipo-pagar" value="">
-                  <input type="hidden" name="horario_id" id="horario-pagar" value="">
+                  <input type="hidden" name="carrito_items" id="carrito-items-pagar" value="[]">
                   <div style="font-size:0.78rem;color:var(--gris-medio);margin-bottom:0.5rem;background:var(--gris-claro);padding:0.6rem 0.8rem;border-radius:var(--radio);">
                     <i class="fa fa-shield-alt" style="color:var(--exito);"></i> Pago seguro con <strong>WebPay Transbank</strong>
                   </div>
-                  <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.9rem;">
+                  <button type="button" id="btn-pagar" class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.9rem;">
                     <i class="fa fa-credit-card"></i> Pagar Reserva
                   </button>
                 </form>
 
-                <form id="form-pendiente" method="POST" action="{% url 'reservar_pendiente' viaje.pk %}">
+                <form id="form-pendiente" method="POST" action="{% url 'reservar_pendiente' viaje.pk %}" style="display:none;">
                   {% csrf_token %}
-                  <input type="hidden" name="cantidad" id="cantidad-pendiente" value="1">
-                  <input type="hidden" name="tipo_pasaje" id="tipo-pendiente" value="">
-                  <input type="hidden" name="horario_id" id="horario-pendiente" value="">
-                  <button type="submit" class="btn btn-dark" style="width:100%;justify-content:center;font-size:0.95rem;padding:0.9rem;">
+                  <input type="hidden" name="carrito_items" id="carrito-items-pendiente" value="[]">
+                  <button type="button" id="btn-pendiente" class="btn btn-dark" style="width:100%;justify-content:center;font-size:0.95rem;padding:0.9rem;">
                     <i class="fa fa-clock"></i> Reservar con Pago Pendiente
                   </button>
                 </form>
-                <p style="font-size:0.75rem;color:var(--gris-medio);margin-top:0.5rem;text-align:center;">
+                <p id="nota-pendiente" style="font-size:0.75rem;color:var(--gris-medio);margin-top:0.5rem;text-align:center;display:none;">
                   <i class="fa fa-info-circle"></i> Si no pagas, la reserva se cancelará 2 días antes del evento.
                 </p>
 
                 <script>
                   (function(){
-                    const input    = document.getElementById('cantidad-input');
-                    const totalEl  = document.getElementById('total-numero');
-                    const hidPagar = document.getElementById('cantidad-pagar');
-                    const hidPend  = document.getElementById('cantidad-pendiente');
                     const maxCupos  = {{ viaje.cupos_disponibles }};
                     const cuposBase = {{ cupos_base }};
-
-                    // Precios: se inicializan al seleccionar el horario
-                    if (!window._PRECIO_IV) window._PRECIO_IV = 0;
-                    if (!window._PRECIO_IDA) window._PRECIO_IDA = 0;
-                    if (!window._PRECIO_VUELTA) window._PRECIO_VUELTA = 0;
-                    if (!window._precioBase) window._precioBase = 0;
-                    // Precio Solo Vuelta definido en el viaje (sin horario)
+                    window._PRECIO_IV    = 0;
+                    window._PRECIO_IDA   = 0;
+                    window._PRECIO_VUELTA = 0;
+                    window._precioBase   = 0;
                     window._PRECIO_SOLO_VUELTA_VIAJE = {{ viaje.precio_vuelta|default:0 }};
+
+                    // Carrito: array de { tipo_pasaje, horario_id, horario_txt, cantidad, precio_unit, monto }
+                    window._carrito = [];
 
                     const fidContador = document.getElementById('fidelidad-contador');
                     const fidBarra    = document.getElementById('fidelidad-barra');
                     const fidMsg      = document.getElementById('fidelidad-msg');
 
-                    function formatCLP(n) { return n.toLocaleString('es-CL'); }
+                    function formatCLP(n) { return Math.round(n).toLocaleString('es-CL'); }
 
-                    function calcularTotal(cant) {
-                      const precio = window._precioBase;
+                    function calcularMontoItem(precio, cuposAcum, cant) {
                       let total = 0;
                       for (let i = 1; i <= cant; i++) {
-                        const cupoNum = cuposBase + i;
-                        if (cupoNum % 10 === 0)      total += 0;
-                        else if (cupoNum % 5 === 0)  total += precio * 0.5;
-                        else                         total += precio;
+                        const n = cuposAcum + i;
+                        if (n % 10 === 0)     total += 0;
+                        else if (n % 5 === 0) total += precio * 0.5;
+                        else                  total += precio;
                       }
                       return Math.round(total);
                     }
 
-                    function proximoHito(total) {
-                      const ciclo = total % 10;
-                      if (ciclo < 4) return { cupo: total + (4 - ciclo), ben: '50% descuento' };
-                      if (ciclo < 9) return { cupo: total + (9 - ciclo), ben: 'Cupo GRATIS' };
-                      return { cupo: total + (10 - ciclo), ben: '50% descuento' };
+                    function totalCarrito() {
+                      return window._carrito.reduce((s, it) => s + it.monto, 0);
                     }
 
-                    function mensajeDescuento(cant) {
-                      let gratis = false, mitad = false;
-                      for (let i = 1; i <= cant; i++) {
-                        const n = cuposBase + i;
-                        if (n % 10 === 0) gratis = true;
-                        else if (n % 5 === 0) mitad = true;
+                    function cuposEnCarrito() {
+                      return window._carrito.reduce((s, it) => s + it.cantidad, 0);
+                    }
+
+                    function renderCarrito() {
+                      const lista = document.getElementById('carrito-lista');
+                      const cont  = document.getElementById('carrito-contenedor');
+                      const formPagar   = document.getElementById('form-pagar');
+                      const formPend    = document.getElementById('form-pendiente');
+                      const notaPend    = document.getElementById('nota-pendiente');
+                      const totalEl     = document.getElementById('total-numero');
+
+                      lista.innerHTML = '';
+                      if (window._carrito.length === 0) {
+                        cont.style.display = 'none';
+                        formPagar.style.display = 'none';
+                        formPend.style.display = 'none';
+                        notaPend.style.display = 'none';
+                        return;
                       }
-                      if (gratis) return { texto: '🎉 ¡Incluye cupo(s) GRATIS!', color: '#155724', bg: '#d4edda', border: '#a5d6a7' };
-                      if (mitad)  return { texto: '🎊 ¡Incluye cupo(s) con 50% de descuento!', color: '#856404', bg: '#fff8e1', border: '#ffe082' };
-                      return null;
+
+                      cont.style.display = 'block';
+                      formPagar.style.display = 'block';
+                      formPend.style.display = 'block';
+                      notaPend.style.display = 'block';
+
+                      window._carrito.forEach(function(item, idx) {
+                        const row = document.createElement('div');
+                        row.style.cssText = 'display:flex;align-items:center;gap:0.4rem;background:#f8f9fa;border-radius:var(--radio);padding:0.4rem 0.6rem;font-size:0.8rem;';
+                        row.innerHTML = `
+                          <span style="flex:1;font-weight:600;">${item.tipo_label}${item.horario_txt ? ' · ' + item.horario_txt : ''}</span>
+                          <span style="white-space:nowrap;">${item.cantidad} cupo${item.cantidad > 1 ? 's' : ''} · $${formatCLP(item.monto)}</span>
+                          <button type="button" onclick="eliminarDelCarrito(${idx})" style="background:none;border:none;cursor:pointer;color:var(--peligro);font-size:0.85rem;padding:0 0.2rem;">
+                            <i class="fa fa-times"></i>
+                          </button>`;
+                        lista.appendChild(row);
+                      });
+
+                      const total = totalCarrito();
+                      totalEl.textContent = formatCLP(total);
+
+                      const json = JSON.stringify(window._carrito.map(function(it) {
+                        return { tipo_pasaje: it.tipo_pasaje, horario_id: it.horario_id, cantidad: it.cantidad };
+                      }));
+                      document.getElementById('carrito-items-pagar').value = json;
+                      document.getElementById('carrito-items-pendiente').value = json;
+
+                      // Actualizar fidelidad con total de cupos en carrito
+                      const totalCupos = cuposEnCarrito();
+                      const proyectado = cuposBase + totalCupos;
+                      const ciclo = proyectado % 10;
+                      if (fidContador) fidContador.textContent = cuposBase + ' → ' + proyectado;
+                      if (fidBarra) {
+                        const lleno = ciclo === 0 && proyectado > 0;
+                        fidBarra.style.width = (lleno ? 100 : Math.round((ciclo / 10) * 100)) + '%';
+                        fidBarra.style.background = lleno ? 'linear-gradient(90deg,#28a745,#20c997)' : 'linear-gradient(90deg,var(--amarillo),#ffc200)';
+                      }
                     }
 
-                    // Expuesta globalmente para que seleccionarTipo() la llame
-                    window.actualizarPanel = function(cant) {
-                      if (!totalEl) return;
-                      totalEl.textContent = formatCLP(calcularTotal(cant));
-                      if (!fidContador) return;
-                      const proyectado = cuposBase + cant;
-                      const ciclo      = proyectado % 10;
-                      fidContador.textContent = cuposBase + ' → ' + proyectado;
+                    window.eliminarDelCarrito = function(idx) {
+                      window._carrito.splice(idx, 1);
+                      renderCarrito();
+                    };
+
+                    window.agregarAlCarrito = function() {
+                      const tipo = window._TIPO;
+                      if (!tipo) { alert('Selecciona primero un tipo de pasaje.'); return; }
+
+                      const horarioId  = window._HORARIO_SELECCIONADO_ID || '';
+                      const horarioTxt = window._HORARIO_SELECCIONADO_TXT || '';
+
+                      if (tipo !== 'solo_vuelta' && !horarioId) {
+                        alert('Selecciona un horario de recogida.'); return;
+                      }
+
+                      const cantInput = document.getElementById('cantidad-input');
+                      const cant = Math.max(1, Math.min(parseInt(cantInput.value) || 1, maxCupos));
+                      cantInput.value = cant;
+
+                      const cuposAcum = cuposBase + cuposEnCarrito();
+                      const precio    = window._precioBase;
+                      const monto     = calcularMontoItem(precio, cuposAcum, cant);
+
+                      const TIPO_LABELS = { ida_vuelta: 'Ida y Vuelta', solo_ida: 'Solo Ida', solo_vuelta: 'Solo Vuelta' };
+
+                      window._carrito.push({
+                        tipo_pasaje: tipo,
+                        tipo_label:  TIPO_LABELS[tipo] || tipo,
+                        horario_id:  horarioId,
+                        horario_txt: horarioTxt,
+                        cantidad:    cant,
+                        precio_unit: precio,
+                        monto:       monto,
+                      });
+
+                      renderCarrito();
+
+                      // Reset selección para siguiente ítem
+                      document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('activo'));
+                      document.querySelectorAll('.horario-radio:checked').forEach(chk => {
+                        chk.checked = false;
+                        chk.closest('.horario-row')?.classList.remove('activo');
+                      });
+                      const pasoHorario = document.getElementById('paso-horario');
+                      if (pasoHorario) {
+                        pasoHorario.style.opacity = '0';
+                        pasoHorario.style.transform = 'translateY(16px)';
+                        setTimeout(() => { pasoHorario.style.display = 'none'; }, 350);
+                      }
+                      window._TIPO = null;
+                      window._HORARIO_SELECCIONADO_ID  = '';
+                      window._HORARIO_SELECCIONADO_TXT = '';
+                      window._precioBase = 0;
+                      document.getElementById('precio-display').textContent = '—';
+                    };
+
+                    function serializarCarrito() {
+                      return JSON.stringify(window._carrito.map(function(it) {
+                        return { tipo_pasaje: it.tipo_pasaje, horario_id: it.horario_id, cantidad: it.cantidad };
+                      }));
+                    }
+
+                    document.getElementById('btn-pagar').addEventListener('click', function() {
+                      const json = serializarCarrito();
+                      document.getElementById('carrito-items-pagar').value = json;
+                      document.getElementById('form-pagar').submit();
+                    });
+
+                    document.getElementById('btn-pendiente').addEventListener('click', function() {
+                      const json = serializarCarrito();
+                      document.getElementById('carrito-items-pendiente').value = json;
+                      document.getElementById('form-pendiente').submit();
+                    });
+
+                    // Expuesto para compatibilidad
+                    window.actualizarPanel = function() {};
+
+                    function getMinCupos() {
+                      return document.querySelectorAll('.horario-radio:checked').length || 1;
+                    }
+
+                    window.actualizarTotalMomentaneo = function(cant) {
+                      const el = document.getElementById('total-momentaneo');
+                      const num = document.getElementById('total-momentaneo-numero');
+                      if (!el || !num) return;
+                      if (!window._precioBase) { el.style.display = 'none'; return; }
+                      const monto = calcularMontoItem(window._precioBase, cuposBase + cuposEnCarrito(), cant);
+                      num.textContent = formatCLP(monto);
+                      el.style.display = 'flex';
+                    };
+
+                    window.actualizarFidelidad = function actualizarFidelidad(cantInput) {
+                      const proyectado = cuposBase + cuposEnCarrito() + cantInput;
+                      const ciclo = proyectado % 10;
+                      if (fidContador) fidContador.textContent = cuposBase + ' → ' + proyectado;
                       if (fidBarra) {
-                        const pct = Math.round((ciclo / 10) * 100);
                         const lleno = ciclo === 0 && proyectado > 0;
-                        fidBarra.style.width = (lleno ? 100 : pct) + '%';
+                        fidBarra.style.width = (lleno ? 100 : Math.round((ciclo / 10) * 100)) + '%';
                         fidBarra.style.background = lleno
                           ? 'linear-gradient(90deg,#28a745,#20c997)'
                           : 'linear-gradient(90deg,var(--amarillo),#ffc200)';
                       }
                       if (fidMsg) {
-                        const desc = mensajeDescuento(cant);
-                        if (desc) {
-                          fidMsg.innerHTML = desc.texto;
-                          fidMsg.style.cssText = `font-size:0.82rem;font-weight:700;text-align:center;padding:0.4rem 0.6rem;border-radius:var(--radio);background:${desc.bg};border:1px solid ${desc.border};color:${desc.color};`;
+                        let gratis = false, mitad = false;
+                        for (let i = 1; i <= cantInput; i++) {
+                          const n = cuposBase + cuposEnCarrito() + i;
+                          if (n % 10 === 0) gratis = true;
+                          else if (n % 5 === 0) mitad = true;
+                        }
+                        if (gratis) {
+                          fidMsg.innerHTML = '🎉 ¡Incluye cupo(s) GRATIS!';
+                          fidMsg.style.cssText = 'font-size:0.82rem;font-weight:700;text-align:center;padding:0.4rem 0.6rem;border-radius:var(--radio);background:#d4edda;border:1px solid #a5d6a7;color:#155724;';
+                        } else if (mitad) {
+                          fidMsg.innerHTML = '🎊 ¡Incluye cupo(s) con 50% de descuento!';
+                          fidMsg.style.cssText = 'font-size:0.82rem;font-weight:700;text-align:center;padding:0.4rem 0.6rem;border-radius:var(--radio);background:#fff8e1;border:1px solid #ffe082;color:#856404;';
                         } else {
-                          const h = proximoHito(proyectado);
-                          fidMsg.innerHTML = 'Próximo beneficio en cupo N°' + h.cupo + ': <strong>' + h.ben + '</strong>';
+                          const ciclo2 = proyectado % 10;
+                          let proxCupo, proxBen;
+                          if (ciclo2 < 4)      { proxCupo = proyectado + (4 - ciclo2); proxBen = '50% descuento'; }
+                          else if (ciclo2 < 9) { proxCupo = proyectado + (9 - ciclo2); proxBen = 'Cupo GRATIS'; }
+                          else                 { proxCupo = proyectado + (10 - ciclo2); proxBen = '50% descuento'; }
+                          fidMsg.innerHTML = 'Próximo beneficio en cupo N°' + proxCupo + ': <strong>' + proxBen + '</strong>';
                           fidMsg.style.cssText = 'font-size:0.75rem;color:var(--gris-medio);text-align:center;padding:0;background:none;border:none;';
                         }
                       }
                     };
 
-                    // No llamar actualizarPanel al inicio: el precio depende del tipo/horario elegido
-
-                    input.addEventListener('input', function(){
-                      const raw = parseInt(this.value);
-                      if (isNaN(raw)) return;
-                      const cant = Math.max(1, Math.min(raw, maxCupos));
-                      if (raw !== cant) this.value = cant;
-                      hidPagar.value = cant;
-                      hidPend.value  = cant;
-                      window.actualizarPanel(cant);
-                    });
-
-                    input.addEventListener('change', function(){
-                      const cant = Math.max(1, Math.min(parseInt(this.value) || 1, maxCupos));
+                    const cantInputEl = document.getElementById('cantidad-input');
+                    cantInputEl.addEventListener('change', function() {
+                      const min  = getMinCupos();
+                      const cant = Math.max(min, Math.min(parseInt(this.value) || min, maxCupos));
                       this.value = cant;
-                      hidPagar.value = cant;
-                      hidPend.value  = cant;
-                      window.actualizarPanel(cant);
+                      actualizarFidelidad(cant);
+                      actualizarTotalMomentaneo(cant);
+                    });
+                    cantInputEl.addEventListener('input', function() {
+                      const min  = getMinCupos();
+                      const raw  = parseInt(this.value) || 0;
+                      if (raw < min) { this.value = min; }
+                      const cant = Math.max(min, Math.min(raw, maxCupos));
+                      actualizarFidelidad(cant);
+                      actualizarTotalMomentaneo(cant);
                     });
                   })();
                 </script>
@@ -602,11 +747,23 @@
 
     const horarioId = btn.dataset.horarioId;
 
-    // Precios del primer horario seleccionado
-    const ref = seleccionados.length > 0 ? seleccionados[0] : btn;
+    // Precio del horario clickeado
+    const ref = checked ? btn : (seleccionados.length > 0 ? seleccionados[0] : btn);
     window._PRECIO_IV     = parseFloat(ref.dataset.precioIv)    || 0;
     window._PRECIO_IDA    = parseFloat(ref.dataset.precioIda)   || 0;
     window._PRECIO_VUELTA = parseFloat(ref.dataset.precioVuelta) || 0;
+
+    // Guardar horario seleccionado (el último marcado)
+    if (checked) {
+      window._HORARIO_SELECCIONADO_ID  = btn.dataset.horarioId;
+      window._HORARIO_SELECCIONADO_TXT = btn.dataset.salidaTxt + ' ' + btn.dataset.salida + ' hrs';
+    } else if (seleccionados.length > 0) {
+      window._HORARIO_SELECCIONADO_ID  = seleccionados[0].dataset.horarioId;
+      window._HORARIO_SELECCIONADO_TXT = seleccionados[0].dataset.salidaTxt + ' ' + seleccionados[0].dataset.salida + ' hrs';
+    } else {
+      window._HORARIO_SELECCIONADO_ID  = '';
+      window._HORARIO_SELECCIONADO_TXT = '';
+    }
 
     // Aplicar precio según tipo ya seleccionado
     const tipo = window._TIPO || 'ida_vuelta';
@@ -615,16 +772,19 @@
     else                             window._precioBase = window._PRECIO_IV;
 
     const precioEl = document.getElementById('precio-display');
-    if (precioEl) precioEl.textContent = window._precioBase.toLocaleString('es-CL');
-    const cantActual = parseInt(document.getElementById('cantidad-input')?.value) || 1;
-    if (window.actualizarPanel) window.actualizarPanel(cantActual);
+    if (precioEl) precioEl.textContent = seleccionados.length > 0 ? window._precioBase.toLocaleString('es-CL') : '—';
+    const cantActualHorario = parseInt(document.getElementById('cantidad-input')?.value) || 1;
+    if (window.actualizarTotalMomentaneo) window.actualizarTotalMomentaneo(cantActualHorario);
 
-    // Propagar horario_id a los formularios
-    const primerHorarioId = seleccionados.length > 0 ? seleccionados[0].dataset.horarioId : horarioId;
-    ['horario-pagar', 'horario-pendiente'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = primerHorarioId;
-    });
+    // Ajustar cantidad mínima al número de horarios seleccionados
+    const cantInput = document.getElementById('cantidad-input');
+    if (cantInput && seleccionados.length > 0) {
+      const actual = parseInt(cantInput.value) || 1;
+      if (actual < seleccionados.length) cantInput.value = seleccionados.length;
+    }
+    const cantActual = parseInt(cantInput?.value) || 1;
+    if (window.actualizarFidelidad) window.actualizarFidelidad(cantActual);
+    if (window.actualizarTotalMomentaneo) window.actualizarTotalMomentaneo(cantActual);
 
     // Mostrar dv-contenido si hay al menos un horario seleccionado
     const contenido = document.getElementById('dv-contenido');
@@ -635,12 +795,8 @@
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               contenido.classList.add('animado');
-              contenido.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
           });
-        } else {
-          const cant = parseInt(document.getElementById('cantidad-input')?.value) || 1;
-          if (window.actualizarPanel) window.actualizarPanel(cant);
         }
       } else {
         contenido.classList.remove('visible', 'animado');
@@ -662,15 +818,13 @@
     const cfg  = TIPOS[tipo];
     window._TIPO = tipo;
 
-    // Badge en dv-contenido
+    // Badges
     const badgeTipoTexto = document.getElementById('badge-tipo-texto');
     if (badgeTipoTexto) badgeTipoTexto.textContent = cfg.label;
-
-    // Badge en la sección de horario
     const badgeTipoEnHorario = document.getElementById('badge-tipo-en-horario-texto');
     if (badgeTipoEnHorario) badgeTipoEnHorario.textContent = cfg.label;
 
-    // Mostrar/ocultar tramos
+    // Mostrar/ocultar tramos en detalle recorrido
     const tramIda    = document.getElementById('tramo-ida');
     const tramVuelta = document.getElementById('tramo-vuelta');
     const separador  = document.getElementById('separador-tramos');
@@ -678,73 +832,61 @@
     if (tramVuelta) tramVuelta.style.display = cfg.vuelta ? 'flex' : 'none';
     if (separador)  separador.style.display  = (cfg.ida && cfg.vuelta) ? 'block' : 'none';
 
-    // Actualizar campos ocultos de tipo
-    ['tipo-pagar', 'tipo-pendiente'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = tipo;
-    });
-
-    // Si no hay horarios, revelar dv-contenido directamente
-    const pasoHorario = document.getElementById('paso-horario');
-    if (!pasoHorario) {
-      const contenido = document.getElementById('dv-contenido');
-      if (contenido && !contenido.classList.contains('visible')) {
-        contenido.classList.add('visible');
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            contenido.classList.add('animado');
-            contenido.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          });
-        });
-      }
-      return;
-    }
-
-    // Solo Vuelta: no necesita horario de recogida, ir directo al detalle
-    if (tipo === 'solo_vuelta') {
-      document.querySelectorAll('.horario-radio:checked').forEach(chk => {
-        chk.checked = false;
-        chk.closest('.horario-row')?.classList.remove('activo');
-      });
-      pasoHorario.style.opacity = '0';
-      pasoHorario.style.transform = 'translateY(16px)';
-      setTimeout(() => { pasoHorario.style.display = 'none'; }, 350);
-
-      // Usar precio solo vuelta definido en el viaje
-      window._precioBase = window._PRECIO_SOLO_VUELTA_VIAJE || 0;
-      const precioEl = document.getElementById('precio-display');
-      if (precioEl) precioEl.textContent = window._precioBase.toLocaleString('es-CL');
-      const cant = parseInt(document.getElementById('cantidad-input')?.value) || 1;
-      if (window.actualizarPanel) window.actualizarPanel(cant);
-
-      const contenido = document.getElementById('dv-contenido');
-      if (contenido && !contenido.classList.contains('visible')) {
-        contenido.classList.add('visible');
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            contenido.classList.add('animado');
-            contenido.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          });
-        });
-      }
-      return;
-    }
-
-    // Hay horarios: resetear selecciones previas y mostrar paso-horario
+    // Resetear horario seleccionado
+    window._HORARIO_SELECCIONADO_ID  = '';
+    window._HORARIO_SELECCIONADO_TXT = '';
     document.querySelectorAll('.horario-radio:checked').forEach(chk => {
       chk.checked = false;
       chk.closest('.horario-row')?.classList.remove('activo');
     });
-    document.getElementById('dv-contenido')?.classList.remove('visible', 'animado');
 
+    const pasoHorario = document.getElementById('paso-horario');
+
+    // Solo Vuelta: no necesita horario, mostrar detalle directamente
+    if (tipo === 'solo_vuelta') {
+      if (pasoHorario) {
+        pasoHorario.style.opacity = '0';
+        pasoHorario.style.transform = 'translateY(16px)';
+        setTimeout(() => { pasoHorario.style.display = 'none'; }, 350);
+      }
+      window._precioBase = window._PRECIO_SOLO_VUELTA_VIAJE || 0;
+      const precioEl = document.getElementById('precio-display');
+      if (precioEl) precioEl.textContent = window._precioBase.toLocaleString('es-CL');
+      const cantActualSV = parseInt(document.getElementById('cantidad-input')?.value) || 1;
+      if (window.actualizarTotalMomentaneo) window.actualizarTotalMomentaneo(cantActualSV);
+
+      const contenido = document.getElementById('dv-contenido');
+      if (contenido && !contenido.classList.contains('visible')) {
+        contenido.classList.add('visible');
+        requestAnimationFrame(() => { requestAnimationFrame(() => {
+          contenido.classList.add('animado');
+        }); });
+      }
+      return;
+    }
+
+    // Ida y Vuelta / Solo Ida: mostrar selector de horario
+    window._precioBase = 0;
+    document.getElementById('precio-display').textContent = '—';
+
+    if (!pasoHorario) {
+      // Sin horarios configurados: ir directo al detalle
+      const contenido = document.getElementById('dv-contenido');
+      if (contenido && !contenido.classList.contains('visible')) {
+        contenido.classList.add('visible');
+        requestAnimationFrame(() => { requestAnimationFrame(() => {
+          contenido.classList.add('animado');
+        }); });
+      }
+      return;
+    }
+
+    document.getElementById('dv-contenido')?.classList.remove('visible', 'animado');
     pasoHorario.style.display = 'block';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        pasoHorario.style.opacity = '1';
-        pasoHorario.style.transform = 'translateY(0)';
-        pasoHorario.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
+    requestAnimationFrame(() => { requestAnimationFrame(() => {
+      pasoHorario.style.opacity = '1';
+      pasoHorario.style.transform = 'translateY(0)';
+    }); });
   }
 </script>
 {% endblock %}

@@ -27,7 +27,8 @@
       "Bash(python manage.py makemigrations reservas --name remove_cupos_horario)",
       "Bash(python manage.py shell -c \"from reservas.models import Reserva; count = Reserva.objects.count\\(\\); Reserva.objects.all\\(\\).delete\\(\\); print\\(f'Eliminados {count} registros.'\\)\")",
       "Bash(python manage.py makemigrations core --name remove_hora_concierto)",
-      "Bash(python manage.py makemigrations reservas --name=\"add_precio_vuelta_to_viaje\")"
+      "Bash(python manage.py makemigrations reservas --name=\"add_precio_vuelta_to_viaje\")",
+      "Bash(python manage.py makemigrations reservas --name=\"add_grupo_compra_to_reserva\")"
     ]
   }
 }

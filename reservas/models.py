@@ -93,6 +93,7 @@ class Reserva(models.Model):
     token_webpay = models.CharField(max_length=255, blank=True, null=True)
     orden_compra = models.CharField(max_length=50, unique=True)
     monto = models.DecimalField(max_digits=10, decimal_places=0)
+    grupo_compra = models.CharField(max_length=50, blank=True, null=True, db_index=True)
 
     class Meta:
         verbose_name = 'Reserva'

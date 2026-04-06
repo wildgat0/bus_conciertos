@@ -52,10 +52,9 @@
             <th>Coordinador</th>
             <th>Fecha Salida</th>
             <th>Ruta</th>
-            <th>Cupos</th>
-            <th>Pasajeros Pagados</th>
-            <th>Precio Unit.</th>
-            <th>Ganancia</th>
+            <th style="text-align:center;">Cupos</th>
+            <th style="text-align:center;">Pasajeros Pagados</th>
+            <th style="text-align:center;">Ganancia</th>
             <th>Estado</th>
           </tr>
         </thead>
@@ -73,8 +72,7 @@
             <td style="text-align:center;">
               <strong style="{% if viaje.cupos_ocupados > 0 %}color:var(--exito);{% endif %}">{{ viaje.cupos_ocupados }}</strong>
             </td>
-            <td>$<span class="fmt-clp">{{ viaje.precio|floatformat:0 }}</span></td>
-            <td style="font-weight:700;{% if viaje.ganancia_total > 0 %}color:var(--exito);{% endif %}">
+            <td style="text-align:center;font-weight:700;{% if viaje.ganancia_total > 0 %}color:var(--exito);{% endif %}">
               $<span class="fmt-clp">{{ viaje.ganancia_total|floatformat:0 }}</span>
             </td>
             <td><span class="badge-estado badge-{{ viaje.estado }}">{{ viaje.get_estado_display }}</span></td>
@@ -83,7 +81,7 @@
         </tbody>
         <tfoot>
           <tr style="background:var(--negro);color:var(--blanco);">
-            <td colspan="7" style="padding:1rem;font-weight:700;text-align:right;font-size:1rem;">TOTAL GENERAL:</td>
+            <td colspan="6" style="padding:1rem;font-weight:700;text-align:right;font-size:1rem;">TOTAL GENERAL:</td>
             <td style="padding:1rem;font-family:'Bebas Neue';font-size:1.5rem;color:var(--amarillo);">$<span id="total-curso">{{ total_general|floatformat:0 }}</span></td>
             <td></td>
           </tr>
@@ -109,10 +107,9 @@
             <th>Coordinador</th>
             <th>Fecha Salida</th>
             <th>Ruta</th>
-            <th>Cupos</th>
-            <th>Pasajeros Pagados</th>
-            <th>Precio Unit.</th>
-            <th>Ganancia</th>
+            <th style="text-align:center;">Cupos</th>
+            <th style="text-align:center;">Pasajeros Pagados</th>
+            <th style="text-align:center;">Ganancia</th>
             <th>Estado</th>
           </tr>
         </thead>
@@ -130,8 +127,7 @@
             <td style="text-align:center;">
               <strong style="{% if viaje.cupos_ocupados > 0 %}color:var(--exito);{% endif %}">{{ viaje.cupos_ocupados }}</strong>
             </td>
-            <td>$<span class="fmt-clp">{{ viaje.precio|floatformat:0 }}</span></td>
-            <td style="font-weight:700;{% if viaje.ganancia_total > 0 %}color:var(--exito);{% endif %}">
+            <td style="text-align:center;font-weight:700;{% if viaje.ganancia_total > 0 %}color:var(--exito);{% endif %}">
               $<span class="fmt-clp">{{ viaje.ganancia_total|floatformat:0 }}</span>
             </td>
             <td><span class="badge-estado badge-{{ viaje.estado }}">{{ viaje.get_estado_display }}</span></td>
@@ -140,7 +136,7 @@
         </tbody>
         <tfoot>
           <tr style="background:var(--negro);color:var(--blanco);">
-            <td colspan="7" style="padding:1rem;font-weight:700;text-align:right;font-size:1rem;">TOTAL GENERAL:</td>
+            <td colspan="6" style="padding:1rem;font-weight:700;text-align:right;font-size:1rem;">TOTAL GENERAL:</td>
             <td style="padding:1rem;font-family:'Bebas Neue';font-size:1.5rem;color:var(--amarillo);">$<span id="total-fin">{{ total_finalizados|floatformat:0 }}</span></td>
             <td></td>
           </tr>

@@ -113,15 +113,18 @@ def detalle_viaje(request, pk):
 
 # ─── WEBPAY / TRANSBANK ──────────────────────────────────────────────────────
 
-def _precio_para_tipo(horario, tipo_pasaje):
+def _precio_para_tipo(horario, tipo_pasaje, viaje=None):
     """Devuelve el precio unitario según el tipo de pasaje y el horario seleccionado."""
+    if tipo_pasaje == 'solo_vuelta':
+        # El precio de solo vuelta viene del viaje, no del horario
+        if viaje is not None:
+            return viaje.precio_vuelta
+        return 0
     if horario is None:
         return 0
     if tipo_pasaje == 'solo_ida':
         return horario.precio_ida
-    if tipo_pasaje == 'solo_vuelta':
-        return horario.precio_vuelta
-    return horario.precio  # ida_vuelta o sin tipo
+    return horario.precio  # ida_vuelta
 
 
 @login_required
@@ -131,57 +134,66 @@ def reservar_pendiente(request, pk):
 
     viaje = get_object_or_404(Viaje, pk=pk, estado='disponible')
 
+    # Leer ítems del carrito (JSON)
     try:
-        cantidad = max(1, int(request.POST.get('cantidad', 1)))
+        items_raw = request.POST.get('carrito_items', '')
+        items = json.loads(items_raw) if items_raw else []
     except (ValueError, TypeError):
-        cantidad = 1
+        items = []
 
-    # Horario seleccionado
-    horario_id = request.POST.get('horario_id')
-    horario = None
-    if horario_id:
-        horario = get_object_or_404(HorarioViaje, pk=horario_id, viaje=viaje)
-        if horario.cupos_disponibles <= 0:
-            messages.error(request, 'Lo sentimos, este horario ya no tiene cupos disponibles.')
-            return redirect('detalle_viaje', pk=pk)
-        if cantidad > horario.cupos_disponibles:
-            messages.error(request, f'Solo quedan {horario.cupos_disponibles} cupos en este horario.')
-            return redirect('detalle_viaje', pk=pk)
-    else:
-        if viaje.cupos_disponibles <= 0:
-            messages.error(request, 'Lo sentimos, este viaje ya no tiene cupos disponibles.')
-            return redirect('lista_viajes')
-        if cantidad > viaje.cupos_disponibles:
-            messages.error(request, f'Solo quedan {viaje.cupos_disponibles} cupos disponibles.')
-            return redirect('detalle_viaje', pk=pk)
+    # Fallback: un solo ítem
+    if not items:
+        try:
+            cantidad = max(1, int(request.POST.get('cantidad', 1)))
+        except (ValueError, TypeError):
+            cantidad = 1
+        items = [{
+            'tipo_pasaje': request.POST.get('tipo_pasaje', 'ida_vuelta'),
+            'horario_id': request.POST.get('horario_id', ''),
+            'cantidad': cantidad,
+        }]
 
-    tipo_pasaje = request.POST.get('tipo_pasaje', 'ida_vuelta')
-    precio_unitario = _precio_para_tipo(horario, tipo_pasaje)
+    if viaje.cupos_disponibles <= 0:
+        messages.error(request, 'Lo sentimos, este viaje ya no tiene cupos disponibles.')
+        return redirect('detalle_viaje', pk=pk)
+
     cupos_base_pend = cupos_pagados_usuario(request.user)
-    monto = calcular_monto_con_descuento(precio_unitario, cupos_base_pend, cantidad)
+    grupo = f'BC-{uuid.uuid4().hex[:12].upper()}'
 
-    # Reutilizar solo reserva pendiente (nunca cancelada) o crear nueva
-    reserva = Reserva.objects.filter(
-        viaje=viaje, usuario=request.user, estado='pendiente'
-    ).first()
-    if reserva:
-        reserva.cantidad = cantidad
-        reserva.tipo_pasaje = tipo_pasaje
-        reserva.horario = horario
-        reserva.monto = monto
-        reserva.save()
-    else:
+    # Eliminar reservas pendientes previas
+    Reserva.objects.filter(viaje=viaje, usuario=request.user, estado='pendiente').delete()
+
+    cupos_acumulados = cupos_base_pend
+    for item in items:
+        try:
+            cantidad_item = max(1, int(item.get('cantidad', 1)))
+        except (ValueError, TypeError):
+            cantidad_item = 1
+        tipo_pasaje = item.get('tipo_pasaje', 'ida_vuelta')
+        horario_id = item.get('horario_id', '')
+        horario = None
+        if horario_id:
+            try:
+                horario = HorarioViaje.objects.get(pk=horario_id, viaje=viaje)
+            except HorarioViaje.DoesNotExist:
+                pass
+
+        precio_unitario = _precio_para_tipo(horario, tipo_pasaje, viaje)
+        monto_item = calcular_monto_con_descuento(precio_unitario, cupos_acumulados, cantidad_item)
+        cupos_acumulados += cantidad_item
+
         Reserva.objects.create(
             viaje=viaje,
             horario=horario,
             usuario=request.user,
             estado='pendiente',
-            cantidad=cantidad,
+            cantidad=cantidad_item,
             tipo_pasaje=tipo_pasaje,
-            monto=monto,
+            monto=monto_item,
+            grupo_compra=grupo,
         )
 
-    messages.success(request, f'Reserva realizada. Recuerda pagar antes de 5 días previos al evento.')
+    messages.success(request, 'Reserva realizada. Recuerda pagar antes de 5 días previos al evento.')
     return redirect('mis_reservas')
 
 
@@ -189,84 +201,96 @@ def reservar_pendiente(request, pk):
 def iniciar_pago(request, pk):
     viaje = get_object_or_404(Viaje, pk=pk, estado='disponible')
 
-    # Leer cantidad solicitada
+    # Leer ítems del carrito (JSON)
     try:
-        cantidad = max(1, int(request.POST.get('cantidad', 1)))
+        items_raw = request.POST.get('carrito_items', '')
+        items = json.loads(items_raw) if items_raw else []
     except (ValueError, TypeError):
-        cantidad = 1
+        items = []
 
-    # Horario seleccionado
-    horario_id = request.POST.get('horario_id')
-    horario = None
-    if horario_id:
-        horario = get_object_or_404(HorarioViaje, pk=horario_id, viaje=viaje)
-        if horario.cupos_disponibles <= 0:
-            messages.error(request, 'Lo sentimos, este horario ya no tiene cupos disponibles.')
-            return redirect('detalle_viaje', pk=pk)
-        if cantidad > horario.cupos_disponibles:
-            messages.error(request, f'Solo quedan {horario.cupos_disponibles} cupos en este horario.')
-            return redirect('detalle_viaje', pk=pk)
-    else:
-        if viaje.cupos_disponibles <= 0:
-            messages.error(request, 'Lo sentimos, este viaje ya no tiene cupos disponibles.')
-            return redirect('lista_viajes')
-        if cantidad > viaje.cupos_disponibles:
-            messages.error(request, f'Solo quedan {viaje.cupos_disponibles} cupos disponibles.')
-            return redirect('detalle_viaje', pk=pk)
+    # Fallback: un solo ítem (compatibilidad)
+    if not items:
+        try:
+            cantidad = max(1, int(request.POST.get('cantidad', 1)))
+        except (ValueError, TypeError):
+            cantidad = 1
+        items = [{
+            'tipo_pasaje': request.POST.get('tipo_pasaje', 'ida_vuelta'),
+            'horario_id': request.POST.get('horario_id', ''),
+            'cantidad': cantidad,
+        }]
 
-    tipo_pasaje = request.POST.get('tipo_pasaje', 'ida_vuelta')
-    precio_unitario = _precio_para_tipo(horario, tipo_pasaje)
+    if viaje.cupos_disponibles <= 0:
+        messages.error(request, 'Lo sentimos, este viaje ya no tiene cupos disponibles.')
+        return redirect('detalle_viaje', pk=pk)
+
     cupos_base_pago = cupos_pagados_usuario(request.user)
-    monto_total = calcular_monto_con_descuento(precio_unitario, cupos_base_pago, cantidad)
+    grupo = f'BC-{uuid.uuid4().hex[:12].upper()}'
 
-    # Reutilizar solo reserva pendiente; nunca tocar pagadas ni canceladas
-    reserva = Reserva.objects.filter(
-        viaje=viaje, usuario=request.user, estado='pendiente'
-    ).first()
-    if reserva:
-        reserva.estado = 'pendiente'
-        reserva.cantidad = cantidad
-        reserva.tipo_pasaje = tipo_pasaje
-        reserva.horario = horario
-        reserva.monto = monto_total
-        reserva.orden_compra = f'BC-{uuid.uuid4().hex[:10].upper()}'
-        reserva.token_webpay = None
-        reserva.save()
-    else:
-        reserva = Reserva.objects.create(
+    # Eliminar reservas pendientes previas de este usuario en este viaje
+    Reserva.objects.filter(viaje=viaje, usuario=request.user, estado='pendiente').delete()
+
+    reservas_creadas = []
+    monto_total = 0
+    cupos_acumulados = cupos_base_pago
+
+    for item in items:
+        try:
+            cantidad_item = max(1, int(item.get('cantidad', 1)))
+        except (ValueError, TypeError):
+            cantidad_item = 1
+        tipo_pasaje = item.get('tipo_pasaje', 'ida_vuelta')
+        horario_id = item.get('horario_id', '')
+        horario = None
+        if horario_id:
+            try:
+                horario = HorarioViaje.objects.get(pk=horario_id, viaje=viaje)
+            except HorarioViaje.DoesNotExist:
+                pass
+
+        precio_unitario = _precio_para_tipo(horario, tipo_pasaje, viaje)
+        monto_item = calcular_monto_con_descuento(precio_unitario, cupos_acumulados, cantidad_item)
+        cupos_acumulados += cantidad_item
+        monto_total += monto_item
+
+        r = Reserva.objects.create(
             viaje=viaje,
             horario=horario,
             usuario=request.user,
             estado='pendiente',
-            cantidad=cantidad,
+            cantidad=cantidad_item,
             tipo_pasaje=tipo_pasaje,
-            monto=monto_total,
+            monto=monto_item,
+            grupo_compra=grupo,
         )
+        reservas_creadas.append(r)
 
-    # Si el monto es 0 (todos los cupos son gratis), confirmar sin pasar por WebPay
+    if not reservas_creadas:
+        messages.error(request, 'El carrito está vacío.')
+        return redirect('detalle_viaje', pk=pk)
+
+    # Reserva principal (primera) para WebPay
+    reserva_principal = reservas_creadas[0]
+
+    # Si el monto total es 0 (cupos gratis), confirmar sin WebPay
     if monto_total == 0:
-        reserva.estado = 'pagado'
-        reserva.orden_compra = f'BC-{uuid.uuid4().hex[:10].upper()}'
-        reserva.save()
+        Reserva.objects.filter(grupo_compra=grupo).update(estado='pagado')
         messages.success(request, '¡Reserva confirmada! Tu cupo fue GRATIS por tu fidelidad. 🎉')
         return redirect('mis_reservas')
 
-    # Iniciar transacción Webpay
-    url_retorno = request.build_absolute_uri(f'/reservas/webpay/retorno/{reserva.id}/')
+    # Iniciar transacción Webpay con monto total del carrito
+    url_retorno = request.build_absolute_uri(f'/reservas/webpay/retorno/{reserva_principal.id}/')
     headers = {
         'Tbk-Api-Key-Id': settings.TRANSBANK_COMMERCE_CODE,
         'Tbk-Api-Key-Secret': settings.TRANSBANK_API_KEY,
         'Content-Type': 'application/json',
     }
-    if settings.TRANSBANK_ENVIRONMENT == 'TEST':
-        base_url = 'https://webpay3gint.transbank.cl'
-    else:
-        base_url = 'https://webpay3g.transbank.cl'
+    base_url = 'https://webpay3gint.transbank.cl' if settings.TRANSBANK_ENVIRONMENT == 'TEST' else 'https://webpay3g.transbank.cl'
 
     payload = {
-        'buy_order': reserva.orden_compra,
-        'session_id': f'session-{request.user.id}-{reserva.id}',
-        'amount': int(reserva.monto),
+        'buy_order': grupo,
+        'session_id': f'session-{request.user.id}-{grupo}',
+        'amount': int(monto_total),
         'return_url': url_retorno,
     }
 
@@ -279,17 +303,17 @@ def iniciar_pago(request, pk):
         )
         data = resp.json()
         if 'token' in data:
-            reserva.token_webpay = data['token']
-            reserva.save()
+            reserva_principal.token_webpay = data['token']
+            reserva_principal.save()
             return render(request, 'reservas/webpay_redirect.html', {
                 'url': data['url'],
                 'token': data['token'],
             })
         else:
-            reserva.delete()
+            Reserva.objects.filter(grupo_compra=grupo).delete()
             messages.error(request, 'Error al conectar con Webpay. Intenta nuevamente.')
     except Exception as e:
-        reserva.delete()
+        Reserva.objects.filter(grupo_compra=grupo).delete()
         messages.error(request, f'Error de conexión con Transbank: {str(e)}')
 
     return redirect('detalle_viaje', pk=pk)
@@ -324,17 +348,31 @@ def retorno_webpay(request, reserva_id):
         )
         data = resp.json()
         if data.get('response_code') == 0:
-            reserva.estado = 'pagado'
-            reserva.save()
+            # Marcar todos los ítems del grupo como pagados
+            if reserva.grupo_compra:
+                Reserva.objects.filter(grupo_compra=reserva.grupo_compra).update(estado='pagado')
+            else:
+                reserva.estado = 'pagado'
+                reserva.save()
             # Actualizar estado del viaje si está lleno
             if reserva.viaje.cupos_disponibles <= 0:
                 reserva.viaje.estado = 'completo'
                 reserva.viaje.save()
+            monto_total_pagado = Reserva.objects.filter(
+                grupo_compra=reserva.grupo_compra
+            ).aggregate(total=Sum('monto'))['total'] if reserva.grupo_compra else reserva.monto
             messages.success(request, '¡Reserva confirmada! Tu pago fue procesado exitosamente.')
-            return render(request, 'reservas/pago_exitoso.html', {'reserva': reserva, 'data': data})
+            return render(request, 'reservas/pago_exitoso.html', {
+                'reserva': reserva,
+                'data': data,
+                'monto_total': monto_total_pagado,
+            })
         else:
-            reserva.estado = 'cancelado'
-            reserva.save()
+            if reserva.grupo_compra:
+                Reserva.objects.filter(grupo_compra=reserva.grupo_compra).update(estado='cancelado')
+            else:
+                reserva.estado = 'cancelado'
+                reserva.save()
             messages.error(request, 'El pago fue rechazado por Webpay.')
     except Exception as e:
         messages.error(request, f'Error al confirmar el pago: {str(e)}')
@@ -432,23 +470,30 @@ def eliminar_viaje(request, pk):
 @user_passes_test(es_coordinador)
 def pasajeros_viaje(request, pk):
     viaje = get_object_or_404(Viaje, pk=pk)
-    reservas_qs = Reserva.objects.filter(viaje=viaje).exclude(estado='cancelado').select_related('usuario__perfilusuario').order_by('usuario__id', 'estado')
+    reservas_qs = Reserva.objects.filter(viaje=viaje).exclude(estado='cancelado').select_related('usuario__perfilusuario', 'horario').order_by('usuario__perfilusuario__rut')
 
-    # Agrupar por (usuario, estado) sumando cantidad y monto
     agrupado = {}
     for r in reservas_qs:
-        key = (r.usuario_id, r.estado, r.tipo_pasaje, r.horario_id)
-        if key not in agrupado:
-            agrupado[key] = {
+        rut = r.usuario.perfilusuario.rut if hasattr(r.usuario, 'perfilusuario') and r.usuario.perfilusuario else r.usuario.id
+        if rut not in agrupado:
+            agrupado[rut] = {
                 'usuario': r.usuario,
                 'estado': r.estado,
-                'tipo_pasaje': r.tipo_pasaje,
-                'horario': r.horario,
+                'tipos_pasaje': [],
+                'horarios': [],
                 'cantidad': 0,
                 'monto': 0,
             }
-        agrupado[key]['cantidad'] += r.cantidad
-        agrupado[key]['monto'] += r.monto
+        tipos = agrupado[rut]['tipos_pasaje']
+        existing = next((t for t in tipos if t['tipo'] == r.tipo_pasaje), None)
+        if existing:
+            existing['cantidad'] += r.cantidad
+        else:
+            tipos.append({'tipo': r.tipo_pasaje, 'cantidad': r.cantidad})
+        if r.horario and r.horario not in agrupado[rut]['horarios']:
+            agrupado[rut]['horarios'].append(r.horario)
+        agrupado[rut]['cantidad'] += r.cantidad
+        agrupado[rut]['monto'] += r.monto
 
     pasajeros = list(agrupado.values())
     return render(request, 'reservas/pasajeros_viaje.html', {'viaje': viaje, 'pasajeros': pasajeros, 'reservas': reservas_qs})
@@ -458,22 +503,30 @@ def pasajeros_viaje(request, pk):
 @user_passes_test(es_coordinador)
 def exportar_pasajeros_excel(request, pk):
     viaje = get_object_or_404(Viaje, pk=pk)
-    reservas_qs = Reserva.objects.filter(viaje=viaje).exclude(estado='cancelado').select_related('usuario__perfilusuario').order_by('usuario__id', 'estado')
+    reservas_qs = Reserva.objects.filter(viaje=viaje).exclude(estado='cancelado').select_related('usuario__perfilusuario', 'horario').order_by('usuario__perfilusuario__rut')
 
-    # Agrupar igual que en la vista pasajeros_viaje
     agrupado = {}
     for r in reservas_qs:
-        key = (r.usuario_id, r.estado, r.tipo_pasaje)
-        if key not in agrupado:
-            agrupado[key] = {
+        rut = r.usuario.perfilusuario.rut if hasattr(r.usuario, 'perfilusuario') and r.usuario.perfilusuario else r.usuario.id
+        if rut not in agrupado:
+            agrupado[rut] = {
                 'usuario': r.usuario,
                 'estado': r.estado,
-                'tipo_pasaje': r.tipo_pasaje,
+                'tipos_pasaje': [],
+                'horarios': [],
                 'cantidad': 0,
                 'monto': 0,
             }
-        agrupado[key]['cantidad'] += r.cantidad
-        agrupado[key]['monto'] += r.monto
+        tipos = agrupado[rut]['tipos_pasaje']
+        existing = next((t for t in tipos if t['tipo'] == r.tipo_pasaje), None)
+        if existing:
+            existing['cantidad'] += r.cantidad
+        else:
+            tipos.append({'tipo': r.tipo_pasaje, 'cantidad': r.cantidad})
+        if r.horario and r.horario not in agrupado[rut]['horarios']:
+            agrupado[rut]['horarios'].append(r.horario)
+        agrupado[rut]['cantidad'] += r.cantidad
+        agrupado[rut]['monto'] += r.monto
     pasajeros = list(agrupado.values())
 
     wb = openpyxl.Workbook()
