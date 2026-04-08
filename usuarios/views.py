@@ -3,6 +3,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
+from django.utils.http import url_has_allowed_host_and_scheme
 from .forms import RegistroForm, LoginForm, EditarPerfilForm, CrearUsuarioAdminForm, AsignarRolForm
 from .models import PerfilUsuario
 from .decorators import admin_required
@@ -32,7 +33,10 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, f'¡Bienvenido de vuelta, {user.first_name or user.username}!')
-            return redirect(request.GET.get('next', 'inicio'))
+            next_url = request.GET.get('next', '')
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                return redirect(next_url)
+            return redirect('inicio')
         else:
             messages.error(request, 'Usuario o contraseña incorrectos.')
     else:
@@ -106,10 +110,13 @@ def editar_usuario(request, pk):
     usuario = get_object_or_404(User, pk=pk)
     perfil = getattr(usuario, 'perfilusuario', None)
     if request.method == 'POST':
-        # Actualizar datos básicos
-        usuario.first_name = request.POST.get('first_name', usuario.first_name)
-        usuario.last_name = request.POST.get('last_name', usuario.last_name)
-        usuario.email = request.POST.get('email', usuario.email)
+        # Actualizar datos básicos con longitudes máximas según el modelo User de Django
+        first_name = request.POST.get('first_name', usuario.first_name)[:150]
+        last_name = request.POST.get('last_name', usuario.last_name)[:150]
+        email = request.POST.get('email', usuario.email)[:254]
+        usuario.first_name = first_name
+        usuario.last_name = last_name
+        usuario.email = email
         usuario.is_active = 'is_active' in request.POST
         usuario.save()
         messages.success(request, 'Usuario actualizado.')

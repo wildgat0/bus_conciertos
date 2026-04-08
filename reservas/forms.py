@@ -37,8 +37,9 @@ class ViajeForm(forms.ModelForm):
 class HorarioViajeForm(forms.ModelForm):
     class Meta:
         model = HorarioViaje
-        fields = ['salida', 'hora_salida', 'precio_ida', 'precio']
+        fields = ['ciudad', 'salida', 'hora_salida', 'precio_ida', 'precio']
         widgets = {
+            'ciudad': forms.Select(attrs={'class': 'form-select'}),
             'salida': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Terminal Alameda, Santiago'}),
             'hora_salida': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
             'precio_ida': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'placeholder': 'Ej: 15000'}),

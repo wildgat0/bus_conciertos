@@ -28,7 +28,14 @@
       "Bash(python manage.py shell -c \"from reservas.models import Reserva; count = Reserva.objects.count\\(\\); Reserva.objects.all\\(\\).delete\\(\\); print\\(f'Eliminados {count} registros.'\\)\")",
       "Bash(python manage.py makemigrations core --name remove_hora_concierto)",
       "Bash(python manage.py makemigrations reservas --name=\"add_precio_vuelta_to_viaje\")",
-      "Bash(python manage.py makemigrations reservas --name=\"add_grupo_compra_to_reserva\")"
+      "Bash(python manage.py makemigrations reservas --name=\"add_grupo_compra_to_reserva\")",
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(venv/Scripts/pip show:*)",
+      "Bash(\"./venv/Scripts/pip.exe\" install:*)",
+      "Bash(\"c:/Repositorio/bus_conciertos/venv/Scripts/pip.exe\" install:*)",
+      "Bash(\"c:/Repositorio/bus_conciertos/venv/Scripts/python.exe\" -m pip install xlsxwriter)",
+      "Bash(\"./venv/Scripts/python.exe\" manage.py makemigrations reservas)",
+      "Bash(\"./venv/Scripts/python.exe\" manage.py migrate)"
     ]
   }
 }

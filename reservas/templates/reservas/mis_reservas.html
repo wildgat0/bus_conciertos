@@ -123,14 +123,6 @@
             <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-credit-card"></i> Pagar ahora</button>
           </form>
         </div>
-        {% elif r.estado == 'cancelado' and r.viaje.estado == 'disponible' and r.viaje.cupos_disponibles > 0 %}
-        <div style="margin-top:0.8rem;">
-          <form method="POST" action="{% url 'iniciar_pago' r.viaje.pk %}" style="display:inline;">
-            {% csrf_token %}
-            <input type="hidden" name="cantidad" value="{{ r.cantidad }}">
-            <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-credit-card"></i> Reintentar pago</button>
-          </form>
-        </div>
         {% endif %}
       </div>
     </div>

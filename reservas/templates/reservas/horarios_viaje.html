@@ -28,7 +28,8 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Salida</th>
+                <th>Ciudad de Recogida</th>
+                <th>Paradero de Recogida</th>
                 <th>Hora Salida</th>
                 <th>Solo Ida (CLP)</th>
                 <th>Solo Vuelta (CLP)</th>
@@ -40,6 +41,7 @@
               {% for h in horarios %}
               <tr {% if editando and editando.pk == h.pk %}style="background:rgba(255,214,0,0.08);"{% endif %}>
                 <td>{{ forloop.counter }}</td>
+                <td><strong>{{ h.get_ciudad_display|upper }}</strong></td>
                 <td>
                   <strong>{{ h.salida }}</strong>
                 </td>
@@ -89,7 +91,11 @@
           </div>
           {% endif %}
           <div class="form-group">
-            <label>Salida</label>
+            <label>Ciudad de Recogida</label>
+            {{ form.ciudad }}
+          </div>
+          <div class="form-group">
+            <label>Paradero de Recogida</label>
             {{ form.salida }}
           </div>
           <div class="form-group">

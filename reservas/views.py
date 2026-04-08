@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.utils import timezone
 from decimal import Decimal
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, Case, When, IntegerField, Value
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 import uuid
@@ -97,7 +97,16 @@ def detalle_viaje(request, pk):
         else:
             proximo_hito = cupos_base + (10 - ciclo)
             proximo_beneficio = '50% descuento'
-    horarios = viaje.horarios.order_by('salida', 'hora_salida')
+    orden_ciudad = Case(
+        When(ciudad='BELLOTO',      then=Value(1)),
+        When(ciudad='VIÑA DEL MAR', then=Value(2)),
+        When(ciudad='VALPARAÍSO',   then=Value(3)),
+        When(ciudad='PLACILLA',     then=Value(4)),
+        When(ciudad='CASABLANCA',   then=Value(5)),
+        default=Value(99),
+        output_field=IntegerField(),
+    )
+    horarios = viaje.horarios.annotate(orden_ciudad=orden_ciudad).order_by('orden_ciudad', 'salida', 'hora_salida')
     context = {
         'viaje': viaje,
         'horarios': horarios,
@@ -523,54 +532,63 @@ def exportar_pasajeros_excel(request, pk):
             existing['cantidad'] += r.cantidad
         else:
             tipos.append({'tipo': r.tipo_pasaje, 'cantidad': r.cantidad})
-        if r.horario and r.horario not in agrupado[rut]['horarios']:
-            agrupado[rut]['horarios'].append(r.horario)
+        if r.horario:
+            existing_h = next((h for h in agrupado[rut]['horarios'] if h['horario'] == r.horario), None)
+            if existing_h:
+                existing_h['cantidad'] += r.cantidad
+            else:
+                agrupado[rut]['horarios'].append({'horario': r.horario, 'cantidad': r.cantidad})
         agrupado[rut]['cantidad'] += r.cantidad
         agrupado[rut]['monto'] += r.monto
     pasajeros = list(agrupado.values())
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = 'Pasajeros'
+    import re
+    import io
+    import xlsxwriter
 
-    header_font = Font(bold=True, color='000000')
-    header_fill = PatternFill(fill_type='solid', fgColor='FFD600')
-    header_align = Alignment(horizontal='center', vertical='center')
+    output = io.BytesIO()
+    wb = xlsxwriter.Workbook(output, {'in_memory': True})
+    ws = wb.add_worksheet('Pasajeros')
 
-    encabezados = ['#', 'Nombre', 'RUT', 'Teléfono', 'Tipo Pasaje', 'Cupos', 'Monto', 'Estado']
-    for col, texto in enumerate(encabezados, start=1):
-        celda = ws.cell(row=1, column=col, value=texto)
-        celda.font = header_font
-        celda.fill = header_fill
-        celda.alignment = header_align
+    fmt_header = wb.add_format({
+        'bold': True, 'bg_color': '#FFD600', 'font_color': '#000000',
+        'align': 'center', 'valign': 'vcenter', 'border': 1,
+    })
+    fmt_center = wb.add_format({'align': 'center', 'valign': 'vcenter'})
+    fmt_text   = wb.add_format({'valign': 'vcenter'})
+    fmt_wrap   = wb.add_format({'valign': 'vcenter', 'text_wrap': True})
 
-    for i, p in enumerate(pasajeros, start=1):
+    encabezados = ['Checklist', 'Checklist', 'Nombre', 'Cupos', 'Teléfono', 'Origen']
+    anchos      = [5,           5,           30,       8,       18,          25]
+
+    for col, (texto, ancho) in enumerate(zip(encabezados, anchos)):
+        ws.write(0, col, texto, fmt_header)
+        ws.set_column(col, col, ancho)
+
+    ws.set_row(0, 18)
+
+    for i, p in enumerate(pasajeros):
+        row = i + 1
         perfil = getattr(p['usuario'], 'perfilusuario', None)
-        estado_display = {'pagado': 'Pagado', 'pendiente': 'Pendiente de Pago', 'cancelado': 'Cancelado'}.get(p['estado'], p['estado'])
-        tipo_display = {'ida_vuelta': 'Ida y Vuelta', 'solo_ida': 'Solo Ida', 'solo_vuelta': 'Solo Vuelta'}.get(p['tipo_pasaje'], p['tipo_pasaje'])
-        ws.append([
-            i,
-            p['usuario'].get_full_name() or p['usuario'].username,
-            perfil.rut if perfil else '',
-            perfil.telefono if perfil else '',
-            tipo_display,
-            p['cantidad'],
-            int(p['monto']),
-            estado_display,
-        ])
+        origen = '\n'.join(f"{h['horario'].salida} ({h['cantidad']})" for h in p['horarios']) if p['horarios'] else ''
 
-    anchos = [5, 30, 15, 18, 16, 8, 14, 20]
-    for col, ancho in enumerate(anchos, start=1):
-        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = ancho
+        ws.insert_checkbox(row, 0, {'checked': False})
+        ws.insert_checkbox(row, 1, {'checked': False})
+        ws.write(row, 2, p['usuario'].get_full_name() or p['usuario'].username,    fmt_text)
+        ws.write(row, 3, p['cantidad'],                                            fmt_center)
+        ws.write(row, 4, perfil.telefono if perfil else '',                        fmt_text)
+        ws.write(row, 5, origen,                                                   fmt_wrap)
 
-    nombre_archivo = f"pasajeros_{viaje.concierto.artista}_{viaje.fecha_salida.strftime('%Y%m%d')}.xlsx"
-    nombre_archivo = nombre_archivo.replace(' ', '_')
+    wb.close()
+
+    artista_seguro = re.sub(r'[^\w\-]', '_', viaje.concierto.artista)
+    nombre_archivo = f"pasajeros_{artista_seguro}_{viaje.fecha_salida.strftime('%Y%m%d')}.xlsx"
 
     response = HttpResponse(
+        output.getvalue(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
-    wb.save(response)
     return response
 
 

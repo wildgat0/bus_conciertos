@@ -53,8 +53,17 @@ class Viaje(models.Model):
 
 
 class HorarioViaje(models.Model):
+    CIUDAD_CHOICES = [
+        ('BELLOTO',      'BELLOTO'),
+        ('VIÑA DEL MAR', 'VIÑA DEL MAR'),
+        ('VALPARAÍSO',   'VALPARAÍSO'),
+        ('PLACILLA',     'PLACILLA'),
+        ('CASABLANCA',   'CASABLANCA'),
+    ]
+
     viaje = models.ForeignKey(Viaje, on_delete=models.CASCADE, related_name='horarios', verbose_name='Viaje')
-    salida = models.CharField(max_length=200, verbose_name='Salida')
+    ciudad = models.CharField(max_length=20, choices=CIUDAD_CHOICES, verbose_name='Ciudad de Recogida', default='BELLOTO')
+    salida = models.CharField(max_length=200, verbose_name='Paradero de Recogida')
     hora_salida = models.TimeField(verbose_name='Hora de Salida')
     precio_ida = models.DecimalField(max_digits=10, decimal_places=0, default=0, verbose_name='Precio Solo Ida (CLP)')
     precio_vuelta = models.DecimalField(max_digits=10, decimal_places=0, default=0, verbose_name='Precio Solo Vuelta (CLP)')
