@@ -152,6 +152,10 @@
       position: static !important;
       flex-direction: column !important;
     }
+    #carrito-card {
+      min-width: unset !important;
+      max-width: unset !important;
+    }
     .dv-panel > div:last-child {
       min-width: unset !important;
       max-width: unset !important;
@@ -272,6 +276,38 @@
           <p style="color:rgba(255,255,255,0.6);font-size:0.9rem;"><i class="fa fa-calendar"></i> {{ viaje.concierto.fecha|date:"l d \d\e F, Y" }} — {{ viaje.concierto.hora|time:"H:i" }} hrs</p>
         </div>
 
+        {% if cupos_pagados or reserva_pendiente %}
+        <div class="dv-card-3" style="display:flex;flex-direction:row;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+          {% if cupos_pagados %}
+          <div style="background:#d4edda;border-radius:var(--radio-lg);padding:1.2rem 1.4rem;border:2px solid #a5d6a7;box-shadow:var(--sombra);text-align:center;flex:1;min-width:140px;">
+            <div style="width:36px;height:36px;background:#28a745;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.5rem;">
+              <i class="fa fa-check" style="color:#fff;font-size:0.85rem;"></i>
+            </div>
+            <div style="font-weight:700;color:#155724;font-size:0.9rem;margin-bottom:0.4rem;">Cupos confirmados</div>
+            <div style="font-family:'Bebas Neue';font-size:2.4rem;color:#155724;line-height:1;">{{ cupos_pagados }}</div>
+            <div style="font-size:0.78rem;color:#2e7d32;">cupo{{ cupos_pagados|pluralize }} pagado{{ cupos_pagados|pluralize }}</div>
+          </div>
+          {% endif %}
+          {% if reserva_pendiente %}
+          <div style="background:#fff8e1;border-radius:var(--radio-lg);padding:1.2rem 1.4rem;border:2px solid #ffe082;box-shadow:var(--sombra);text-align:center;flex:1;min-width:140px;">
+            <div style="width:36px;height:36px;background:#ffc107;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.5rem;">
+              <i class="fa fa-clock" style="color:#fff;font-size:0.85rem;"></i>
+            </div>
+            <div style="font-weight:700;color:#856404;font-size:0.9rem;margin-bottom:0.4rem;">Pago pendiente</div>
+            <div style="font-family:'Bebas Neue';font-size:2.4rem;color:#856404;line-height:1;">{{ reserva_pendiente.cantidad }}</div>
+            <div style="font-size:0.78rem;color:#856404;margin-bottom:0.8rem;">cupo{{ reserva_pendiente.cantidad|pluralize }} sin pagar</div>
+            <form method="POST" action="{% url 'iniciar_pago' viaje.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="cantidad" value="{{ reserva_pendiente.cantidad }}">
+              <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;font-size:0.8rem;">
+                <i class="fa fa-credit-card"></i> Pagar $<span class="fmt-clp">{{ reserva_pendiente.monto|floatformat:0 }}</span>
+              </button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
         <div class="dv-card-2" style="background:var(--blanco);border-radius:var(--radio-lg);padding:1.5rem;box-shadow:var(--sombra);margin-bottom:1.5rem;">
           <h3 style="margin-bottom:1.2rem;border-bottom:2px solid var(--amarillo);padding-bottom:0.5rem;">Detalles del Recorrido</h3>
           <div style="display:grid;gap:1rem;">
@@ -291,7 +327,7 @@
               <div>
                 <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--gris-medio);">Regreso</div>
                 <div style="font-weight:700;">{{ viaje.destino }}</div>
-                <div style="color:var(--gris-medio);font-size:0.9rem;">{{ viaje.fecha_regreso|date:"d/m/Y" }} a las {{ viaje.fecha_regreso|time:"H:i" }} hrs</div>
+                <div style="color:var(--gris-medio);font-size:0.9rem;">{{ viaje.fecha_regreso|date:"d/m/Y" }}<span id="regreso-hora"> a las {{ viaje.fecha_regreso|time:"H:i" }} hrs</span></div>
               </div>
             </div>
           </div>
@@ -302,18 +338,6 @@
           {% endif %}
         </div>
 
-        {% if perfil %}
-        <div class="dv-card-3" style="background:var(--amarillo-light);border-radius:var(--radio-lg);padding:1.5rem;border:2px solid var(--amarillo);">
-          <h4 style="margin-bottom:1rem;"><i class="fa fa-user"></i> Tus datos de pasajero</h4>
-          <div class="dv-pasajero-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.9rem;">
-            <div><strong>Nombre:</strong> {{ user.get_full_name }}</div>
-            <div><strong>RUT:</strong> {{ perfil.rut }}</div>
-            <div><strong>Email:</strong> {{ user.email }}</div>
-            <div><strong>Teléfono:</strong> {{ perfil.telefono }}</div>
-          </div>
-          <p style="margin-top:0.8rem;font-size:0.82rem;color:var(--gris-medio);">Estos datos se usarán para tu reserva. <a href="{% url 'mi_perfil' %}">Actualizar perfil</a></p>
-        </div>
-        {% endif %}
       </div>
 
       <!-- Panel de reserva -->
@@ -343,64 +367,70 @@
                 {% if perfil %}
 
                 <!-- Fidelidad -->
-                <div style="border:1px solid #e0e0e0;border-radius:var(--radio);padding:0.8rem 1rem;margin-bottom:1rem;background:#fafafa;">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
-                    <span style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gris-medio);">Cupos comprados</span>
-                    <span id="fidelidad-contador" style="font-family:'Bebas Neue';font-size:1.1rem;color:var(--negro);">{{ cupos_base }}</span>
+                <div style="border:1px solid #e9ecef;border-radius:var(--radio);padding:0.75rem 1rem;margin-bottom:1.2rem;background:#f8f9fa;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--gris-medio);"><i class="fa fa-star" style="color:var(--amarillo);margin-right:0.3rem;"></i>Cupos comprados</span>
+                    <span id="fidelidad-contador" style="font-family:'Bebas Neue';font-size:1.2rem;color:var(--negro);">{{ cupos_base }}</span>
                   </div>
-                  <div style="background:#e9ecef;border-radius:999px;height:8px;overflow:hidden;margin-bottom:0.4rem;">
+                  <div style="background:#e9ecef;border-radius:999px;height:6px;overflow:hidden;margin-bottom:0.5rem;">
                     <div id="fidelidad-barra" style="height:100%;border-radius:999px;background:linear-gradient(90deg,var(--amarillo),#ffc200);width:0%;transition:width 0.4s;"></div>
                   </div>
-                  <div id="fidelidad-msg" style="font-size:0.75rem;color:var(--gris-medio);text-align:center;">
+                  <div id="fidelidad-msg" style="font-size:0.72rem;color:var(--gris-medio);text-align:center;">
                     Próximo beneficio en cupo N°{{ proximo_hito }}: <strong>{{ proximo_beneficio }}</strong>
                   </div>
                 </div>
 
-                <!-- Selector de cantidad y botón agregar al carrito -->
+                <!-- Datos del pasajero -->
+                <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:var(--radio);padding:1rem;margin-bottom:1rem;">
+                  <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--gris-medio);margin-bottom:0.8rem;"><i class="fa fa-user" style="margin-right:0.3rem;"></i>Datos del pasajero</div>
+
+                  <!-- Nombre -->
+                  <div style="margin-bottom:0.75rem;">
+                    <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.3rem;color:var(--negro);">Nombre y apellido</label>
+                    <input type="text" id="nombre-titular-input" class="form-control" placeholder="Ej: Juan Pérez" style="font-size:0.95rem;padding:0.5rem 0.75rem;">
+                  </div>
+
+                  <!-- Contacto -->
+                  <div>
+                    <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.3rem;color:var(--negro);">Teléfono de contacto</label>
+                    <div style="display:flex;border:1px solid #ced4da;border-radius:var(--radio);overflow:hidden;background:#fff;">
+                      <span style="background:#e9ecef;padding:0.5rem 0.75rem;font-size:0.9rem;font-weight:700;color:#495057;white-space:nowrap;border-right:1px solid #ced4da;">+56 9</span>
+                      <input type="text" id="contacto-input" placeholder="XXXX XXXX" maxlength="9" style="border:none;outline:none;padding:0.5rem 0.75rem;font-size:0.95rem;width:100%;background:#fff;letter-spacing:0.05em;"
+                        oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/(\d{4})(?=\d)/,'$1 ').slice(0,9)">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Retorno -->
+                <div id="ciudad-vuelta-contenedor" style="display:none;margin-bottom:1rem;">
+                  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.3rem;color:var(--negro);"><i class="fa fa-map-marker-alt" style="color:var(--gris-medio);margin-right:0.3rem;"></i>¿Dónde se baja en el retorno?</label>
+                  <select id="ciudad-vuelta-input" class="form-control" style="font-size:0.95rem;padding:0.5rem 0.75rem;">
+                    <option value="">— Selecciona ciudad —</option>
+                    <option value="Belloto">Belloto</option>
+                    <option value="Viña del Mar">Viña del Mar</option>
+                    <option value="Valparaíso">Valparaíso</option>
+                    <option value="Placilla">Placilla</option>
+                    <option value="Casablanca - Cruce Chacabuco">Casablanca - Cruce Chacabuco</option>
+                  </select>
+                </div>
+
+                <!-- Cantidad -->
                 <div style="margin-bottom:1rem;">
-                  <label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:0.4rem;">Cantidad de cupos</label>
-                  <input type="number" id="cantidad-input" value="1" min="1" max="{{ viaje.cupos_disponibles }}" class="form-control" style="text-align:center;font-size:1.1rem;font-weight:700;">
-                  <div id="total-momentaneo" style="display:none;margin-top:0.5rem;background:var(--gris-claro);border-radius:var(--radio);padding:0.5rem 0.8rem;justify-content:space-between;align-items:center;">
-                    <span style="font-size:0.82rem;color:var(--gris-medio);">Subtotal este ítem</span>
-                    <span style="font-family:'Bebas Neue';font-size:1.3rem;color:var(--negro);">$<span id="total-momentaneo-numero">0</span></span>
+                  <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.3rem;color:var(--negro);"><i class="fa fa-ticket-alt" style="color:var(--gris-medio);margin-right:0.3rem;"></i>Cantidad de cupos</label>
+                  <div style="display:flex;align-items:center;border:1px solid #ced4da;border-radius:var(--radio);overflow:hidden;background:#fff;">
+                    <button type="button" onclick="let i=document.getElementById('cantidad-input');let v=Math.max(1,parseInt(i.value)||1);i.value=Math.max(1,v-1);i.dispatchEvent(new Event('input'));" style="background:#e9ecef;border:none;padding:0.5rem 0.9rem;font-size:1.1rem;cursor:pointer;font-weight:700;color:#495057;">−</button>
+                    <input type="number" id="cantidad-input" value="1" min="1" max="{{ viaje.cupos_disponibles }}" style="border:none;outline:none;text-align:center;font-size:1.1rem;font-weight:700;width:100%;padding:0.5rem 0;">
+                    <button type="button" onclick="let i=document.getElementById('cantidad-input');let v=parseInt(i.value)||1;i.value=Math.min({{ viaje.cupos_disponibles }},v+1);i.dispatchEvent(new Event('input'));" style="background:#e9ecef;border:none;padding:0.5rem 0.9rem;font-size:1.1rem;cursor:pointer;font-weight:700;color:#495057;">+</button>
+                  </div>
+                  <div id="total-momentaneo" style="display:none;margin-top:0.5rem;background:#fff9c4;border:1px solid #ffe082;border-radius:var(--radio);padding:0.5rem 0.8rem;justify-content:space-between;align-items:center;">
+                    <span style="font-size:0.82rem;color:#856404;">Subtotal este ítem</span>
+                    <span style="font-family:'Bebas Neue';font-size:1.3rem;color:#5d4037;">$<span id="total-momentaneo-numero">0</span></span>
                   </div>
                 </div>
 
-                <button type="button" id="btn-agregar-carrito" onclick="agregarAlCarrito()" class="btn btn-dark" style="width:100%;justify-content:center;margin-bottom:1rem;">
-                  <i class="fa fa-plus"></i> Agregar al carrito
+                <button type="button" id="btn-agregar-carrito" onclick="agregarAlCarrito()" class="btn btn-dark" style="width:100%;justify-content:center;margin-bottom:0;gap:0.5rem;">
+                  <i class="fa fa-cart-plus"></i> Agregar al carrito
                 </button>
-
-                <!-- Carrito -->
-                <div id="carrito-contenedor" style="display:none;margin-bottom:1rem;">
-                  <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gris-medio);margin-bottom:0.5rem;">Carrito</div>
-                  <div id="carrito-lista" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
-                  <div style="border-top:2px solid var(--amarillo);margin-top:0.7rem;padding-top:0.7rem;display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-size:0.85rem;color:var(--gris-medio);">Total a pagar</span>
-                    <span style="font-family:'Bebas Neue';font-size:1.6rem;color:var(--negro);">$<span id="total-numero">0</span></span>
-                  </div>
-                </div>
-
-                <form id="form-pagar" method="POST" action="{% url 'iniciar_pago' viaje.pk %}" style="margin-bottom:0.75rem;display:none;">
-                  {% csrf_token %}
-                  <input type="hidden" name="carrito_items" id="carrito-items-pagar" value="[]">
-                  <div style="font-size:0.78rem;color:var(--gris-medio);margin-bottom:0.5rem;background:var(--gris-claro);padding:0.6rem 0.8rem;border-radius:var(--radio);">
-                    <i class="fa fa-shield-alt" style="color:var(--exito);"></i> Pago seguro con <strong>WebPay Transbank</strong>
-                  </div>
-                  <button type="button" id="btn-pagar" class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.9rem;">
-                    <i class="fa fa-credit-card"></i> Pagar Reserva
-                  </button>
-                </form>
-
-                <form id="form-pendiente" method="POST" action="{% url 'reservar_pendiente' viaje.pk %}" style="display:none;">
-                  {% csrf_token %}
-                  <input type="hidden" name="carrito_items" id="carrito-items-pendiente" value="[]">
-                  <button type="button" id="btn-pendiente" class="btn btn-dark" style="width:100%;justify-content:center;font-size:0.95rem;padding:0.9rem;">
-                    <i class="fa fa-clock"></i> Reservar con Pago Pendiente
-                  </button>
-                </form>
-                <p id="nota-pendiente" style="font-size:0.75rem;color:var(--gris-medio);margin-top:0.5rem;text-align:center;display:none;">
-                  <i class="fa fa-info-circle"></i> Si no pagas, la reserva se cancelará 2 días antes del evento.
-                </p>
 
                 <script>
                   (function(){
@@ -442,7 +472,7 @@
 
                     function renderCarrito() {
                       const lista = document.getElementById('carrito-lista');
-                      const cont  = document.getElementById('carrito-contenedor');
+                      const carritoCard = document.getElementById('carrito-card');
                       const formPagar   = document.getElementById('form-pagar');
                       const formPend    = document.getElementById('form-pendiente');
                       const notaPend    = document.getElementById('nota-pendiente');
@@ -450,14 +480,13 @@
 
                       lista.innerHTML = '';
                       if (window._carrito.length === 0) {
-                        cont.style.display = 'none';
+                        lista.innerHTML = '<div style="text-align:center;padding:1.2rem 0.5rem;color:var(--gris-medio);font-size:0.85rem;"><i class="fa fa-shopping-cart" style="font-size:1.5rem;display:block;margin-bottom:0.4rem;opacity:0.3;"></i>Esperando a tus reservas</div>';
                         formPagar.style.display = 'none';
                         formPend.style.display = 'none';
                         notaPend.style.display = 'none';
                         return;
                       }
 
-                      cont.style.display = 'block';
                       formPagar.style.display = 'block';
                       formPend.style.display = 'block';
                       notaPend.style.display = 'block';
@@ -466,7 +495,7 @@
                         const row = document.createElement('div');
                         row.style.cssText = 'display:flex;align-items:center;gap:0.4rem;background:#f8f9fa;border-radius:var(--radio);padding:0.4rem 0.6rem;font-size:0.8rem;';
                         row.innerHTML = `
-                          <span style="flex:1;font-weight:600;">${item.tipo_label}${item.horario_txt ? ' · ' + item.horario_txt : ''}</span>
+                          <span style="flex:1;font-weight:600;">${item.nombre_titular} · ${item.tipo_label}${item.horario_txt ? ' · ' + item.horario_txt : ''}${item.ciudad_vuelta ? ' · ' + item.ciudad_vuelta : ''}</span>
                           <span style="white-space:nowrap;">${item.cantidad} cupo${item.cantidad > 1 ? 's' : ''} · $${formatCLP(item.monto)}</span>
                           <button type="button" onclick="eliminarDelCarrito(${idx})" style="background:none;border:none;cursor:pointer;color:var(--peligro);font-size:0.85rem;padding:0 0.2rem;">
                             <i class="fa fa-times"></i>
@@ -511,6 +540,22 @@
                         alert('Selecciona un horario de recogida.'); return;
                       }
 
+                      // Validar nombre del titular
+                      const nombreTitular = (document.getElementById('nombre-titular-input')?.value || '').trim();
+                      if (!nombreTitular) { alert('Ingresa el nombre del titular de la reserva.'); return; }
+
+                      // Validar contacto
+                      const contactoRaw = (document.getElementById('contacto-input')?.value || '').replace(/\s/g, '');
+                      if (!contactoRaw || contactoRaw.length < 8) { alert('Ingresa un número de contacto válido (+56 9 XXXX XXXX).'); return; }
+                      const contacto = '+56 9 ' + contactoRaw.slice(0,4) + ' ' + contactoRaw.slice(4);
+
+                      // Validar ciudad de vuelta si aplica
+                      let ciudadVuelta = '';
+                      if (tipo === 'ida_vuelta' || tipo === 'solo_vuelta') {
+                        ciudadVuelta = document.getElementById('ciudad-vuelta-input')?.value || '';
+                        if (!ciudadVuelta) { alert('Selecciona la ciudad de salida para la vuelta.'); return; }
+                      }
+
                       const cantInput = document.getElementById('cantidad-input');
                       const cant = Math.max(1, Math.min(parseInt(cantInput.value) || 1, maxCupos));
                       cantInput.value = cant;
@@ -522,13 +567,16 @@
                       const TIPO_LABELS = { ida_vuelta: 'Ida y Vuelta', solo_ida: 'Solo Ida', solo_vuelta: 'Solo Vuelta' };
 
                       window._carrito.push({
-                        tipo_pasaje: tipo,
-                        tipo_label:  TIPO_LABELS[tipo] || tipo,
-                        horario_id:  horarioId,
-                        horario_txt: horarioTxt,
-                        cantidad:    cant,
-                        precio_unit: precio,
-                        monto:       monto,
+                        tipo_pasaje:    tipo,
+                        tipo_label:     TIPO_LABELS[tipo] || tipo,
+                        horario_id:     horarioId,
+                        horario_txt:    horarioTxt,
+                        ciudad_vuelta:  ciudadVuelta,
+                        nombre_titular: nombreTitular,
+                        contacto:       contacto,
+                        cantidad:       cant,
+                        precio_unit:    precio,
+                        monto:          monto,
                       });
 
                       renderCarrito();
@@ -549,25 +597,37 @@
                       window._HORARIO_SELECCIONADO_ID  = '';
                       window._HORARIO_SELECCIONADO_TXT = '';
                       window._precioBase = 0;
+                      const ciudadInput = document.getElementById('ciudad-vuelta-input');
+                      if (ciudadInput) ciudadInput.value = '';
+                      const ciudadCont = document.getElementById('ciudad-vuelta-contenedor');
+                      if (ciudadCont) ciudadCont.style.display = 'none';
+                      const nombreInput = document.getElementById('nombre-titular-input');
+                      if (nombreInput) nombreInput.value = '';
+                      const contactoInput = document.getElementById('contacto-input');
+                      if (contactoInput) contactoInput.value = '';
+                      cantInput.value = 1;
+                      cantInput.dispatchEvent(new Event('input'));
                       document.getElementById('precio-display').textContent = '—';
                     };
 
                     function serializarCarrito() {
                       return JSON.stringify(window._carrito.map(function(it) {
-                        return { tipo_pasaje: it.tipo_pasaje, horario_id: it.horario_id, cantidad: it.cantidad };
+                        return { tipo_pasaje: it.tipo_pasaje, horario_id: it.horario_id, cantidad: it.cantidad, ciudad_vuelta: it.ciudad_vuelta || '', nombre_titular: it.nombre_titular || '', contacto: it.contacto || '' };
                       }));
                     }
 
-                    document.getElementById('btn-pagar').addEventListener('click', function() {
-                      const json = serializarCarrito();
-                      document.getElementById('carrito-items-pagar').value = json;
-                      document.getElementById('form-pagar').submit();
-                    });
-
-                    document.getElementById('btn-pendiente').addEventListener('click', function() {
-                      const json = serializarCarrito();
-                      document.getElementById('carrito-items-pendiente').value = json;
-                      document.getElementById('form-pendiente').submit();
+                    // Los botones están en carrito-card (fuera del script), se ligan con delegación
+                    document.addEventListener('click', function(e) {
+                      if (e.target.closest('#btn-pagar')) {
+                        const json = serializarCarrito();
+                        document.getElementById('carrito-items-pagar').value = json;
+                        document.getElementById('form-pagar').submit();
+                      }
+                      if (e.target.closest('#btn-pendiente')) {
+                        const json = serializarCarrito();
+                        document.getElementById('carrito-items-pendiente').value = json;
+                        document.getElementById('form-pendiente').submit();
+                      }
                     });
 
                     // Expuesto para compatibilidad
@@ -639,6 +699,11 @@
                       actualizarFidelidad(cant);
                       actualizarTotalMomentaneo(cant);
                     });
+
+                    // Inicializar barra de fidelidad al cargar la página
+                    actualizarFidelidad(parseInt(cantInputEl.value) || 1);
+                    // Diferir renderCarrito: carrito-lista está después del script en el DOM
+                    setTimeout(renderCarrito, 0);
                   })();
                 </script>
 
@@ -665,38 +730,44 @@
           </div>
         </div>
 
-        {% if cupos_pagados or reserva_pendiente %}
-        <div style="display:flex;flex-direction:column;gap:1rem;min-width:190px;max-width:220px;">
-          {% if cupos_pagados %}
-          <div style="background:#d4edda;border-radius:var(--radio-lg);padding:1.2rem 1.4rem;border:2px solid #a5d6a7;box-shadow:var(--sombra);text-align:center;">
-            <div style="width:36px;height:36px;background:#28a745;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.5rem;">
-              <i class="fa fa-check" style="color:#fff;font-size:0.85rem;"></i>
-            </div>
-            <div style="font-weight:700;color:#155724;font-size:0.9rem;margin-bottom:0.4rem;">Cupos confirmados</div>
-            <div style="font-family:'Bebas Neue';font-size:2.4rem;color:#155724;line-height:1;">{{ cupos_pagados }}</div>
-            <div style="font-size:0.78rem;color:#2e7d32;">cupo{{ cupos_pagados|pluralize }} pagado{{ cupos_pagados|pluralize }}</div>
+        <!-- Card carrito -->
+        <div id="carrito-card" style="display:block;background:var(--blanco);border-radius:var(--radio-lg);box-shadow:var(--sombra-fuerte);overflow:hidden;border:2px solid var(--amarillo);min-width:270px;max-width:310px;align-self:flex-start;">
+          <div style="background:var(--negro);padding:1rem 1.5rem;text-align:center;">
+            <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px;"><i class="fa fa-shopping-cart" style="color:var(--amarillo);margin-right:0.4rem;"></i> Carrito de compras</div>
           </div>
-          {% endif %}
-
-          {% if reserva_pendiente %}
-          <div style="background:#fff8e1;border-radius:var(--radio-lg);padding:1.2rem 1.4rem;border:2px solid #ffe082;box-shadow:var(--sombra);text-align:center;">
-            <div style="width:36px;height:36px;background:#ffc107;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.5rem;">
-              <i class="fa fa-clock" style="color:#fff;font-size:0.85rem;"></i>
+          <div style="padding:1.2rem;">
+            <div id="carrito-contenedor" style="margin-bottom:1rem;">
+              <div id="carrito-lista" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
+              <div style="border-top:2px solid var(--amarillo);margin-top:0.7rem;padding-top:0.7rem;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:0.85rem;color:var(--gris-medio);">Total a pagar</span>
+                <span style="font-family:'Bebas Neue';font-size:1.6rem;color:var(--negro);">$<span id="total-numero">0</span></span>
+              </div>
             </div>
-            <div style="font-weight:700;color:#856404;font-size:0.9rem;margin-bottom:0.4rem;">Pago pendiente</div>
-            <div style="font-family:'Bebas Neue';font-size:2.4rem;color:#856404;line-height:1;">{{ reserva_pendiente.cantidad }}</div>
-            <div style="font-size:0.78rem;color:#856404;margin-bottom:0.8rem;">cupo{{ reserva_pendiente.cantidad|pluralize }} sin pagar</div>
-            <form method="POST" action="{% url 'iniciar_pago' viaje.pk %}">
+
+            <form id="form-pagar" method="POST" action="{% url 'iniciar_pago' viaje.pk %}" style="margin-bottom:0.75rem;display:none;">
               {% csrf_token %}
-              <input type="hidden" name="cantidad" value="{{ reserva_pendiente.cantidad }}">
-              <button type="submit" class="btn btn-primary btn-sm" style="width:100%;justify-content:center;font-size:0.8rem;">
-                <i class="fa fa-credit-card"></i> Pagar $<span class="fmt-clp">{{ reserva_pendiente.monto|floatformat:0 }}</span>
+              <input type="hidden" name="carrito_items" id="carrito-items-pagar" value="[]">
+              <div style="font-size:0.78rem;color:var(--gris-medio);margin-bottom:0.5rem;background:var(--gris-claro);padding:0.6rem 0.8rem;border-radius:var(--radio);">
+                <i class="fa fa-shield-alt" style="color:var(--exito);"></i> Pago seguro con <strong>WebPay Transbank</strong>
+              </div>
+              <button type="button" id="btn-pagar" class="btn btn-primary" style="width:100%;justify-content:center;font-size:1rem;padding:0.9rem;">
+                <i class="fa fa-credit-card"></i> Pagar Reserva
               </button>
             </form>
+
+            <form id="form-pendiente" method="POST" action="{% url 'reservar_pendiente' viaje.pk %}" style="display:none;">
+              {% csrf_token %}
+              <input type="hidden" name="carrito_items" id="carrito-items-pendiente" value="[]">
+              <button type="button" id="btn-pendiente" class="btn btn-dark" style="width:100%;justify-content:center;font-size:0.95rem;padding:0.9rem;">
+                <i class="fa fa-clock"></i> Reservar con Pago Pendiente
+              </button>
+            </form>
+            <p id="nota-pendiente" style="font-size:0.75rem;color:var(--gris-medio);margin-top:0.5rem;text-align:center;display:none;">
+              <i class="fa fa-info-circle"></i> Si no pagas, la reserva se cancelará 2 días antes del evento.
+            </p>
           </div>
-          {% endif %}
         </div>
-        {% endif %}
+
 
       </div>
     </div>
@@ -833,6 +904,15 @@
     if (tramIda)    tramIda.style.display    = cfg.ida    ? 'flex' : 'none';
     if (tramVuelta) tramVuelta.style.display = cfg.vuelta ? 'flex' : 'none';
     if (separador)  separador.style.display  = (cfg.ida && cfg.vuelta) ? 'block' : 'none';
+    const regresoHora = document.getElementById('regreso-hora');
+    if (regresoHora) regresoHora.style.display = (tipo === 'solo_vuelta' || tipo === 'ida_vuelta') ? 'none' : '';
+
+    // Mostrar/ocultar selector de ciudad de vuelta
+    const ciudadContenedor = document.getElementById('ciudad-vuelta-contenedor');
+    if (ciudadContenedor) {
+      ciudadContenedor.style.display = (tipo === 'ida_vuelta' || tipo === 'solo_vuelta') ? 'block' : 'none';
+      document.getElementById('ciudad-vuelta-input').value = '';
+    }
 
     // Resetear horario seleccionado
     window._HORARIO_SELECCIONADO_ID  = '';

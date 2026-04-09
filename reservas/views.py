@@ -180,6 +180,9 @@ def reservar_pendiente(request, pk):
             cantidad_item = 1
         tipo_pasaje = item.get('tipo_pasaje', 'ida_vuelta')
         horario_id = item.get('horario_id', '')
+        nombre_titular = item.get('nombre_titular', '').strip()
+        ciudad_vuelta = item.get('ciudad_vuelta', '').strip()
+        contacto = item.get('contacto', '').strip()
         horario = None
         if horario_id:
             try:
@@ -200,6 +203,9 @@ def reservar_pendiente(request, pk):
             tipo_pasaje=tipo_pasaje,
             monto=monto_item,
             grupo_compra=grupo,
+            nombre_titular=nombre_titular,
+            ciudad_vuelta=ciudad_vuelta,
+            contacto=contacto,
         )
 
     messages.success(request, 'Reserva realizada. Recuerda pagar antes de 5 días previos al evento.')
@@ -250,6 +256,9 @@ def iniciar_pago(request, pk):
             cantidad_item = 1
         tipo_pasaje = item.get('tipo_pasaje', 'ida_vuelta')
         horario_id = item.get('horario_id', '')
+        nombre_titular = item.get('nombre_titular', '').strip()
+        ciudad_vuelta = item.get('ciudad_vuelta', '').strip()
+        contacto = item.get('contacto', '').strip()
         horario = None
         if horario_id:
             try:
@@ -271,6 +280,9 @@ def iniciar_pago(request, pk):
             tipo_pasaje=tipo_pasaje,
             monto=monto_item,
             grupo_compra=grupo,
+            nombre_titular=nombre_titular,
+            ciudad_vuelta=ciudad_vuelta,
+            contacto=contacto,
         )
         reservas_creadas.append(r)
 
@@ -479,72 +491,25 @@ def eliminar_viaje(request, pk):
 @user_passes_test(es_coordinador)
 def pasajeros_viaje(request, pk):
     viaje = get_object_or_404(Viaje, pk=pk)
-    reservas_qs = Reserva.objects.filter(viaje=viaje).exclude(estado='cancelado').select_related('usuario__perfilusuario', 'horario').order_by('usuario__perfilusuario__rut')
-
-    agrupado = {}
-    for r in reservas_qs:
-        rut = r.usuario.perfilusuario.rut if hasattr(r.usuario, 'perfilusuario') and r.usuario.perfilusuario else r.usuario.id
-        if rut not in agrupado:
-            agrupado[rut] = {
-                'usuario': r.usuario,
-                'estado': r.estado,
-                'tipos_pasaje': [],
-                'horarios': [],
-                'cantidad': 0,
-                'monto': 0,
-            }
-        tipos = agrupado[rut]['tipos_pasaje']
-        existing = next((t for t in tipos if t['tipo'] == r.tipo_pasaje), None)
-        if existing:
-            existing['cantidad'] += r.cantidad
-        else:
-            tipos.append({'tipo': r.tipo_pasaje, 'cantidad': r.cantidad})
-        if r.horario and r.horario not in agrupado[rut]['horarios']:
-            agrupado[rut]['horarios'].append(r.horario)
-        agrupado[rut]['cantidad'] += r.cantidad
-        agrupado[rut]['monto'] += r.monto
-
-    pasajeros = list(agrupado.values())
-    return render(request, 'reservas/pasajeros_viaje.html', {'viaje': viaje, 'pasajeros': pasajeros, 'reservas': reservas_qs})
+    pasajeros = Reserva.objects.filter(viaje=viaje).exclude(estado='cancelado').select_related('usuario__perfilusuario', 'horario').order_by('fecha_reserva')
+    return render(request, 'reservas/pasajeros_viaje.html', {'viaje': viaje, 'pasajeros': pasajeros})
 
 
 @login_required
 @user_passes_test(es_coordinador)
 def exportar_pasajeros_excel(request, pk):
     viaje = get_object_or_404(Viaje, pk=pk)
-    reservas_qs = Reserva.objects.filter(viaje=viaje).exclude(estado='cancelado').select_related('usuario__perfilusuario', 'horario').order_by('usuario__perfilusuario__rut')
-
-    agrupado = {}
-    for r in reservas_qs:
-        rut = r.usuario.perfilusuario.rut if hasattr(r.usuario, 'perfilusuario') and r.usuario.perfilusuario else r.usuario.id
-        if rut not in agrupado:
-            agrupado[rut] = {
-                'usuario': r.usuario,
-                'estado': r.estado,
-                'tipos_pasaje': [],
-                'horarios': [],
-                'cantidad': 0,
-                'monto': 0,
-            }
-        tipos = agrupado[rut]['tipos_pasaje']
-        existing = next((t for t in tipos if t['tipo'] == r.tipo_pasaje), None)
-        if existing:
-            existing['cantidad'] += r.cantidad
-        else:
-            tipos.append({'tipo': r.tipo_pasaje, 'cantidad': r.cantidad})
-        if r.horario:
-            existing_h = next((h for h in agrupado[rut]['horarios'] if h['horario'] == r.horario), None)
-            if existing_h:
-                existing_h['cantidad'] += r.cantidad
-            else:
-                agrupado[rut]['horarios'].append({'horario': r.horario, 'cantidad': r.cantidad})
-        agrupado[rut]['cantidad'] += r.cantidad
-        agrupado[rut]['monto'] += r.monto
-    pasajeros = list(agrupado.values())
+    reservas_qs = Reserva.objects.filter(viaje=viaje).exclude(estado='cancelado').select_related('usuario__perfilusuario', 'horario').order_by('fecha_reserva')
 
     import re
     import io
     import xlsxwriter
+
+    TIPO_LABELS = {
+        'ida_vuelta':  'Ida y Vuelta',
+        'solo_ida':    'Solo Ida',
+        'solo_vuelta': 'Solo Vuelta',
+    }
 
     output = io.BytesIO()
     wb = xlsxwriter.Workbook(output, {'in_memory': True})
@@ -556,10 +521,9 @@ def exportar_pasajeros_excel(request, pk):
     })
     fmt_center = wb.add_format({'align': 'center', 'valign': 'vcenter'})
     fmt_text   = wb.add_format({'valign': 'vcenter'})
-    fmt_wrap   = wb.add_format({'valign': 'vcenter', 'text_wrap': True})
 
-    encabezados = ['Checklist', 'Checklist', 'Nombre', 'Cupos', 'Teléfono', 'Origen']
-    anchos      = [5,           5,           30,       8,       18,          25]
+    encabezados = ['Titular', 'Cupos', 'Contacto', 'Origen', 'Retorno', 'Tipo de Pasaje']
+    anchos      = [30,        8,       18,          25,       25,        18]
 
     for col, (texto, ancho) in enumerate(zip(encabezados, anchos)):
         ws.write(0, col, texto, fmt_header)
@@ -567,17 +531,15 @@ def exportar_pasajeros_excel(request, pk):
 
     ws.set_row(0, 18)
 
-    for i, p in enumerate(pasajeros):
+    for i, r in enumerate(reservas_qs):
         row = i + 1
-        perfil = getattr(p['usuario'], 'perfilusuario', None)
-        origen = '\n'.join(f"{h['horario'].salida} ({h['cantidad']})" for h in p['horarios']) if p['horarios'] else ''
-
-        ws.insert_checkbox(row, 0, {'checked': False})
-        ws.insert_checkbox(row, 1, {'checked': False})
-        ws.write(row, 2, p['usuario'].get_full_name() or p['usuario'].username,    fmt_text)
-        ws.write(row, 3, p['cantidad'],                                            fmt_center)
-        ws.write(row, 4, perfil.telefono if perfil else '',                        fmt_text)
-        ws.write(row, 5, origen,                                                   fmt_wrap)
+        origen = f"{r.horario.ciudad} {r.horario.hora_salida.strftime('%H:%M')} hrs" if r.horario else '—'
+        ws.write(row, 0, r.nombre_titular or '—',              fmt_text)
+        ws.write(row, 1, r.cantidad,                           fmt_center)
+        ws.write(row, 2, r.contacto or '—',                    fmt_text)
+        ws.write(row, 3, origen,                               fmt_text)
+        ws.write(row, 4, (r.ciudad_vuelta or '—').upper(),     fmt_text)
+        ws.write(row, 5, TIPO_LABELS.get(r.tipo_pasaje, '—'),  fmt_text)
 
     wb.close()
 

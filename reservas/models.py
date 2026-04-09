@@ -103,6 +103,9 @@ class Reserva(models.Model):
     orden_compra = models.CharField(max_length=50, unique=True)
     monto = models.DecimalField(max_digits=10, decimal_places=0)
     grupo_compra = models.CharField(max_length=50, blank=True, null=True, db_index=True)
+    nombre_titular = models.CharField(max_length=150, blank=True, default='', verbose_name='Nombre del titular')
+    ciudad_vuelta = models.CharField(max_length=100, blank=True, default='', verbose_name='Ciudad de retorno')
+    contacto = models.CharField(max_length=20, blank=True, default='', verbose_name='Contacto')
 
     class Meta:
         verbose_name = 'Reserva'

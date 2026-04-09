@@ -42,12 +42,12 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Pasajero</th>
-            <th>RUT</th>
-            <th>Contacto</th>
-            <th>Horario</th>
-            <th>Tipo de Pasaje</th>
+            <th>Titular</th>
             <th>Cupos</th>
+            <th>Contacto</th>
+            <th>Origen</th>
+            <th>Retorno</th>
+            <th>Tipo de Pasaje</th>
             <th>Estado</th>
           </tr>
         </thead>
@@ -55,34 +55,25 @@
           {% for p in pasajeros %}
           <tr>
             <td>{{ forloop.counter }}</td>
-            <td>
-              <strong>{{ p.usuario.get_full_name|default:p.usuario.username }}</strong><br>
-              <span style="font-size:0.8rem;color:var(--gris-medio);">{{ p.usuario.email }}</span>
-            </td>
-            <td>{% if p.usuario.perfilusuario %}{{ p.usuario.perfilusuario.rut }}{% else %}—{% endif %}</td>
-            <td>{% if p.usuario.perfilusuario %}{{ p.usuario.perfilusuario.telefono }}{% else %}—{% endif %}</td>
+            <td style="font-weight:600;">{{ p.nombre_titular|default:"—" }}</td>
+            <td style="text-align:center;">{{ p.cantidad }}</td>
+            <td>{{ p.contacto|default:"—" }}</td>
             <td style="font-size:0.82rem;">
-              {% if p.horarios %}
-                {% for h in p.horarios %}
-                  <div style="{% if not forloop.first %}margin-top:0.3rem;padding-top:0.3rem;border-top:1px solid #eee;{% endif %}">
-                    <div style="font-weight:600;">{{ h.salida }}</div>
-                    <div style="color:var(--gris-medio);">{{ h.hora_salida|time:"H:i" }} hrs</div>
-                  </div>
-                {% endfor %}
+              {% if p.horario %}
+                <div style="font-weight:600;">{{ p.horario.ciudad }}</div>
+                <div style="color:var(--gris-medio);">{{ p.horario.hora_salida|time:"H:i" }} hrs</div>
               {% else %}—{% endif %}
             </td>
-            <td style="display:flex;flex-direction:column;gap:0.3rem;align-items:flex-start;">
-              {% for t in p.tipos_pasaje %}
-                {% if t.tipo == 'solo_ida' %}
-                  <span class="badge-estado" style="background:#e3f2fd;color:#0d47a1;"><i class="fa fa-arrow-right"></i> Solo Ida ({{ t.cantidad }})</span>
-                {% elif t.tipo == 'solo_vuelta' %}
-                  <span class="badge-estado" style="background:#f3e5f5;color:#6a1b9a;"><i class="fa fa-arrow-left"></i> Solo Vuelta ({{ t.cantidad }})</span>
-                {% else %}
-                  <span class="badge-estado" style="background:#fff9c4;color:#5d4037;"><i class="fa fa-exchange-alt"></i> Ida y Vuelta ({{ t.cantidad }})</span>
-                {% endif %}
-              {% endfor %}
+            <td style="font-size:0.82rem;"><div style="font-weight:600;text-transform:uppercase;">{{ p.ciudad_vuelta|default:"—" }}</div></td>
+            <td>
+              {% if p.tipo_pasaje == 'solo_ida' %}
+                <span class="badge-estado" style="background:#e3f2fd;color:#0d47a1;"><i class="fa fa-arrow-right"></i> Solo Ida</span>
+              {% elif p.tipo_pasaje == 'solo_vuelta' %}
+                <span class="badge-estado" style="background:#f3e5f5;color:#6a1b9a;"><i class="fa fa-arrow-left"></i> Solo Vuelta</span>
+              {% else %}
+                <span class="badge-estado" style="background:#fff9c4;color:#5d4037;"><i class="fa fa-exchange-alt"></i> Ida y Vuelta</span>
+              {% endif %}
             </td>
-            <td style="text-align:center;font-weight:700;">{{ p.cantidad }}</td>
             <td><span class="badge-estado badge-{{ p.estado }}">{{ p.estado|capfirst }}</span></td>
           </tr>
           {% endfor %}

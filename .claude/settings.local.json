@@ -35,7 +35,11 @@
       "Bash(\"c:/Repositorio/bus_conciertos/venv/Scripts/pip.exe\" install:*)",
       "Bash(\"c:/Repositorio/bus_conciertos/venv/Scripts/python.exe\" -m pip install xlsxwriter)",
       "Bash(\"./venv/Scripts/python.exe\" manage.py makemigrations reservas)",
-      "Bash(\"./venv/Scripts/python.exe\" manage.py migrate)"
+      "Bash(\"./venv/Scripts/python.exe\" manage.py migrate)",
+      "Bash(python manage.py makemigrations reservas --name add_nombre_titular_to_reserva)",
+      "Bash(python manage.py makemigrations reservas --name add_ciudad_vuelta_to_reserva)",
+      "Bash(python manage.py makemigrations reservas --name add_contacto_to_reserva)",
+      "Bash(python manage.py shell -c \"from reservas.models import Reserva; print\\(Reserva.objects.values\\('nombre_titular','contacto'\\)[:5]\\)\")"
     ]
   }
 }
