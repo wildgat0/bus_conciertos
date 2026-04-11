@@ -6,6 +6,8 @@ from decimal import Decimal
 from django.db.models import Sum, Count, Q, Case, When, IntegerField, Value
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 import uuid
 import requests
 import json
@@ -44,6 +46,46 @@ def mensaje_descuento_rango(cupos_base, cantidad):
     if tiene_50:
         return '🎊 ¡Uno o más cupos incluyen 50% de descuento!'
     return None
+
+
+def enviar_comprobante_pago(reserva, monto_total):
+    """Envía el comprobante de pago por correo al titular de cada reserva del grupo."""
+    try:
+        reservas_grupo = Reserva.objects.filter(
+            grupo_compra=reserva.grupo_compra
+        ).select_related('viaje__concierto', 'horario') if reserva.grupo_compra else [reserva]
+
+        # Agrupar por email para no enviar duplicados
+        enviados = set()
+        for r in reservas_grupo:
+            if not r.email or r.email in enviados:
+                continue
+            enviados.add(r.email)
+
+            otras = [x for x in reservas_grupo if x.pk != r.pk]
+            contexto = {
+                'nombre_titular': r.nombre_titular or r.usuario.get_full_name() or r.usuario.username,
+                'orden_compra':   r.orden_compra,
+                'artista':        r.viaje.concierto.artista,
+                'concierto':      r.viaje.concierto.nombre,
+                'fecha_salida':   r.viaje.fecha_salida.strftime('%d/%m/%Y'),
+                'cupos':          r.cantidad,
+                'horario':        str(r.horario) if r.horario else '',
+                'tipo_pasaje':    r.get_tipo_pasaje_display(),
+                'monto_total':    f'{int(monto_total):,}'.replace(',', '.'),
+                'reservas_adicionales': otras,
+            }
+            html = render_to_string('reservas/email_comprobante.html', contexto)
+            msg = EmailMultiAlternatives(
+                subject=f'Comprobante de pago — {r.viaje.concierto.artista}',
+                body=f'Tu reserva para {r.viaje.concierto.artista} fue confirmada. Orden: {r.orden_compra}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[r.email],
+            )
+            msg.attach_alternative(html, 'text/html')
+            msg.send(fail_silently=True)
+    except Exception:
+        pass  # No interrumpir el flujo si el correo falla
 
 
 def es_coordinador(user):
@@ -180,9 +222,11 @@ def reservar_pendiente(request, pk):
             cantidad_item = 1
         tipo_pasaje = item.get('tipo_pasaje', 'ida_vuelta')
         horario_id = item.get('horario_id', '')
+        rut_titular = item.get('rut', '').strip()
         nombre_titular = item.get('nombre_titular', '').strip()
         ciudad_vuelta = item.get('ciudad_vuelta', '').strip()
         contacto = item.get('contacto', '').strip()
+        email_titular = item.get('email', '').strip()
         horario = None
         if horario_id:
             try:
@@ -203,9 +247,11 @@ def reservar_pendiente(request, pk):
             tipo_pasaje=tipo_pasaje,
             monto=monto_item,
             grupo_compra=grupo,
+            rut=rut_titular,
             nombre_titular=nombre_titular,
             ciudad_vuelta=ciudad_vuelta,
             contacto=contacto,
+            email=email_titular,
         )
 
     messages.success(request, 'Reserva realizada. Recuerda pagar antes de 5 días previos al evento.')
@@ -256,9 +302,11 @@ def iniciar_pago(request, pk):
             cantidad_item = 1
         tipo_pasaje = item.get('tipo_pasaje', 'ida_vuelta')
         horario_id = item.get('horario_id', '')
+        rut_titular = item.get('rut', '').strip()
         nombre_titular = item.get('nombre_titular', '').strip()
         ciudad_vuelta = item.get('ciudad_vuelta', '').strip()
         contacto = item.get('contacto', '').strip()
+        email_titular = item.get('email', '').strip()
         horario = None
         if horario_id:
             try:
@@ -280,9 +328,11 @@ def iniciar_pago(request, pk):
             tipo_pasaje=tipo_pasaje,
             monto=monto_item,
             grupo_compra=grupo,
+            rut=rut_titular,
             nombre_titular=nombre_titular,
             ciudad_vuelta=ciudad_vuelta,
             contacto=contacto,
+            email=email_titular,
         )
         reservas_creadas.append(r)
 
@@ -382,6 +432,7 @@ def retorno_webpay(request, reserva_id):
             monto_total_pagado = Reserva.objects.filter(
                 grupo_compra=reserva.grupo_compra
             ).aggregate(total=Sum('monto'))['total'] if reserva.grupo_compra else reserva.monto
+            enviar_comprobante_pago(reserva, monto_total_pagado)
             messages.success(request, '¡Reserva confirmada! Tu pago fue procesado exitosamente.')
             return render(request, 'reservas/pago_exitoso.html', {
                 'reserva': reserva,
@@ -653,3 +704,98 @@ def auditoria_ganancias(request):
         'total_combinado': total_combinado,
     }
     return render(request, 'reservas/auditoria.html', context)
+
+
+@login_required
+@user_passes_test(es_admin)
+def exportar_auditoria_excel(request):
+    mes  = request.GET.get('mes', '')   # formato YYYY-MM
+    anio = request.GET.get('anio', '')  # formato YYYY
+
+    viajes_curso = Viaje.objects.filter(estado='disponible').select_related('concierto', 'coordinador').order_by('-fecha_salida')
+    viajes_fin   = Viaje.objects.exclude(estado='disponible').select_related('concierto', 'coordinador').order_by('-fecha_salida')
+
+    def filtrar(qs):
+        if mes and mes != 'todos':
+            try:
+                anio_m, num_m = mes.split('-')
+                qs = qs.filter(fecha_salida__year=anio_m, fecha_salida__month=num_m)
+            except ValueError:
+                pass
+        elif anio and anio != 'todos':
+            qs = qs.filter(fecha_salida__year=anio)
+        return qs
+
+    viajes_curso = filtrar(viajes_curso)
+    viajes_fin   = filtrar(viajes_fin)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Auditoría'
+
+    amarillo    = PatternFill('solid', fgColor='FFD600')
+    font_bold   = Font(bold=True, color='111111')
+    font_total  = Font(bold=True, color='FFFFFF')
+    fill_total  = PatternFill('solid', fgColor='111111')
+    center      = Alignment(horizontal='center', vertical='center')
+
+    cabeceras = ['Concierto', 'Artista', 'Fecha Salida', 'Origen', 'Destino', 'Cupos Totales', 'Pasajeros Pagados', 'Ganancia (CLP)']
+    ws.append(cabeceras)
+    for cell in ws[1]:
+        cell.fill      = amarillo
+        cell.font      = font_bold
+        cell.alignment = center
+
+    def escribir_filas(qs, etiqueta):
+        for v in qs:
+            ws.append([
+                v.concierto.nombre,
+                v.concierto.artista,
+                v.fecha_salida.strftime('%d/%m/%Y'),
+                v.origen,
+                v.destino,
+                v.cupos_totales,
+                v.cupos_ocupados,
+                int(v.ganancia_total),
+            ])
+
+    escribir_filas(viajes_curso, 'En Curso')
+    escribir_filas(viajes_fin,   'Finalizado')
+
+    # Fila de total
+    total = sum(int(v.ganancia_total) for v in list(viajes_curso) + list(viajes_fin))
+    fila_total = ws.max_row + 1
+    ws.cell(fila_total, 7, 'TOTAL')
+    ws.cell(fila_total, 8, total)
+    for col in range(1, 9):
+        c = ws.cell(fila_total, col)
+        c.fill = fill_total
+        c.font = font_total
+        c.alignment = center
+
+    anchos = [22, 22, 14, 20, 20, 12, 14, 18]
+    for i, w in enumerate(anchos, 1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+
+    nombre_archivo = f'auditoria_{mes or anio or "completa"}.xlsx'
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
+    wb.save(response)
+    return response
+
+
+# ─── COMPRAS ────────────────────────────────────────────────────────────────
+@login_required
+@user_passes_test(es_coordinador)
+def compras(request):
+    reservas = (
+        Reserva.objects
+        .select_related('viaje__concierto', 'usuario')
+        .order_by('-fecha_reserva')
+    )
+
+    context = {
+        'reservas': reservas,
+        'total': reservas.count(),
+    }
+    return render(request, 'reservas/compras.html', context)

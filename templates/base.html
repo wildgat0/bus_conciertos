@@ -28,6 +28,7 @@
           {% if user.is_superuser or user.groups.all.0.name == 'Administrador' or user.groups.all.0.name == 'Coordinador' %}
             <a href="{% url 'gestion_viajes' %}" class="btn btn-outline btn-sm"><i class="fa fa-cog"></i> Gestión</a>
             <a href="{% url 'calendario_conciertos' %}" class="btn btn-outline btn-sm"><i class="fa fa-calendar-alt"></i> Calendario</a>
+            <a href="{% url 'compras' %}" class="btn btn-outline btn-sm"><i class="fa fa-shopping-cart"></i> Compras</a>
           {% endif %}
           {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
             <a href="{% url 'gestion_usuarios' %}" class="btn btn-outline btn-sm"><i class="fa fa-users-cog"></i> Usuarios</a>
@@ -56,6 +57,7 @@
         {% if user.is_superuser or user.groups.all.0.name == 'Administrador' or user.groups.all.0.name == 'Coordinador' %}
           <a href="{% url 'gestion_viajes' %}" class="btn btn-outline btn-sm"><i class="fa fa-cog"></i> Gestión</a>
           <a href="{% url 'calendario_conciertos' %}" class="btn btn-outline btn-sm"><i class="fa fa-calendar-alt"></i> Calendario</a>
+          <a href="{% url 'compras' %}" class="btn btn-outline btn-sm"><i class="fa fa-shopping-cart"></i> Compras</a>
         {% endif %}
         {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
           <a href="{% url 'gestion_usuarios' %}" class="btn btn-outline btn-sm"><i class="fa fa-users-cog"></i> Usuarios</a>

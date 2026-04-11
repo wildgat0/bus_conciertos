@@ -30,13 +30,16 @@
   </div>
 
   <!-- Filtros por mes y año -->
-  <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+  <div style="display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;">
     <select id="aud-filtro-mes" style="padding:0.45rem 1rem;border-radius:var(--radio);border:2px solid #ddd;background:#fff;color:var(--negro);font-size:0.85rem;font-weight:600;cursor:pointer;outline:none;">
       <option value="todos">Todos los meses</option>
     </select>
     <select id="aud-filtro-anio" style="padding:0.45rem 1rem;border-radius:var(--radio);border:2px solid #ddd;background:#fff;color:var(--negro);font-size:0.85rem;font-weight:600;cursor:pointer;outline:none;">
       <option value="todos">Todos los años</option>
     </select>
+    <a id="btn-exportar-excel" href="{% url 'exportar_auditoria_excel' %}" class="btn btn-dark btn-sm" style="margin-left:auto;">
+      <i class="fa fa-file-excel"></i> Exportar Excel
+    </a>
   </div>
 
   <div class="tabla-wrapper">
@@ -49,7 +52,7 @@
         <thead>
           <tr>
             <th>Concierto</th>
-            <th>Coordinador</th>
+            <th>Encargado</th>
             <th>Fecha Salida</th>
             <th>Ruta</th>
             <th style="text-align:center;">Cupos</th>
@@ -104,7 +107,7 @@
         <thead>
           <tr>
             <th>Concierto</th>
-            <th>Coordinador</th>
+            <th>Encargado</th>
             <th>Fecha Salida</th>
             <th>Ruta</th>
             <th style="text-align:center;">Cupos</th>
@@ -220,6 +223,21 @@
     selectMes.value = 'todos';
     aplicarFiltros();
   });
+
+  // ── Exportar Excel: actualizar href con filtros activos ─────
+  const btnExportar = document.getElementById('btn-exportar-excel');
+  const baseUrl = "{% url 'exportar_auditoria_excel' %}";
+
+  function actualizarHrefExport() {
+    const mes  = selectMes.value;
+    const anio = selectAnio.value;
+    let url = baseUrl + '?mes=' + encodeURIComponent(mes) + '&anio=' + encodeURIComponent(anio);
+    btnExportar.href = url;
+  }
+
+  selectMes.addEventListener('change', actualizarHrefExport);
+  selectAnio.addEventListener('change', actualizarHrefExport);
+  actualizarHrefExport();
 
   // Formatear totales iniciales
   ['total-curso', 'total-fin'].forEach(function(id) {

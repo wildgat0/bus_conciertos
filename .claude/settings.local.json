@@ -39,7 +39,11 @@
       "Bash(python manage.py makemigrations reservas --name add_nombre_titular_to_reserva)",
       "Bash(python manage.py makemigrations reservas --name add_ciudad_vuelta_to_reserva)",
       "Bash(python manage.py makemigrations reservas --name add_contacto_to_reserva)",
-      "Bash(python manage.py shell -c \"from reservas.models import Reserva; print\\(Reserva.objects.values\\('nombre_titular','contacto'\\)[:5]\\)\")"
+      "Bash(python manage.py shell -c \"from reservas.models import Reserva; print\\(Reserva.objects.values\\('nombre_titular','contacto'\\)[:5]\\)\")",
+      "Bash(python manage.py makemigrations reservas --name add_email_to_reserva)",
+      "Bash(python manage.py makemigrations reservas --name add_rut_to_reserva)",
+      "Bash(python manage.py shell -c \"from reservas.models import Reserva; count = Reserva.objects.count\\(\\); Reserva.objects.all\\(\\).delete\\(\\); print\\(f'{count} reservas eliminadas.'\\)\")",
+      "Bash(git checkout:*)"
     ]
   }
 }

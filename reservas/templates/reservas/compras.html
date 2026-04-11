@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}Compras{% endblock %}
+{% block content %}
+<style>
+  @keyframes cp-fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes cp-fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .cp-header-anim { animation: cp-fadeDown 0.5s ease both; }
+  .cp-filters-anim { animation: cp-fadeUp 0.5s ease both; animation-delay: 0.1s; opacity: 0; }
+  .cp-tabla-anim   { animation: cp-fadeUp 0.6s ease both; animation-delay: 0.2s; opacity: 0; }
+
+  .compras-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+  }
+  .compras-filters input,
+  .compras-filters select {
+    padding: 0.45rem 0.8rem;
+    border: 2px solid #ddd;
+    border-radius: var(--radio);
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: var(--blanco);
+    color: var(--negro);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .compras-filters input:focus,
+  .compras-filters select:focus { border-color: var(--amarillo); }
+  .compras-filters .btn { height: 38px; }
+</style>
+
+<div class="page-header cp-header-anim">
+  <div class="container">
+    <h1><i class="fa fa-shopping-cart"></i> Compras</h1>
+    <p>Historial completo de compras realizadas en el sistema</p>
+  </div>
+</div>
+
+<section class="seccion" style="max-width:none;">
+  <div class="tabla-wrapper">
+    <div class="tabla-header">
+      <h2>TODAS LAS COMPRAS <span style="font-size:0.85rem;font-weight:400;color:var(--gris-medio);">({{ total }})</span></h2>
+    </div>
+
+    <!-- Filtros -->
+    <div class="compras-filters cp-filters-anim" style="padding:1rem 1.5rem 0;">
+      <input type="text" id="filtro-rut" placeholder="Buscar por RUT…" style="min-width:200px;" autocomplete="off">
+      <select id="filtro-estado">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="pagado">Pagado</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+    </div>
+
+    {% if reservas %}
+    <div class="cp-tabla-anim" style="overflow-x:auto;padding:0 1.5rem 1.5rem;">
+      <table id="tabla-compras" style="text-align:left;">
+        <thead>
+          <tr>
+            <th>RUT</th>
+            <th>Titular</th>
+            <th>Cupos</th>
+            <th>Concierto</th>
+            <th>Fecha de Pago</th>
+            <th>Orden de Compra</th>
+            <th>Tipo de Pasaje</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reservas %}
+          <tr data-rut="{{ r.rut }}" data-estado="{{ r.estado }}">
+            <td style="white-space:nowrap;color:var(--gris-medio);font-size:0.88rem;">{{ r.rut|default:"—" }}</td>
+            <td><strong>{{ r.nombre_titular }}</strong></td>
+            <td><strong>{{ r.cantidad }}</strong></td>
+            <td>
+              <strong>{{ r.viaje.concierto.artista }}</strong><br>
+              <span style="font-size:0.8rem;color:var(--gris-medio);">{{ r.viaje.concierto.nombre }}</span>
+            </td>
+            <td style="white-space:nowrap;">
+              {{ r.fecha_reserva|date:"d/m/Y" }}<br>
+              <span style="font-size:0.78rem;color:var(--gris-medio);">{{ r.fecha_reserva|time:"H:i" }}</span>
+            </td>
+            <td style="font-size:0.8rem;color:var(--gris-medio);white-space:nowrap;">{{ r.orden_compra }}</td>
+            <td>
+              {% if r.tipo_pasaje == 'solo_ida' %}
+                <span class="badge-estado" style="background:#e3f2fd;color:#0d47a1;"><i class="fa fa-arrow-right"></i> Solo Ida</span>
+              {% elif r.tipo_pasaje == 'solo_vuelta' %}
+                <span class="badge-estado" style="background:#f3e5f5;color:#6a1b9a;"><i class="fa fa-arrow-left"></i> Solo Vuelta</span>
+              {% else %}
+                <span class="badge-estado" style="background:#fff9c4;color:#5d4037;"><i class="fa fa-exchange-alt"></i> Ida y Vuelta</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge-estado badge-{{ r.estado }}">{{ r.get_estado_display }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div style="padding:0.75rem 0;text-align:right;font-size:0.88rem;color:var(--gris-medio);border-top:1px solid #eee;margin-top:0.5rem;">
+        Total de resultados: <strong style="color:var(--negro);">{{ total }}</strong>
+      </div>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:3rem 1.5rem;">
+      <i class="fa fa-shopping-cart" style="font-size:2.5rem;color:var(--gris-claro);margin-bottom:1rem;display:block;"></i>
+      <p style="color:var(--gris-medio);">No se encontraron compras{% if q or estado_actual or tipo_actual %} con los filtros aplicados{% endif %}.</p>
+      {% if q or estado_actual or tipo_actual %}
+        <a href="{% url 'compras' %}" class="btn btn-outline btn-sm" style="margin-top:0.5rem;"><i class="fa fa-times"></i> Limpiar filtros</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% block extra_js %}
+<script>
+  const filtroRut    = document.getElementById('filtro-rut');
+  const filtroEstado = document.getElementById('filtro-estado');
+  const contadorEl   = document.querySelector('.tabla-header h2 span');
+
+  function aplicarFiltros() {
+    const q      = (filtroRut?.value || '').toLowerCase().replace(/\s/g, '');
+    const estado = filtroEstado?.value || '';
+    const filas  = document.querySelectorAll('#tabla-compras tbody tr');
+    let visibles = 0;
+    filas.forEach(function (fila) {
+      const rut        = (fila.dataset.rut || '').toLowerCase().replace(/\s/g, '');
+      const filaEstado = fila.dataset.estado || '';
+      const coincide   = rut.includes(q) && (estado === '' || filaEstado === estado);
+      fila.style.display = coincide ? '' : 'none';
+      if (coincide) visibles++;
+    });
+    if (contadorEl) contadorEl.textContent = '(' + visibles + ')';
+  }
+
+  filtroRut?.addEventListener('input', aplicarFiltros);
+  filtroEstado?.addEventListener('change', aplicarFiltros);
+</script>
+{% endblock %}
+{% endblock %}

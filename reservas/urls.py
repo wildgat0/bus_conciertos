@@ -27,4 +27,10 @@ urlpatterns = [
 
     # Admin
     path('auditoria/', views.auditoria_ganancias, name='auditoria_ganancias'),
+
+    # Compras
+    path('compras/', views.compras, name='compras'),
+
+    # Exportar auditoría
+    path('auditoria/exportar/', views.exportar_auditoria_excel, name='exportar_auditoria_excel'),
 ]

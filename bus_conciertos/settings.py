@@ -92,6 +92,15 @@ LOGOUT_REDIRECT_URL = '/'
 # WhatsApp de la empresa
 WHATSAPP_NUMBER = '+56912345678'
 
+# Email (SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'tucorreo@gmail.com'        # Cambiar por el correo real
+EMAIL_HOST_PASSWORD = 'tu_contraseña_app'     # Contraseña de aplicación de Gmail
+DEFAULT_FROM_EMAIL = 'Bus Conciertos <tucorreo@gmail.com>'
+
 # Transbank Webpay (ambiente de integración)
 TRANSBANK_COMMERCE_CODE = '597055555532'
 TRANSBANK_API_KEY = '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C'

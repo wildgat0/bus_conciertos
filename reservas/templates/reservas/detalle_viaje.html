@@ -25,11 +25,24 @@
   .dv-grid { display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: start; }
 
   /* ── Selector de horario (tabla) ─────────────────────────── */
+  #paso-horario, #paso-horario * { cursor: default !important; }
   .horario-row { transition: background 0.2s; border-bottom: 1px solid #eee; }
   .horario-row:hover { background: rgba(255,214,0,0.08); }
+  .horario-row-disabled, .horario-row-disabled * { cursor: not-allowed !important; }
   .horario-row.activo { background: var(--negro) !important; color: var(--blanco); }
   .horario-row.activo td { color: var(--blanco); }
   .horario-row-disabled { opacity: 0.5; }
+  .horarios-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  @media (max-width: 900px) {
+    .horarios-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .horarios-grid { grid-template-columns: 1fr; }
+  }
 
   /* ── Selector de tipo de pasaje ───────────────────────────── */
   .tipo-selector {
@@ -224,9 +237,9 @@
       Elige el horario de tu preferencia para continuar.
     </p>
     {% regroup horarios by salida as grupos_horario %}
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;">
+    <div class="horarios-grid">
       {% for grupo in grupos_horario %}
-      <div style="border:2px solid #ddd;border-radius:var(--radio-lg);overflow:hidden;min-width:220px;flex:1;">
+      <div style="border:2px solid #ddd;border-radius:var(--radio-lg);overflow:hidden;">
         <div style="background:var(--negro);color:var(--blanco);padding:0.5rem 0.8rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.9rem;text-transform:uppercase;letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;">
           {{ grupo.list.0.get_ciudad_display }} — {{ grupo.grouper }}
           <i class="fa fa-bus" style="color:var(--amarillo);"></i>
@@ -240,9 +253,9 @@
              data-precio-iv="{{ h.precio|floatformat:0 }}"
              data-precio-ida="{{ h.precio_ida|floatformat:0 }}"
              data-precio-vuelta="{{ h.precio_vuelta|floatformat:0 }}"
-             style="display:flex;align-items:center;gap:0.75rem;padding:0.45rem 0.8rem;border-top:1px solid #eee;cursor:{% if h.cupos_disponibles > 0 %}pointer{% else %}not-allowed{% endif %};">
+             style="display:flex;align-items:center;gap:0.75rem;padding:0.45rem 0.8rem;border-top:1px solid #eee;cursor:{% if h.cupos_disponibles > 0 %}default{% else %}not-allowed{% endif %};">
           <input type="radio" name="horario_radio" class="horario-radio" value="{{ h.pk }}"
-                 style="accent-color:var(--amarillo);width:18px;height:18px;flex-shrink:0;"
+                 style="accent-color:var(--amarillo);width:18px;height:18px;flex-shrink:0;cursor:{% if h.cupos_disponibles > 0 %}default{% else %}not-allowed{% endif %};"
                  {% if h.cupos_disponibles == 0 %}disabled{% endif %}>
           <span style="font-weight:700;font-size:0.95rem;">{{ h.hora_salida|time:"H:i" }} HRS</span>
           {% if h.cupos_disponibles == 0 %}
@@ -384,6 +397,13 @@
                 <div style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:var(--radio);padding:1rem;margin-bottom:1rem;">
                   <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--gris-medio);margin-bottom:0.8rem;"><i class="fa fa-user" style="margin-right:0.3rem;"></i>Datos del pasajero</div>
 
+                  <!-- RUT -->
+                  <div style="margin-bottom:0.75rem;">
+                    <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.3rem;color:var(--negro);">RUT</label>
+                    <input type="text" id="rut-input" class="form-control" placeholder="Ej: 12345678-9" maxlength="10" style="font-size:0.95rem;padding:0.5rem 0.75rem;"
+                      oninput="let v=this.value.replace(/[^0-9kK]/g,'');if(v.length>1)v=v.slice(0,-1)+'-'+v.slice(-1);this.value=v.slice(0,10);">
+                  </div>
+
                   <!-- Nombre -->
                   <div style="margin-bottom:0.75rem;">
                     <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.3rem;color:var(--negro);">Nombre y apellido</label>
@@ -391,13 +411,19 @@
                   </div>
 
                   <!-- Contacto -->
-                  <div>
+                  <div style="margin-bottom:0.75rem;">
                     <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.3rem;color:var(--negro);">Teléfono de contacto</label>
                     <div style="display:flex;border:1px solid #ced4da;border-radius:var(--radio);overflow:hidden;background:#fff;">
                       <span style="background:#e9ecef;padding:0.5rem 0.75rem;font-size:0.9rem;font-weight:700;color:#495057;white-space:nowrap;border-right:1px solid #ced4da;">+56 9</span>
                       <input type="text" id="contacto-input" placeholder="XXXX XXXX" maxlength="9" style="border:none;outline:none;padding:0.5rem 0.75rem;font-size:0.95rem;width:100%;background:#fff;letter-spacing:0.05em;"
                         oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/(\d{4})(?=\d)/,'$1 ').slice(0,9)">
                     </div>
+                  </div>
+
+                  <!-- Correo electrónico -->
+                  <div>
+                    <label style="font-size:0.78rem;font-weight:600;display:block;margin-bottom:0.3rem;color:var(--negro);"><i class="fa fa-envelope" style="color:var(--gris-medio);margin-right:0.3rem;"></i>Correo electrónico</label>
+                    <input type="email" id="email-input" placeholder="correo@ejemplo.com" style="width:100%;border:1px solid #ced4da;border-radius:var(--radio);padding:0.5rem 0.75rem;font-size:0.95rem;outline:none;background:#fff;font-family:inherit;">
                   </div>
                 </div>
 
@@ -540,6 +566,10 @@
                         alert('Selecciona un horario de recogida.'); return;
                       }
 
+                      // Validar RUT
+                      const rut = (document.getElementById('rut-input')?.value || '').trim();
+                      if (!rut || !/^\d{7,8}-[\dkK]$/.test(rut)) { alert('Ingresa un RUT válido (Ej: 12345678-9).'); return; }
+
                       // Validar nombre del titular
                       const nombreTitular = (document.getElementById('nombre-titular-input')?.value || '').trim();
                       if (!nombreTitular) { alert('Ingresa el nombre del titular de la reserva.'); return; }
@@ -548,6 +578,10 @@
                       const contactoRaw = (document.getElementById('contacto-input')?.value || '').replace(/\s/g, '');
                       if (!contactoRaw || contactoRaw.length < 8) { alert('Ingresa un número de contacto válido (+56 9 XXXX XXXX).'); return; }
                       const contacto = '+56 9 ' + contactoRaw.slice(0,4) + ' ' + contactoRaw.slice(4);
+
+                      // Validar correo electrónico
+                      const email = (document.getElementById('email-input')?.value || '').trim();
+                      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('Ingresa un correo electrónico válido.'); return; }
 
                       // Validar ciudad de vuelta si aplica
                       let ciudadVuelta = '';
@@ -572,8 +606,10 @@
                         horario_id:     horarioId,
                         horario_txt:    horarioTxt,
                         ciudad_vuelta:  ciudadVuelta,
+                        rut:            rut,
                         nombre_titular: nombreTitular,
                         contacto:       contacto,
+                        email:          email,
                         cantidad:       cant,
                         precio_unit:    precio,
                         monto:          monto,
@@ -605,6 +641,10 @@
                       if (nombreInput) nombreInput.value = '';
                       const contactoInput = document.getElementById('contacto-input');
                       if (contactoInput) contactoInput.value = '';
+                      const rutInput = document.getElementById('rut-input');
+                      if (rutInput) rutInput.value = '';
+                      const emailInput = document.getElementById('email-input');
+                      if (emailInput) emailInput.value = '';
                       cantInput.value = 1;
                       cantInput.dispatchEvent(new Event('input'));
                       document.getElementById('precio-display').textContent = '—';
@@ -612,7 +652,7 @@
 
                     function serializarCarrito() {
                       return JSON.stringify(window._carrito.map(function(it) {
-                        return { tipo_pasaje: it.tipo_pasaje, horario_id: it.horario_id, cantidad: it.cantidad, ciudad_vuelta: it.ciudad_vuelta || '', nombre_titular: it.nombre_titular || '', contacto: it.contacto || '' };
+                        return { tipo_pasaje: it.tipo_pasaje, horario_id: it.horario_id, cantidad: it.cantidad, ciudad_vuelta: it.ciudad_vuelta || '', rut: it.rut || '', nombre_titular: it.nombre_titular || '', contacto: it.contacto || '', email: it.email || '' };
                       }));
                     }
 
