@@ -25,17 +25,28 @@
       <button class="navbar-toggler" aria-label="Menú">☰</button>
       <div class="nav-actions">
         {% if user.is_authenticated %}
-          {% if user.is_superuser or user.groups.all.0.name == 'Administrador' or user.groups.all.0.name == 'Coordinador' %}
-            <a href="{% url 'gestion_viajes' %}" class="btn btn-outline btn-sm"><i class="fa fa-cog"></i> Gestión</a>
-            <a href="{% url 'calendario_conciertos' %}" class="btn btn-outline btn-sm"><i class="fa fa-calendar-alt"></i> Calendario</a>
-            <a href="{% url 'compras' %}" class="btn btn-outline btn-sm"><i class="fa fa-shopping-cart"></i> Compras</a>
-          {% endif %}
-          {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
-            <a href="{% url 'gestion_usuarios' %}" class="btn btn-outline btn-sm"><i class="fa fa-users-cog"></i> Usuarios</a>
-            <a href="{% url 'auditoria_ganancias' %}" class="btn btn-outline btn-sm"><i class="fa fa-chart-line"></i> Auditoría</a>
-          {% endif %}
           <a href="{% url 'mi_perfil' %}" class="btn btn-outline btn-sm"><i class="fa fa-user"></i> {{ user.first_name|default:user.username }}</a>
           <a href="{% url 'logout' %}" class="btn btn-primary btn-sm"><i class="fa fa-sign-out-alt"></i> Salir</a>
+          {% if user.is_superuser or user.groups.all.0.name == 'Administrador' or user.groups.all.0.name == 'Coordinador' %}
+          <div class="nav-admin-dropdown">
+            <button class="nav-admin-trigger" aria-label="Menú admin">☰</button>
+            <div class="nav-admin-menu">
+              {% if user.is_superuser or user.groups.all.0.name == 'Administrador' or user.groups.all.0.name == 'Coordinador' %}
+                <a href="{% url 'calendario_conciertos' %}"><i class="fa fa-calendar-alt"></i> Calendario</a>
+                <a href="{% url 'gestion_viajes' %}"><i class="fa fa-cog"></i> Gestión</a>
+              {% endif %}
+              {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
+                <a href="{% url 'auditoria_ganancias' %}"><i class="fa fa-chart-line"></i> Auditoría</a>
+              {% endif %}
+              {% if user.is_superuser or user.groups.all.0.name == 'Administrador' or user.groups.all.0.name == 'Coordinador' %}
+                <a href="{% url 'compras' %}"><i class="fa fa-shopping-cart"></i> Compras</a>
+              {% endif %}
+              {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
+                <a href="{% url 'gestion_usuarios' %}"><i class="fa fa-users-cog"></i> Usuarios</a>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
         {% else %}
           <a href="{% url 'login' %}" class="btn btn-outline btn-sm"><i class="fa fa-sign-in-alt"></i> Ingresar</a>
           <a href="{% url 'registro' %}" class="btn btn-primary btn-sm"><i class="fa fa-user-plus"></i> Registrarse</a>

@@ -97,7 +97,13 @@ class Reserva(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Pasajero')
     cantidad = models.PositiveIntegerField(default=1, verbose_name='Cantidad de cupos')
     tipo_pasaje = models.CharField(max_length=20, choices=TIPO_PASAJE_CHOICES, default='ida_vuelta', verbose_name='Tipo de pasaje')
+    PAGO_CHOICES = [
+        ('WEB', 'Web'),
+        ('TRANSFERENCIA', 'Transferencia'),
+    ]
+
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    pago = models.CharField(max_length=20, choices=PAGO_CHOICES, null=True, blank=True, verbose_name='Pago')
     fecha_reserva = models.DateTimeField(auto_now_add=True)
     token_webpay = models.CharField(max_length=255, blank=True, null=True)
     orden_compra = models.CharField(max_length=50, unique=True)

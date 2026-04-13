@@ -76,6 +76,7 @@
             <th>Orden de Compra</th>
             <th>Tipo de Pasaje</th>
             <th>Estado</th>
+            <th>Pago</th>
           </tr>
         </thead>
         <tbody>
@@ -105,6 +106,7 @@
             <td>
               <span class="badge-estado badge-{{ r.estado }}">{{ r.get_estado_display }}</span>
             </td>
+            <td>{{ r.pago|default:"—" }}</td>
           </tr>
           {% endfor %}
         </tbody>

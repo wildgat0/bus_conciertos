@@ -18,7 +18,7 @@
     </div>
     <div class="kpi-card">
       <div class="kpi-valor">{{ viaje.cupos_ocupados }}</div>
-      <div class="kpi-label">Pasajeros confirmados</div>
+      <div class="kpi-label">Cupos confirmados</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-valor">{{ viaje.cupos_disponibles }}</div>
@@ -31,6 +31,9 @@
       <h2>LISTA DE PASAJEROS</h2>
       <div style="display:flex;align-items:center;gap:0.75rem;">
         <span class="badge-estado badge-disponible">{{ viaje.cupos_ocupados }} pasajero{{ viaje.cupos_ocupados|pluralize }}</span>
+        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('modal-agregar').style.display='flex'">
+          <i class="fa fa-user-plus"></i> Agregar Pasajero
+        </button>
         {% if pasajeros %}
         <a href="{% url 'exportar_pasajeros_excel' viaje.pk %}" class="btn btn-primary btn-sm"><i class="fa fa-file-excel"></i> Exportar a Excel</a>
         {% endif %}
@@ -49,6 +52,8 @@
             <th>Retorno</th>
             <th>Tipo de Pasaje</th>
             <th>Estado</th>
+            <th>Pago</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -56,7 +61,7 @@
           <tr>
             <td>{{ forloop.counter }}</td>
             <td style="font-weight:600;">{{ p.nombre_titular|default:"—" }}</td>
-            <td style="text-align:center;">{{ p.cantidad }}</td>
+            <td>{{ p.cantidad }}</td>
             <td>{{ p.contacto|default:"—" }}</td>
             <td style="font-size:0.82rem;">
               {% if p.horario %}
@@ -75,6 +80,34 @@
               {% endif %}
             </td>
             <td><span class="badge-estado badge-{{ p.estado }}">{{ p.estado|capfirst }}</span></td>
+            <td>{{ p.pago|default:"—" }}</td>
+            <td>
+              <div style="display:flex;gap:0.4rem;">
+                {% if p.pago == 'TRANSFERENCIA' %}
+                <button type="button" class="btn btn-sm" style="padding:0.45rem 0.6rem;background:var(--amarillo);color:var(--negro);border:none;" title="Editar"
+                  onclick="abrirModalEditar(
+                    '{% url 'editar_pasajero_manual' p.pk %}',
+                    '{{ p.nombre_titular|default:''|escapejs }}',
+                    '{{ p.rut|default:''|escapejs }}',
+                    '{{ p.contacto|default:''|escapejs }}',
+                    '{{ p.email|default:''|escapejs }}',
+                    {{ p.cantidad }},
+                    '{{ p.tipo_pasaje }}',
+                    {{ p.monto }},
+                    '{{ p.ciudad_vuelta|default:''|escapejs }}',
+                    '{{ p.horario.pk|default:'' }}'
+                  )">
+                  <i class="fa fa-pencil-alt"></i>
+                </button>
+                {% endif %}
+                <button type="button" class="btn btn-danger btn-sm" style="padding:0.45rem 0.6rem;" title="Eliminar"
+                  data-url="{% url 'eliminar_pasajero' p.pk %}"
+                  data-nombre="{{ p.nombre_titular|default:p.usuario.get_full_name|escapejs }}"
+                  onclick="abrirModalEliminar(this.dataset.url, this.dataset.nombre)">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -92,4 +125,244 @@
     <a href="{% url 'gestion_viajes' %}" class="btn btn-dark"><i class="fa fa-arrow-left"></i> Volver a Gestión</a>
   </div>
 </section>
+
+<!-- Modal agregar pasajero -->
+<div id="modal-agregar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:1rem;">
+  <div class="form-card" style="max-width:560px;width:100%;margin:0;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
+      <h2 style="margin:0;"><i class="fa fa-user-plus"></i> Agregar Pasajero</h2>
+      <button type="button" onclick="document.getElementById('modal-agregar').style.display='none'" style="background:none;border:none;color:var(--gris-medio);font-size:1.5rem;cursor:pointer;">✕</button>
+    </div>
+    <p class="subtitulo" style="margin-bottom:1.2rem;">El campo <strong>Pago</strong> se asignará automáticamente como <strong>TRANSFERENCIA</strong>.</p>
+    <form method="POST" action="{% url 'agregar_pasajero_manual' viaje.pk %}">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Nombre Titular</label>
+          {{ form.nombre_titular }}
+        </div>
+        <div class="form-group">
+          <label>RUT</label>
+          {{ form.rut }}
+        </div>
+        <div class="form-group">
+          <label>Teléfono de contacto</label>
+          <div class="input-group">
+            <span class="input-prefix">+56 9</span>
+            {{ form.contacto }}
+          </div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Email</label>
+          {{ form.email }}
+        </div>
+        <div class="form-group">
+          <label>Cantidad de Cupos</label>
+          {{ form.cantidad }}
+        </div>
+        <div class="form-group">
+          <label>Tipo de Pasaje</label>
+          {{ form.tipo_pasaje }}
+        </div>
+        <div class="form-group">
+          <label>Monto (CLP)</label>
+          {{ form.monto }}
+        </div>
+        <div class="form-group">
+          <label>Ciudad de Retorno</label>
+          {{ form.ciudad_vuelta }}
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Horario</label>
+          {{ form.horario }}
+        </div>
+      </div>
+      <div style="display:flex;gap:0.75rem;margin-top:1.2rem;">
+        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar</button>
+        <button type="button" class="btn btn-dark" onclick="document.getElementById('modal-agregar').style.display='none'">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Modal confirmar eliminación -->
+<div id="modal-eliminar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:1rem;">
+  <div class="form-card" style="max-width:420px;width:100%;margin:0;text-align:center;">
+    <div style="font-size:2.5rem;margin-bottom:0.75rem;">🗑️</div>
+    <h2 style="margin-bottom:0.5rem;">¿Eliminar pasajero?</h2>
+    <p id="modal-eliminar-nombre" style="color:var(--gris-medio);margin-bottom:1.5rem;"></p>
+    <form id="form-eliminar" method="POST" action="">
+      {% csrf_token %}
+      <div style="display:flex;gap:0.75rem;justify-content:center;">
+        <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Eliminar</button>
+        <button type="button" class="btn btn-dark" onclick="document.getElementById('modal-eliminar').style.display='none'">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal editar pasajero manual -->
+<div id="modal-editar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:1rem;">
+  <div class="form-card" style="max-width:560px;width:100%;margin:0;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">
+      <h2 style="margin:0;"><i class="fa fa-pencil-alt"></i> Editar Pasajero</h2>
+      <button type="button" onclick="document.getElementById('modal-editar').style.display='none'" style="background:none;border:none;color:var(--gris-medio);font-size:1.5rem;cursor:pointer;">✕</button>
+    </div>
+    <form id="form-editar" method="POST" action="">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Nombre Titular</label>
+          <input type="text" name="nombre_titular" id="edit_nombre_titular" class="form-control" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+          <label>RUT</label>
+          <input type="text" name="rut" id="edit_rut" class="form-control" placeholder="Ej: 12.345.678-9">
+        </div>
+        <div class="form-group">
+          <label>Teléfono de contacto</label>
+          <div class="input-group">
+            <span class="input-prefix">+56 9</span>
+            <input type="text" name="contacto" id="edit_contacto" class="form-control" placeholder="XXXX XXXX" maxlength="9">
+          </div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Email</label>
+          <input type="email" name="email" id="edit_email" class="form-control" placeholder="correo@ejemplo.cl">
+        </div>
+        <div class="form-group">
+          <label>Cantidad de Cupos</label>
+          <input type="number" name="cantidad" id="edit_cantidad" class="form-control" min="1">
+        </div>
+        <div class="form-group">
+          <label>Tipo de Pasaje</label>
+          <select name="tipo_pasaje" id="edit_tipo_pasaje" class="form-select">
+            <option value="ida_vuelta">Ida y Vuelta</option>
+            <option value="solo_ida">Solo Ida</option>
+            <option value="solo_vuelta">Solo Vuelta</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Monto (CLP)</label>
+          <input type="number" name="monto" id="edit_monto" class="form-control" min="0">
+        </div>
+        <div class="form-group">
+          <label>Ciudad de Retorno</label>
+          <select name="ciudad_vuelta" id="edit_ciudad_vuelta" class="form-select">
+            <option value="">— Selecciona ciudad —</option>
+            <option value="Belloto">Belloto</option>
+            <option value="Viña del Mar">Viña del Mar</option>
+            <option value="Valparaíso">Valparaíso</option>
+            <option value="Placilla">Placilla</option>
+            <option value="Casablanca - Cruce Chacabuco">Casablanca - Cruce Chacabuco</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Horario</label>
+          <select name="horario" id="edit_horario" class="form-select">
+            <option value="">---------</option>
+            {% for h in viaje.horarios.all %}
+            <option value="{{ h.pk }}">{{ h }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.75rem;margin-top:1.2rem;">
+        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar</button>
+        <button type="button" class="btn btn-dark" onclick="document.getElementById('modal-editar').style.display='none'">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+function abrirModalEliminar(url, nombre) {
+  document.getElementById('form-eliminar').action = url;
+  document.getElementById('modal-eliminar-nombre').textContent = nombre;
+  document.getElementById('modal-eliminar').style.display = 'flex';
+}
+
+function abrirModalEditar(action, nombre, rut, contacto, email, cantidad, tipo_pasaje, monto, ciudad_vuelta, horario_pk) {
+  document.getElementById('form-editar').action = action;
+  document.getElementById('edit_nombre_titular').value = nombre;
+  document.getElementById('edit_rut').value = rut;
+  // Mostrar solo la parte numérica del contacto (sin el prefijo +56 9)
+  const contactoSinPrefijo = contacto.replace(/^\+56\s*9\s*/, '');
+  document.getElementById('edit_contacto').value = contactoSinPrefijo;
+  document.getElementById('edit_email').value = email;
+  document.getElementById('edit_cantidad').value = cantidad;
+  document.getElementById('edit_tipo_pasaje').value = tipo_pasaje;
+  document.getElementById('edit_monto').value = monto ? parseInt(monto, 10).toLocaleString('es-CL') : '';
+  document.getElementById('edit_ciudad_vuelta').value = ciudad_vuelta;
+  document.getElementById('edit_horario').value = horario_pk;
+  document.getElementById('modal-editar').style.display = 'flex';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+
+  // ── Monto: formato pesos chilenos en tiempo real ─────
+  function formatearPesos(input) {
+    let raw = input.value.replace(/\D/g, '');
+    if (raw === '') { input.value = ''; return; }
+    input.value = parseInt(raw, 10).toLocaleString('es-CL');
+  }
+
+  function limpiarPesosAlEnviar(form) {
+    form.addEventListener('submit', function () {
+      [form.querySelector('[name="monto"]')].forEach(function (el) {
+        if (el) el.value = el.value.replace(/\./g, '');
+      });
+    });
+  }
+
+  const montoAgregar = document.getElementById('id_monto');
+  if (montoAgregar) {
+    montoAgregar.setAttribute('type', 'text');
+    montoAgregar.addEventListener('input', function () { formatearPesos(this); });
+    limpiarPesosAlEnviar(montoAgregar.closest('form'));
+  }
+
+  const montoEditar = document.getElementById('edit_monto');
+  if (montoEditar) {
+    montoEditar.setAttribute('type', 'text');
+    montoEditar.addEventListener('input', function () { formatearPesos(this); });
+    limpiarPesosAlEnviar(montoEditar.closest('form'));
+  }
+
+  // ── Contacto modal editar: mismo formato XXXX XXXX ──
+  const editContacto = document.getElementById('edit_contacto');
+  if (editContacto) {
+    editContacto.addEventListener('input', function () {
+      let digits = this.value.replace(/\D/g, '').slice(0, 8);
+      this.value = digits.length > 4 ? digits.slice(0, 4) + ' ' + digits.slice(4) : digits;
+    });
+    editContacto.addEventListener('keydown', function (e) {
+      const allowed = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'];
+      if (allowed.includes(e.key)) return;
+      if (!/^\d$/.test(e.key)) e.preventDefault();
+    });
+  }
+
+  // ── Contacto: formato XXXX XXXX (solo dígitos, máx 9 chars con espacio) ──
+  const contacto = document.getElementById('id_contacto');
+  if (contacto) {
+    contacto.setAttribute('maxlength', '9');
+    contacto.addEventListener('input', function () {
+      let digits = this.value.replace(/\D/g, '').slice(0, 8);
+      if (digits.length > 4) {
+        this.value = digits.slice(0, 4) + ' ' + digits.slice(4);
+      } else {
+        this.value = digits;
+      }
+    });
+    contacto.addEventListener('keydown', function (e) {
+      const allowed = ['Backspace','Delete','Tab','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'];
+      if (allowed.includes(e.key)) return;
+      if (!/^\d$/.test(e.key)) e.preventDefault();
+    });
+  }
+
+});
+</script>
+{% endblock %}
 {% endblock %}

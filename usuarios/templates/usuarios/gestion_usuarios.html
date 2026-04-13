@@ -32,9 +32,14 @@
           <tr>
             <td>
               <strong>{{ u.username }}</strong>
-              {% if u.is_superuser %}<span class="badge-estado badge-pagado" style="margin-left:4px;">Superadmin</span>{% endif %}
             </td>
-            <td>{{ u.get_full_name|default:"—" }}</td>
+            <td>
+              {% if u.is_superuser %}
+                <strong style="color:#dc3545;">{{ u.get_full_name|default:"—" }}</strong>
+              {% else %}
+                {{ u.get_full_name|default:"—" }}
+              {% endif %}
+            </td>
             <td style="font-size:0.85rem;">{{ u.email }}</td>
             <td>
               {% if u.is_superuser %}

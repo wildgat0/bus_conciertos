@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Calendario de Conciertos{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div class="container">
@@ -48,7 +49,12 @@
             <td>
               <div class="tabla-acciones">
                 <a href="{% url 'editar_concierto' c.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
-                <a href="{% url 'eliminar_concierto' c.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+                <button type="button" class="btn btn-danger btn-sm" title="Eliminar"
+                  data-url="{% url 'eliminar_concierto' c.pk %}"
+                  data-nombre="{{ c.artista|escapejs }} — {{ c.nombre|escapejs }}"
+                  onclick="abrirModalEliminarConcierto(this.dataset.url, this.dataset.nombre)">
+                  <i class="fa fa-trash"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -93,7 +99,12 @@
             <td>
               <div class="tabla-acciones">
                 <a href="{% url 'editar_concierto' c.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
-                <a href="{% url 'eliminar_concierto' c.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+                <button type="button" class="btn btn-danger btn-sm" title="Eliminar"
+                  data-url="{% url 'eliminar_concierto' c.pk %}"
+                  data-nombre="{{ c.artista|escapejs }} — {{ c.nombre|escapejs }}"
+                  onclick="abrirModalEliminarConcierto(this.dataset.url, this.dataset.nombre)">
+                  <i class="fa fa-trash"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -104,4 +115,30 @@
   </div>
   {% endif %}
 </section>
+
+<!-- Modal confirmar eliminación concierto -->
+<div id="modal-eliminar-concierto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:1rem;">
+  <div class="form-card" style="max-width:420px;width:100%;margin:0;text-align:center;">
+    <div style="font-size:2.5rem;margin-bottom:0.75rem;">🗑️</div>
+    <h2 style="margin-bottom:0.5rem;">¿Eliminar concierto?</h2>
+    <p id="modal-concierto-nombre" style="color:var(--gris-medio);margin-bottom:1.5rem;"></p>
+    <form id="form-eliminar-concierto" method="POST" action="">
+      {% csrf_token %}
+      <div style="display:flex;gap:0.75rem;justify-content:center;">
+        <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Eliminar</button>
+        <button type="button" class="btn btn-dark" onclick="document.getElementById('modal-eliminar-concierto').style.display='none'">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+function abrirModalEliminarConcierto(url, nombre) {
+  document.getElementById('form-eliminar-concierto').action = url;
+  document.getElementById('modal-concierto-nombre').textContent = nombre;
+  document.getElementById('modal-eliminar-concierto').style.display = 'flex';
+}
+</script>
+{% endblock %}
 {% endblock %}

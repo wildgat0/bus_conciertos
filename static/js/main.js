@@ -13,6 +13,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ─── Dropdown menú admin ─────────────────────────
+  const adminTrigger = document.querySelector('.nav-admin-trigger');
+  const adminMenu = document.querySelector('.nav-admin-menu');
+  if (adminTrigger && adminMenu) {
+    adminTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      adminMenu.classList.toggle('open');
+    });
+    document.addEventListener('click', () => {
+      adminMenu.classList.remove('open');
+    });
+  }
+
   // ─── Cerrar alertas automáticamente ────────────
   document.querySelectorAll('.alert[data-auto-dismiss]').forEach(alert => {
     setTimeout(() => {

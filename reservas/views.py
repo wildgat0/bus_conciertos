@@ -15,7 +15,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
 from .models import Viaje, Reserva, HorarioViaje
-from .forms import ViajeForm, PasajeroForm, HorarioViajeForm
+from .forms import ViajeForm, PasajeroForm, HorarioViajeForm, AgregarPasajeroManualForm
 from usuarios.decorators import coordinador_required, admin_required
 
 
@@ -421,9 +421,10 @@ def retorno_webpay(request, reserva_id):
         if data.get('response_code') == 0:
             # Marcar todos los ítems del grupo como pagados
             if reserva.grupo_compra:
-                Reserva.objects.filter(grupo_compra=reserva.grupo_compra).update(estado='pagado')
+                Reserva.objects.filter(grupo_compra=reserva.grupo_compra).update(estado='pagado', pago='WEB')
             else:
                 reserva.estado = 'pagado'
+                reserva.pago = 'WEB'
                 reserva.save()
             # Actualizar estado del viaje si está lleno
             if reserva.viaje.cupos_disponibles <= 0:
@@ -543,7 +544,31 @@ def eliminar_viaje(request, pk):
 def pasajeros_viaje(request, pk):
     viaje = get_object_or_404(Viaje, pk=pk)
     pasajeros = Reserva.objects.filter(viaje=viaje).exclude(estado='cancelado').select_related('usuario__perfilusuario', 'horario').order_by('fecha_reserva')
-    return render(request, 'reservas/pasajeros_viaje.html', {'viaje': viaje, 'pasajeros': pasajeros})
+    form = AgregarPasajeroManualForm(viaje=viaje)
+    return render(request, 'reservas/pasajeros_viaje.html', {'viaje': viaje, 'pasajeros': pasajeros, 'form': form})
+
+
+@login_required
+@user_passes_test(es_coordinador)
+def agregar_pasajero_manual(request, pk):
+    viaje = get_object_or_404(Viaje, pk=pk)
+    if request.method == 'POST':
+        form = AgregarPasajeroManualForm(request.POST, viaje=viaje)
+        if form.is_valid():
+            reserva = form.save(commit=False)
+            reserva.viaje = viaje
+            reserva.usuario = request.user
+            reserva.estado = 'pagado'
+            reserva.pago = 'TRANSFERENCIA'
+            if reserva.contacto and not reserva.contacto.startswith('+56'):
+                reserva.contacto = f'+56 9 {reserva.contacto}'
+            reserva.save()
+            if reserva.email:
+                enviar_comprobante_pago(reserva, reserva.monto)
+            messages.success(request, 'Pasajero agregado correctamente.')
+        else:
+            messages.error(request, 'Error al agregar el pasajero. Revisa los datos.')
+    return redirect('pasajeros_viaje', pk=pk)
 
 
 @login_required
@@ -618,6 +643,23 @@ def editar_pasajero(request, pk):
     else:
         form = PasajeroForm(instance=reserva)
     return render(request, 'reservas/form_pasajero.html', {'form': form, 'reserva': reserva})
+
+
+@login_required
+@user_passes_test(es_coordinador)
+def editar_pasajero_manual(request, pk):
+    reserva = get_object_or_404(Reserva, pk=pk)
+    if request.method == 'POST':
+        form = AgregarPasajeroManualForm(request.POST, instance=reserva, viaje=reserva.viaje)
+        if form.is_valid():
+            reserva = form.save(commit=False)
+            if reserva.contacto and not reserva.contacto.startswith('+56'):
+                reserva.contacto = f'+56 9 {reserva.contacto}'
+            reserva.save()
+            messages.success(request, 'Pasajero actualizado correctamente.')
+        else:
+            messages.error(request, 'Error al actualizar el pasajero. Revisa los datos.')
+    return redirect('pasajeros_viaje', pk=reserva.viaje.pk)
 
 
 @login_required
