@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from django.http import JsonResponse
 from django.utils import timezone
 from .models import Concierto
 from .forms import ConciertoForm
@@ -35,6 +36,7 @@ def calendario_conciertos(request):
     return render(request, 'core/calendario_conciertos.html', {
         'proximos': proximos,
         'pasados': pasados,
+        'form': ConciertoForm(),
     })
 
 
@@ -42,10 +44,17 @@ def calendario_conciertos(request):
 def crear_concierto(request):
     if request.method == 'POST':
         form = ConciertoForm(request.POST)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if form.is_valid():
             form.save()
+            if is_ajax:
+                return JsonResponse({'ok': True})
             messages.success(request, 'Concierto agregado al calendario.')
             return redirect('calendario_conciertos')
+        else:
+            if is_ajax:
+                errors = {field: list(errs) for field, errs in form.errors.items()}
+                return JsonResponse({'ok': False, 'errors': errors})
     else:
         form = ConciertoForm()
     return render(request, 'core/form_concierto.html', {'form': form, 'titulo': 'Nuevo Concierto'})
@@ -56,10 +65,17 @@ def editar_concierto(request, pk):
     concierto = get_object_or_404(Concierto, pk=pk)
     if request.method == 'POST':
         form = ConciertoForm(request.POST, instance=concierto)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if form.is_valid():
             form.save()
+            if is_ajax:
+                return JsonResponse({'ok': True})
             messages.success(request, 'Concierto actualizado.')
             return redirect('calendario_conciertos')
+        else:
+            if is_ajax:
+                errors = {field: list(errs) for field, errs in form.errors.items()}
+                return JsonResponse({'ok': False, 'errors': errors})
     else:
         form = ConciertoForm(instance=concierto)
     return render(request, 'core/form_concierto.html', {'form': form, 'titulo': 'Editar Concierto', 'concierto': concierto})

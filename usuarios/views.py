@@ -89,17 +89,27 @@ def gestion_usuarios(request):
     return render(request, 'usuarios/gestion_usuarios.html', {
         'usuarios': usuarios,
         'usuarios_pasajeros': usuarios_pasajeros,
+        'form': CrearUsuarioAdminForm(),
+        'form_rol': AsignarRolForm(),
     })
 
 
 @admin_required
 def crear_usuario(request):
+    from django.http import JsonResponse
     if request.method == 'POST':
         form = CrearUsuarioAdminForm(request.POST)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if form.is_valid():
             form.save()
+            if is_ajax:
+                return JsonResponse({'ok': True})
             messages.success(request, 'Usuario creado exitosamente.')
             return redirect('gestion_usuarios')
+        else:
+            if is_ajax:
+                errors = {field: list(errs) for field, errs in form.errors.items()}
+                return JsonResponse({'ok': False, 'errors': errors})
     else:
         form = CrearUsuarioAdminForm()
     return render(request, 'usuarios/form_usuario.html', {'form': form, 'titulo': 'Crear Usuario'})
@@ -107,10 +117,11 @@ def crear_usuario(request):
 
 @admin_required
 def editar_usuario(request, pk):
+    from django.http import JsonResponse
     usuario = get_object_or_404(User, pk=pk)
     perfil = getattr(usuario, 'perfilusuario', None)
     if request.method == 'POST':
-        # Actualizar datos básicos con longitudes máximas según el modelo User de Django
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         first_name = request.POST.get('first_name', usuario.first_name)[:150]
         last_name = request.POST.get('last_name', usuario.last_name)[:150]
         email = request.POST.get('email', usuario.email)[:254]
@@ -119,6 +130,8 @@ def editar_usuario(request, pk):
         usuario.email = email
         usuario.is_active = 'is_active' in request.POST
         usuario.save()
+        if is_ajax:
+            return JsonResponse({'ok': True})
         messages.success(request, 'Usuario actualizado.')
         return redirect('gestion_usuarios')
     return render(request, 'usuarios/editar_usuario.html', {'usuario': usuario, 'perfil': perfil})
@@ -139,16 +152,23 @@ def eliminar_usuario(request, pk):
 
 @admin_required
 def asignar_rol(request, pk):
+    from django.http import JsonResponse
     usuario = get_object_or_404(User, pk=pk)
     if request.method == 'POST':
         form = AsignarRolForm(request.POST)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if form.is_valid():
             usuario.groups.clear()
             grupo = form.cleaned_data.get('grupo')
             if grupo:
                 usuario.groups.add(grupo)
+            if is_ajax:
+                return JsonResponse({'ok': True})
             messages.success(request, f'Rol actualizado para {usuario.username}.')
             return redirect('gestion_usuarios')
+        else:
+            if is_ajax:
+                return JsonResponse({'ok': False, 'errors': {f: list(e) for f, e in form.errors.items()}})
     else:
         grupo_actual = usuario.groups.first()
         form = AsignarRolForm(initial={'grupo': grupo_actual})

@@ -81,7 +81,7 @@
         </thead>
         <tbody>
           {% for r in reservas %}
-          <tr data-rut="{{ r.rut }}" data-estado="{{ r.estado }}">
+          <tr data-rut="{{ r.rut }}" data-estado="{{ r.estado }}" data-cupos="{{ r.cantidad }}">
             <td style="white-space:nowrap;color:var(--gris-medio);font-size:0.88rem;">{{ r.rut|default:"—" }}</td>
             <td><strong>{{ r.nombre_titular }}</strong></td>
             <td><strong>{{ r.cantidad }}</strong></td>
@@ -112,7 +112,8 @@
         </tbody>
       </table>
       <div style="padding:0.75rem 0;text-align:right;font-size:0.88rem;color:var(--gris-medio);border-top:1px solid #eee;margin-top:0.5rem;">
-        Total de resultados: <strong style="color:var(--negro);">{{ total }}</strong>
+        Total de cupos: <strong id="total-cupos" style="color:var(--negro);">{{ total_cupos }}</strong>
+        <span style="margin-left:0.5rem;font-size:0.8rem;color:var(--gris-medio);">(Total no considera estados Cancelado)</span>
       </div>
     </div>
     {% else %}
@@ -138,14 +139,22 @@
     const estado = filtroEstado?.value || '';
     const filas  = document.querySelectorAll('#tabla-compras tbody tr');
     let visibles = 0;
+    let sumaCupos = 0;
     filas.forEach(function (fila) {
       const rut        = (fila.dataset.rut || '').toLowerCase().replace(/\s/g, '');
       const filaEstado = fila.dataset.estado || '';
       const coincide   = rut.includes(q) && (estado === '' || filaEstado === estado);
       fila.style.display = coincide ? '' : 'none';
-      if (coincide) visibles++;
+      if (coincide) {
+        visibles++;
+        if (fila.dataset.estado !== 'cancelado') {
+          sumaCupos += parseInt(fila.dataset.cupos || '0', 10);
+        }
+      }
     });
     if (contadorEl) contadorEl.textContent = '(' + visibles + ')';
+    const totalCuposEl = document.getElementById('total-cupos');
+    if (totalCuposEl) totalCuposEl.textContent = sumaCupos;
   }
 
   filtroRut?.addEventListener('input', aplicarFiltros);

@@ -482,8 +482,11 @@ def gestion_viajes(request):
 @user_passes_test(es_coordinador)
 def crear_viaje(request):
     from core.models import Concierto
+    from django.http import JsonResponse
+    from django.urls import reverse
     if request.method == 'POST':
         form = ViajeForm(request.POST)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if form.is_valid():
             texto = form.cleaned_data['concierto_nombre'].strip()
             concierto = Concierto.objects.filter(
@@ -491,13 +494,21 @@ def crear_viaje(request):
             ).first()
             if not concierto:
                 form.add_error('concierto_nombre', f'No se encontró ningún concierto con "{texto}". Créalo primero en el Calendario.')
+                if is_ajax:
+                    return JsonResponse({'ok': False, 'errors': {'concierto_nombre': [f'No se encontró ningún concierto con "{texto}". Créalo primero en el Calendario.']}})
             else:
                 viaje = form.save(commit=False)
                 viaje.concierto = concierto
                 viaje.coordinador = request.user
                 viaje.save()
+                if is_ajax:
+                    return JsonResponse({'ok': True, 'redirect': reverse('horarios_viaje', args=[viaje.pk])})
                 messages.success(request, 'Viaje creado. Ahora agrega los horarios.')
                 return redirect('horarios_viaje', pk=viaje.pk)
+        else:
+            if is_ajax:
+                errors = {field: list(errs) for field, errs in form.errors.items()}
+                return JsonResponse({'ok': False, 'errors': errors})
     else:
         form = ViajeForm()
     return render(request, 'reservas/form_viaje.html', {'form': form, 'titulo': 'Crear Nuevo Viaje'})
@@ -507,9 +518,11 @@ def crear_viaje(request):
 @user_passes_test(es_coordinador)
 def editar_viaje(request, pk):
     from core.models import Concierto
+    from django.http import JsonResponse
     viaje = get_object_or_404(Viaje, pk=pk)
     if request.method == 'POST':
         form = ViajeForm(request.POST, instance=viaje)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if form.is_valid():
             texto = form.cleaned_data['concierto_nombre'].strip()
             concierto = Concierto.objects.filter(
@@ -517,12 +530,20 @@ def editar_viaje(request, pk):
             ).first()
             if not concierto:
                 form.add_error('concierto_nombre', f'No se encontró ningún concierto con "{texto}". Créalo primero en el Calendario.')
+                if is_ajax:
+                    return JsonResponse({'ok': False, 'errors': {'concierto_nombre': [f'No se encontró ningún concierto con "{texto}". Créalo primero en el Calendario.']}})
             else:
                 viaje = form.save(commit=False)
                 viaje.concierto = concierto
                 viaje.save()
+                if is_ajax:
+                    return JsonResponse({'ok': True})
                 messages.success(request, 'Viaje actualizado exitosamente.')
                 return redirect('gestion_viajes')
+        else:
+            if is_ajax:
+                errors = {field: list(errs) for field, errs in form.errors.items()}
+                return JsonResponse({'ok': False, 'errors': errors})
     else:
         form = ViajeForm(instance=viaje)
     return render(request, 'reservas/form_viaje.html', {'form': form, 'titulo': 'Editar Viaje', 'viaje': viaje})
@@ -781,7 +802,7 @@ def exportar_auditoria_excel(request):
     fill_total  = PatternFill('solid', fgColor='111111')
     center      = Alignment(horizontal='center', vertical='center')
 
-    cabeceras = ['Concierto', 'Artista', 'Fecha Salida', 'Origen', 'Destino', 'Cupos Totales', 'Pasajeros Pagados', 'Ganancia (CLP)']
+    cabeceras = ['Artista', 'Concierto', 'Fecha Salida', 'Origen', 'Destino', 'Cupos Totales', 'Pasajeros Pagados', 'Ganancia (CLP)']
     ws.append(cabeceras)
     for cell in ws[1]:
         cell.fill      = amarillo
@@ -791,8 +812,8 @@ def exportar_auditoria_excel(request):
     def escribir_filas(qs, etiqueta):
         for v in qs:
             ws.append([
-                v.concierto.nombre,
                 v.concierto.artista,
+                v.concierto.nombre,
                 v.fecha_salida.strftime('%d/%m/%Y'),
                 v.origen,
                 v.destino,
@@ -836,8 +857,10 @@ def compras(request):
         .order_by('-fecha_reserva')
     )
 
+    from django.db.models import Sum
     context = {
         'reservas': reservas,
         'total': reservas.count(),
+        'total_cupos': reservas.exclude(estado='cancelado').aggregate(total=Sum('cantidad'))['total'] or 0,
     }
     return render(request, 'reservas/compras.html', context)

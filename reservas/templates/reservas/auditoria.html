@@ -186,11 +186,39 @@
     selectAnio.appendChild(opt);
   });
 
+  function parseGanancia(str) {
+    // Elimina todo símbolo que no sea dígito (puntos, comas, espacios de locale)
+    // pero conserva el signo negativo
+    const s = String(str || '0');
+    const neg = s.trim().startsWith('-');
+    const n = parseInt(s.replace(/\D/g, ''), 10) || 0;
+    return neg ? -n : n;
+  }
+
   function recalcularTotal(selector, spanId) {
+    const el = document.getElementById(spanId);
+    if (!el) return;
     const total = [...document.querySelectorAll(selector)]
       .filter(f => f.style.display !== 'none')
-      .reduce((sum, f) => sum + (parseInt(f.dataset.ganancia.replace(/\D/g, ''), 10) || 0), 0);
-    document.getElementById(spanId).textContent = total.toLocaleString('es-CL');
+      .reduce((sum, f) => sum + parseGanancia(f.dataset.ganancia), 0);
+    el.textContent = total.toLocaleString('es-CL');
+  }
+
+  function actualizarKpiGanancia() {
+    const visibles = [...filas].filter(f => f.style.display !== 'none');
+    const totalGanancia  = visibles.reduce((s, f) => s + parseGanancia(f.dataset.ganancia), 0);
+    const totalPasajeros = visibles.reduce((s, f) => s + (parseInt(f.dataset.pasajeros) || 0), 0);
+    const totalViajes    = visibles.length;
+
+    const elGanancia = document.getElementById('kpi-ganancia-total');
+    elGanancia.textContent = totalGanancia.toLocaleString('es-CL');
+    elGanancia.closest('.kpi-card').style.transition = 'background 0.3s';
+    elGanancia.closest('.kpi-card').style.background = 'rgba(255,220,0,0.15)';
+    setTimeout(function() { elGanancia.closest('.kpi-card').style.background = ''; }, 400);
+
+    document.getElementById('kpi-pasajeros').textContent          = totalPasajeros.toLocaleString('es-CL');
+    document.getElementById('kpi-total-viajes').textContent       = totalViajes;
+    document.getElementById('kpi-viajes-registrados').textContent = totalViajes;
   }
 
   function aplicarFiltros() {
@@ -206,16 +234,7 @@
 
     recalcularTotal('.aud-fila-curso', 'total-curso');
     recalcularTotal('.aud-fila-fin', 'total-fin');
-
-    const visibles = [...filas].filter(f => f.style.display !== 'none');
-    const totalGanancia  = visibles.reduce((s, f) => s + (parseInt(f.dataset.ganancia.replace(/\D/g, ''), 10) || 0), 0);
-    const totalPasajeros = visibles.reduce((s, f) => s + (parseInt(f.dataset.pasajeros) || 0), 0);
-    const totalViajes    = visibles.length;
-
-    document.getElementById('kpi-ganancia-total').textContent     = totalGanancia.toLocaleString('es-CL');
-    document.getElementById('kpi-pasajeros').textContent          = totalPasajeros.toLocaleString('es-CL');
-    document.getElementById('kpi-total-viajes').textContent       = totalViajes;
-    document.getElementById('kpi-viajes-registrados').textContent = totalViajes;
+    actualizarKpiGanancia();
   }
 
   selectMes.addEventListener('change', aplicarFiltros);
@@ -239,13 +258,15 @@
   selectAnio.addEventListener('change', actualizarHrefExport);
   actualizarHrefExport();
 
-  // Formatear totales iniciales
+  // Formatear totales iniciales de tablas
   ['total-curso', 'total-fin'].forEach(function(id) {
     const el = document.getElementById(id);
-    if (el) {
-      const n = parseInt(el.textContent.replace(/\D/g, ''), 10);
-      if (!isNaN(n)) el.textContent = n.toLocaleString('es-CL');
-    }
+    if (!el) return;
+    const n = parseInt(el.textContent.replace(/\D/g, ''), 10);
+    if (!isNaN(n)) el.textContent = n.toLocaleString('es-CL');
   });
+
+  // Inicializar KPI desde JS para que sea consistente con los datos de las filas
+  actualizarKpiGanancia();
 </script>
 {% endblock %}

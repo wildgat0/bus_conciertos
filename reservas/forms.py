@@ -62,7 +62,7 @@ class PasajeroForm(forms.ModelForm):
 class AgregarPasajeroManualForm(forms.ModelForm):
     class Meta:
         model = Reserva
-        fields = ['nombre_titular', 'rut', 'contacto', 'email', 'cantidad', 'tipo_pasaje', 'monto', 'horario', 'ciudad_vuelta']
+        fields = ['nombre_titular', 'rut', 'contacto', 'email', 'cantidad', 'tipo_pasaje', 'monto', 'horario', 'ciudad_vuelta', 'plataforma']
         widgets = {
             'nombre_titular': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre completo'}),
             'rut':            forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: 12.345.678-9'}),
@@ -80,6 +80,12 @@ class AgregarPasajeroManualForm(forms.ModelForm):
                 ('Placilla', 'Placilla'),
                 ('Casablanca - Cruce Chacabuco', 'Casablanca - Cruce Chacabuco'),
             ]),
+            'plataforma':     forms.Select(attrs={'class': 'form-select'}, choices=[
+                ('', '— Selecciona plataforma —'),
+                ('WHATSAPP', 'WhatsApp'),
+                ('INSTAGRAM', 'Instagram'),
+                ('PRESENCIAL', 'Presencial'),
+            ]),
         }
 
     def __init__(self, *args, viaje=None, **kwargs):
@@ -87,5 +93,6 @@ class AgregarPasajeroManualForm(forms.ModelForm):
         self.fields['horario'].required = False
         self.fields['ciudad_vuelta'].required = False
         self.fields['email'].required = False
+        self.fields['plataforma'].required = False
         if viaje:
             self.fields['horario'].queryset = viaje.horarios.all()

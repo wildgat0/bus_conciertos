@@ -46,7 +46,8 @@
       "Bash(git checkout:*)",
       "Bash(python manage.py shell -c \"from django.contrib.auth.models import User; u = User.objects.filter\\(username='pasajero1'\\).first\\(\\); print\\('Existe:', bool\\(u\\)\\); print\\('Activo:', u.is_active if u else 'N/A'\\)\")",
       "Bash(python manage.py shell -c ':*)",
-      "Bash(python manage.py makemigrations reservas --name=\"add_pago_to_reserva\")"
+      "Bash(python manage.py makemigrations reservas --name=\"add_pago_to_reserva\")",
+      "Bash(python manage.py makemigrations reservas --name add_plataforma_to_reserva)"
     ]
   }
 }

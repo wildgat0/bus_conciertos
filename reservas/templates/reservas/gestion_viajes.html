@@ -11,7 +11,7 @@
   <div class="tabla-wrapper">
     <div class="tabla-header">
       <h2>VIAJES PROGRAMADOS</h2>
-      <a href="{% url 'crear_viaje' %}" class="btn btn-primary"><i class="fa fa-plus"></i> Nuevo Viaje</a>
+      <button type="button" class="btn btn-primary" onclick="abrirModalNuevoViaje()"><i class="fa fa-plus"></i> Nuevo Viaje</button>
     </div>
     {% if viajes %}
     <div style="overflow-x:auto;">
@@ -46,8 +46,24 @@
               <div class="tabla-acciones">
                 <a href="{% url 'pasajeros_viaje' viaje.pk %}" class="btn btn-dark btn-sm" title="Ver pasajeros"><i class="fa fa-users"></i></a>
                 <a href="{% url 'horarios_viaje' viaje.pk %}" class="btn btn-outline btn-sm" title="Horarios"><i class="fa fa-clock"></i></a>
-                <a href="{% url 'editar_viaje' viaje.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
-                <a href="{% url 'eliminar_viaje' viaje.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+                <button type="button" class="btn btn-primary btn-sm" title="Editar"
+                  data-url="{% url 'editar_viaje' viaje.pk %}"
+                  data-concierto="{{ viaje.concierto.artista|escapejs }} — {{ viaje.concierto.nombre|escapejs }}"
+                  data-origen="{{ viaje.origen|escapejs }}"
+                  data-destino="{{ viaje.destino|escapejs }}"
+                  data-fecha="{{ viaje.fecha_salida|date:'Y-m-d' }}"
+                  data-cupos="{{ viaje.cupos_totales }}"
+                  data-precio="{{ viaje.precio_vuelta }}"
+                  data-estado="{{ viaje.estado }}"
+                  onclick="abrirModalEditarViaje(this.dataset)">
+                  <i class="fa fa-edit"></i>
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" title="Eliminar"
+                  data-url="{% url 'eliminar_viaje' viaje.pk %}"
+                  data-nombre="{{ viaje.concierto.artista|escapejs }} — {{ viaje.concierto.nombre|escapejs }}"
+                  onclick="abrirModalEliminarViaje(this.dataset.url, this.dataset.nombre)">
+                  <i class="fa fa-trash"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -99,8 +115,24 @@
               <div class="tabla-acciones">
                 <a href="{% url 'pasajeros_viaje' viaje.pk %}" class="btn btn-dark btn-sm" title="Ver pasajeros"><i class="fa fa-users"></i></a>
                 <a href="{% url 'horarios_viaje' viaje.pk %}" class="btn btn-outline btn-sm" title="Horarios"><i class="fa fa-clock"></i></a>
-                <a href="{% url 'editar_viaje' viaje.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
-                <a href="{% url 'eliminar_viaje' viaje.pk %}" class="btn btn-danger btn-sm" title="Eliminar"><i class="fa fa-trash"></i></a>
+                <button type="button" class="btn btn-primary btn-sm" title="Editar"
+                  data-url="{% url 'editar_viaje' viaje.pk %}"
+                  data-concierto="{{ viaje.concierto.artista|escapejs }} — {{ viaje.concierto.nombre|escapejs }}"
+                  data-origen="{{ viaje.origen|escapejs }}"
+                  data-destino="{{ viaje.destino|escapejs }}"
+                  data-fecha="{{ viaje.fecha_salida|date:'Y-m-d' }}"
+                  data-cupos="{{ viaje.cupos_totales }}"
+                  data-precio="{{ viaje.precio_vuelta }}"
+                  data-estado="{{ viaje.estado }}"
+                  onclick="abrirModalEditarViaje(this.dataset)">
+                  <i class="fa fa-edit"></i>
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" title="Eliminar"
+                  data-url="{% url 'eliminar_viaje' viaje.pk %}"
+                  data-nombre="{{ viaje.concierto.artista|escapejs }} — {{ viaje.concierto.nombre|escapejs }}"
+                  onclick="abrirModalEliminarViaje(this.dataset.url, this.dataset.nombre)">
+                  <i class="fa fa-trash"></i>
+                </button>
               </div>
             </td>
           </tr>
@@ -115,10 +147,281 @@
     {% endif %}
   </div>
 </section>
+
+<!-- Modal Nuevo Viaje -->
+<div id="modal-nuevo-viaje" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;">
+  <div class="form-card" style="max-width:620px;width:100%;margin:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <h2 style="margin:0;"><i class="fa fa-plus"></i> Nuevo Viaje</h2>
+      <button type="button" onclick="cerrarModalNuevoViaje()" style="background:none;border:none;font-size:1.8rem;line-height:1;cursor:pointer;color:var(--gris-medio);">&times;</button>
+    </div>
+    <form id="form-nuevo-viaje" method="POST" action="{% url 'crear_viaje' %}">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Concierto</label>
+          <input type="text" name="concierto_nombre" class="form-control" placeholder="Ej: Metallica, Ed Sheeran..." autocomplete="off">
+          <small style="color:var(--gris-medio);">Escribe el nombre del artista o del concierto tal como está registrado en el Calendario.</small>
+          <span class="error-msg" id="nuevo-err-concierto" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Punto de Origen</label>
+          <input type="text" name="origen" class="form-control" placeholder="Ej: Terminal Alameda, Santiago">
+          <span class="error-msg" id="nuevo-err-origen" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Destino</label>
+          <input type="text" name="destino" class="form-control" placeholder="Ej: Movistar Arena">
+          <span class="error-msg" id="nuevo-err-destino" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Fecha de Salida</label>
+          <input type="date" name="fecha_salida" class="form-control">
+          <span class="error-msg" id="nuevo-err-fecha" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Cupos Totales del Bus</label>
+          <input type="number" name="cupos_totales" class="form-control" min="1">
+          <span class="error-msg" id="nuevo-err-cupos" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Precio Solo Vuelta (CLP)</label>
+          <input type="text" id="nuevo-precio-display" class="form-control" placeholder="Ej: 15.000" autocomplete="off" inputmode="numeric">
+          <input type="hidden" id="nuevo-precio-hidden" name="precio_vuelta">
+          <span class="error-msg" id="nuevo-err-precio" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select name="estado" class="form-select">
+            <option value="disponible">Disponible</option>
+            <option value="completo">Completo</option>
+            <option value="cancelado">Cancelado</option>
+            <option value="realizado">Realizado</option>
+          </select>
+          <span class="error-msg" id="nuevo-err-estado" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+      </div>
+      <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+        <button type="button" class="btn btn-dark" onclick="cerrarModalNuevoViaje()">Cancelar</button>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-arrow-right"></i> Continuar a Horarios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Editar Viaje -->
+<div id="modal-editar-viaje" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;">
+  <div class="form-card" style="max-width:620px;width:100%;margin:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <h2 style="margin:0;"><i class="fa fa-edit"></i> Editar Viaje</h2>
+      <button type="button" onclick="cerrarModalEditarViaje()" style="background:none;border:none;font-size:1.8rem;line-height:1;cursor:pointer;color:var(--gris-medio);">&times;</button>
+    </div>
+    <form id="form-editar-viaje" method="POST" action="">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Concierto</label>
+          <input type="text" id="edit-concierto" name="concierto_nombre" class="form-control" placeholder="Ej: Metallica, Ed Sheeran..." autocomplete="off">
+          <small style="color:var(--gris-medio);">Escribe el nombre del artista o del concierto tal como está registrado en el Calendario.</small>
+          <span class="error-msg" id="edit-err-concierto" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Punto de Origen</label>
+          <input type="text" id="edit-origen" name="origen" class="form-control" placeholder="Ej: Terminal Alameda, Santiago">
+          <span class="error-msg" id="edit-err-origen" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Destino</label>
+          <input type="text" id="edit-destino" name="destino" class="form-control" placeholder="Ej: Movistar Arena">
+          <span class="error-msg" id="edit-err-destino" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Fecha de Salida</label>
+          <input type="date" id="edit-fecha" name="fecha_salida" class="form-control">
+          <span class="error-msg" id="edit-err-fecha" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Cupos Totales del Bus</label>
+          <input type="number" id="edit-cupos" name="cupos_totales" class="form-control" min="1">
+          <span class="error-msg" id="edit-err-cupos" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Precio Solo Vuelta (CLP)</label>
+          <input type="text" id="edit-precio-display" class="form-control" placeholder="Ej: 15.000" autocomplete="off" inputmode="numeric">
+          <input type="hidden" id="edit-precio" name="precio_vuelta">
+          <span class="error-msg" id="edit-err-precio" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="edit-estado" name="estado" class="form-select">
+            <option value="disponible">Disponible</option>
+            <option value="completo">Completo</option>
+            <option value="cancelado">Cancelado</option>
+            <option value="realizado">Realizado</option>
+          </select>
+          <span class="error-msg" id="edit-err-estado" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+      </div>
+      <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+        <button type="button" class="btn btn-dark" onclick="cerrarModalEditarViaje()">Cancelar</button>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar Cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal confirmar eliminación viaje -->
+<div id="modal-eliminar-viaje" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:1rem;">
+  <div class="form-card" style="max-width:420px;width:100%;margin:0;text-align:center;">
+    <div style="font-size:2.5rem;margin-bottom:0.75rem;">🗑️</div>
+    <h2 style="margin-bottom:0.5rem;">¿Eliminar viaje?</h2>
+    <p id="modal-viaje-nombre" style="color:var(--gris-medio);margin-bottom:1.5rem;"></p>
+    <form id="form-eliminar-viaje" method="POST" action="">
+      {% csrf_token %}
+      <div style="display:flex;gap:0.75rem;justify-content:center;">
+        <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Eliminar</button>
+        <button type="button" class="btn btn-dark" onclick="document.getElementById('modal-eliminar-viaje').style.display='none'">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+function abrirModalNuevoViaje() {
+  document.getElementById('form-nuevo-viaje').reset();
+  document.querySelectorAll('#modal-nuevo-viaje .error-msg').forEach(function(el) { el.textContent = ''; });
+  document.getElementById('modal-nuevo-viaje').style.display = 'flex';
+}
+
+function cerrarModalNuevoViaje() {
+  document.getElementById('modal-nuevo-viaje').style.display = 'none';
+  document.getElementById('nuevo-precio-display').value = '';
+  document.getElementById('nuevo-precio-hidden').value = '';
+}
+
+document.getElementById('nuevo-precio-display').addEventListener('input', function() {
+  var raw = this.value.replace(/\D/g, '');
+  var cursor = this.selectionStart;
+  var oldLen = this.value.length;
+  this.value = raw ? parseInt(raw, 10).toLocaleString('es-CL') : '';
+  var newLen = this.value.length;
+  this.setSelectionRange(cursor + (newLen - oldLen), cursor + (newLen - oldLen));
+  document.getElementById('nuevo-precio-hidden').value = raw;
+});
+
+document.getElementById('form-nuevo-viaje').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var raw = document.getElementById('nuevo-precio-display').value.replace(/\D/g, '');
+  document.getElementById('nuevo-precio-hidden').value = raw;
+  var form = this;
+  fetch(form.action, {
+    method: 'POST',
+    body: new FormData(form),
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(resp) {
+    if (resp.ok) {
+      window.location.href = resp.redirect;
+    } else {
+      var errorMap = {
+        concierto_nombre: 'nuevo-err-concierto',
+        origen: 'nuevo-err-origen',
+        destino: 'nuevo-err-destino',
+        fecha_salida: 'nuevo-err-fecha',
+        cupos_totales: 'nuevo-err-cupos',
+        precio_vuelta: 'nuevo-err-precio',
+        estado: 'nuevo-err-estado'
+      };
+      document.querySelectorAll('#modal-nuevo-viaje .error-msg').forEach(function(el) { el.textContent = ''; });
+      for (var field in resp.errors) {
+        var elId = errorMap[field];
+        if (elId) {
+          var el = document.getElementById(elId);
+          if (el) el.textContent = resp.errors[field][0];
+        }
+      }
+    }
+  });
+});
+
+function formatClp(val) {
+  var n = parseInt(String(val).replace(/\D/g, ''), 10);
+  return isNaN(n) ? '' : n.toLocaleString('es-CL');
+}
+
+document.getElementById('edit-precio-display').addEventListener('input', function() {
+  var raw = this.value.replace(/\D/g, '');
+  var cursor = this.selectionStart;
+  var oldLen = this.value.length;
+  this.value = raw ? parseInt(raw, 10).toLocaleString('es-CL') : '';
+  var newLen = this.value.length;
+  this.setSelectionRange(cursor + (newLen - oldLen), cursor + (newLen - oldLen));
+  document.getElementById('edit-precio').value = raw;
+});
+
+function abrirModalEditarViaje(data) {
+  document.getElementById('form-editar-viaje').action = data.url;
+  document.getElementById('edit-concierto').value = data.concierto;
+  document.getElementById('edit-origen').value = data.origen;
+  document.getElementById('edit-destino').value = data.destino;
+  document.getElementById('edit-fecha').value = data.fecha;
+  document.getElementById('edit-cupos').value = data.cupos;
+  document.getElementById('edit-precio-display').value = formatClp(data.precio);
+  document.getElementById('edit-precio').value = data.precio;
+  document.getElementById('edit-estado').value = data.estado;
+  document.querySelectorAll('#modal-editar-viaje .error-msg').forEach(function(el) { el.textContent = ''; });
+  document.getElementById('modal-editar-viaje').style.display = 'flex';
+}
+
+function cerrarModalEditarViaje() {
+  document.getElementById('modal-editar-viaje').style.display = 'none';
+}
+
+document.getElementById('form-editar-viaje').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var raw = document.getElementById('edit-precio-display').value.replace(/\D/g, '');
+  document.getElementById('edit-precio').value = raw;
+  var form = this;
+  fetch(form.action, {
+    method: 'POST',
+    body: new FormData(form),
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(resp) {
+    if (resp.ok) {
+      location.reload();
+    } else {
+      var errorMap = {
+        concierto_nombre: 'edit-err-concierto',
+        origen: 'edit-err-origen',
+        destino: 'edit-err-destino',
+        fecha_salida: 'edit-err-fecha',
+        cupos_totales: 'edit-err-cupos',
+        precio_vuelta: 'edit-err-precio',
+        estado: 'edit-err-estado'
+      };
+      document.querySelectorAll('#modal-editar-viaje .error-msg').forEach(function(el) { el.textContent = ''; });
+      for (var field in resp.errors) {
+        var elId = errorMap[field];
+        if (elId) {
+          var el = document.getElementById(elId);
+          if (el) el.textContent = resp.errors[field][0];
+        }
+      }
+    }
+  });
+});
+
+function abrirModalEliminarViaje(url, nombre) {
+  document.getElementById('form-eliminar-viaje').action = url;
+  document.getElementById('modal-viaje-nombre').textContent = nombre;
+  document.getElementById('modal-eliminar-viaje').style.display = 'flex';
+}
+
   document.querySelectorAll('.fmt-clp').forEach(function(el) {
     const n = parseInt(el.textContent.replace(/\D/g, ''), 10);
     if (!isNaN(n)) el.textContent = n.toLocaleString('es-CL');

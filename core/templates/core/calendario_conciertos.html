@@ -13,7 +13,7 @@
   <div class="tabla-wrapper">
     <div class="tabla-header">
       <h2>PRÓXIMOS CONCIERTOS</h2>
-      <a href="{% url 'crear_concierto' %}" class="btn btn-primary"><i class="fa fa-plus"></i> Nuevo Concierto</a>
+      <button type="button" class="btn btn-primary" onclick="abrirModalNuevoConcierto()"><i class="fa fa-plus"></i> Nuevo Concierto</button>
     </div>
 
     {% if proximos %}
@@ -48,7 +48,17 @@
             </td>
             <td>
               <div class="tabla-acciones">
-                <a href="{% url 'editar_concierto' c.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
+                <button type="button" class="btn btn-primary btn-sm" title="Editar"
+                  data-url="{% url 'editar_concierto' c.pk %}"
+                  data-artista="{{ c.artista|escapejs }}"
+                  data-nombre="{{ c.nombre|escapejs }}"
+                  data-fecha="{{ c.fecha|date:'Y-m-d' }}"
+                  data-lugar="{{ c.lugar|escapejs }}"
+                  data-region="{{ c.region }}"
+                  data-activo="{{ c.activo|yesno:'1,0' }}"
+                  onclick="abrirModalEditarConcierto(this.dataset)">
+                  <i class="fa fa-edit"></i>
+                </button>
                 <button type="button" class="btn btn-danger btn-sm" title="Eliminar"
                   data-url="{% url 'eliminar_concierto' c.pk %}"
                   data-nombre="{{ c.artista|escapejs }} — {{ c.nombre|escapejs }}"
@@ -65,7 +75,7 @@
     {% else %}
     <div style="text-align:center;padding:3rem;">
       <p style="color:var(--gris-medio);">No hay conciertos próximos registrados.</p>
-      <a href="{% url 'crear_concierto' %}" class="btn btn-primary" style="margin-top:1rem;"><i class="fa fa-plus"></i> Agregar primer concierto</a>
+      <button type="button" class="btn btn-primary" style="margin-top:1rem;" onclick="abrirModalNuevoConcierto()"><i class="fa fa-plus"></i> Agregar primer concierto</button>
     </div>
     {% endif %}
   </div>
@@ -98,7 +108,17 @@
             <td>{{ c.get_region_display }}</td>
             <td>
               <div class="tabla-acciones">
-                <a href="{% url 'editar_concierto' c.pk %}" class="btn btn-primary btn-sm" title="Editar"><i class="fa fa-edit"></i></a>
+                <button type="button" class="btn btn-primary btn-sm" title="Editar"
+                  data-url="{% url 'editar_concierto' c.pk %}"
+                  data-artista="{{ c.artista|escapejs }}"
+                  data-nombre="{{ c.nombre|escapejs }}"
+                  data-fecha="{{ c.fecha|date:'Y-m-d' }}"
+                  data-lugar="{{ c.lugar|escapejs }}"
+                  data-region="{{ c.region }}"
+                  data-activo="{{ c.activo|yesno:'1,0' }}"
+                  onclick="abrirModalEditarConcierto(this.dataset)">
+                  <i class="fa fa-edit"></i>
+                </button>
                 <button type="button" class="btn btn-danger btn-sm" title="Eliminar"
                   data-url="{% url 'eliminar_concierto' c.pk %}"
                   data-nombre="{{ c.artista|escapejs }} — {{ c.nombre|escapejs }}"
@@ -116,6 +136,106 @@
   {% endif %}
 </section>
 
+<!-- Modal Editar Concierto -->
+<div id="modal-editar-concierto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;">
+  <div class="form-card" style="max-width:620px;width:100%;margin:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <h2 style="margin:0;"><i class="fa fa-edit"></i> Editar Concierto</h2>
+      <button type="button" onclick="cerrarModalEditarConcierto()" style="background:none;border:none;font-size:1.8rem;line-height:1;cursor:pointer;color:var(--gris-medio);">&times;</button>
+    </div>
+    <form id="form-editar-concierto" method="POST" action="">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Artista / Banda</label>
+          <input type="text" id="ec-artista" name="artista" class="form-control" placeholder="Ej: Metallica">
+          <span class="error-msg" id="ec-err-artista" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Nombre del Concierto</label>
+          <input type="text" id="ec-nombre" name="nombre" class="form-control" placeholder="Ej: Legends Tour">
+          <span class="error-msg" id="ec-err-nombre" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="ec-fecha" name="fecha" class="form-control">
+          <span class="error-msg" id="ec-err-fecha" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Lugar / Recinto</label>
+          <input type="text" id="ec-lugar" name="lugar" class="form-control" placeholder="Ej: Estadio Nacional">
+          <span class="error-msg" id="ec-err-lugar" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group">
+          <label>Región</label>
+          <select id="ec-region" name="region" class="form-select">
+            <option value="santiago">Santiago</option>
+            <option value="valparaiso">Región de Valparaíso</option>
+          </select>
+          <span class="error-msg" id="ec-err-region" style="color:var(--peligro);font-size:0.82rem;display:block;"></span>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:0.6rem;">
+          <input type="checkbox" id="ec-activo" name="activo" class="form-check-input">
+          <label for="ec-activo" style="margin:0;font-weight:500;">Concierto activo (visible en la página)</label>
+        </div>
+      </div>
+      <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+        <button type="button" class="btn btn-dark" onclick="cerrarModalEditarConcierto()">Cancelar</button>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar Cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Nuevo Concierto -->
+<div id="modal-nuevo-concierto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;">
+  <div class="form-card" style="max-width:620px;width:100%;margin:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <h2 style="margin:0;"><i class="fa fa-calendar-plus"></i> Nuevo Concierto</h2>
+      <button type="button" onclick="cerrarModalNuevoConcierto()" style="background:none;border:none;font-size:1.8rem;line-height:1;cursor:pointer;color:var(--gris-medio);">&times;</button>
+    </div>
+    <div id="err-general" style="color:var(--peligro);font-size:0.85rem;margin-bottom:0.75rem;"></div>
+    <form id="form-nuevo-concierto" method="POST" action="{% url 'crear_concierto' %}">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Artista / Banda</label>
+          {{ form.artista }}
+          <span class="error-msg" id="err-artista" style="color:var(--peligro);font-size:0.82rem;"></span>
+        </div>
+        <div class="form-group">
+          <label>Nombre del Concierto</label>
+          {{ form.nombre }}
+          <span class="error-msg" id="err-nombre" style="color:var(--peligro);font-size:0.82rem;"></span>
+        </div>
+        <div class="form-group">
+          <label>Fecha</label>
+          {{ form.fecha }}
+          <span class="error-msg" id="err-fecha" style="color:var(--peligro);font-size:0.82rem;"></span>
+        </div>
+        <div class="form-group">
+          <label>Lugar / Recinto</label>
+          {{ form.lugar }}
+          <span class="error-msg" id="err-lugar" style="color:var(--peligro);font-size:0.82rem;"></span>
+        </div>
+        <div class="form-group">
+          <label>Región</label>
+          {{ form.region }}
+          <span class="error-msg" id="err-region" style="color:var(--peligro);font-size:0.82rem;"></span>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:0.6rem;">
+          {{ form.activo }}
+          <label style="margin:0;font-weight:500;">Concierto activo (visible en la página)</label>
+        </div>
+      </div>
+      <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+        <button type="button" class="btn btn-dark" onclick="cerrarModalNuevoConcierto()">Cancelar</button>
+        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar Concierto</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal confirmar eliminación concierto -->
 <div id="modal-eliminar-concierto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;padding:1rem;">
   <div class="form-card" style="max-width:420px;width:100%;margin:0;text-align:center;">
@@ -131,9 +251,100 @@
     </form>
   </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
+function abrirModalEditarConcierto(data) {
+  document.getElementById('form-editar-concierto').action = data.url;
+  document.getElementById('ec-artista').value = data.artista;
+  document.getElementById('ec-nombre').value = data.nombre;
+  document.getElementById('ec-fecha').value = data.fecha;
+  document.getElementById('ec-lugar').value = data.lugar;
+  document.getElementById('ec-region').value = data.region;
+  document.getElementById('ec-activo').checked = data.activo === '1';
+  document.querySelectorAll('#modal-editar-concierto .error-msg').forEach(function(el) { el.textContent = ''; });
+  document.getElementById('modal-editar-concierto').style.display = 'flex';
+}
+
+function cerrarModalEditarConcierto() {
+  document.getElementById('modal-editar-concierto').style.display = 'none';
+}
+
+document.getElementById('form-editar-concierto').addEventListener('submit', function(e) {
+  e.preventDefault();
+  fetch(this.action, {
+    method: 'POST',
+    body: new FormData(this),
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(resp) {
+    if (resp.ok) {
+      location.reload();
+    } else {
+      var errorMap = {
+        artista: 'ec-err-artista',
+        nombre:  'ec-err-nombre',
+        fecha:   'ec-err-fecha',
+        lugar:   'ec-err-lugar',
+        region:  'ec-err-region'
+      };
+      document.querySelectorAll('#modal-editar-concierto .error-msg').forEach(function(el) { el.textContent = ''; });
+      for (var field in resp.errors) {
+        var el = document.getElementById(errorMap[field]);
+        if (el) el.textContent = resp.errors[field][0];
+      }
+    }
+  });
+});
+
+function abrirModalNuevoConcierto() {
+  document.getElementById('modal-nuevo-concierto').style.display = 'flex';
+}
+
+function cerrarModalNuevoConcierto() {
+  document.getElementById('modal-nuevo-concierto').style.display = 'none';
+  document.getElementById('form-nuevo-concierto').reset();
+  document.querySelectorAll('#modal-nuevo-concierto .error-msg').forEach(function(el) { el.textContent = ''; });
+  document.getElementById('err-general').textContent = '';
+}
+
+document.getElementById('form-nuevo-concierto').addEventListener('submit', function(e) {
+  e.preventDefault();
+  var form = this;
+  var data = new FormData(form);
+  fetch(form.action, {
+    method: 'POST',
+    body: data,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(resp) {
+    if (resp.ok) {
+      location.reload();
+    } else {
+      var errorMap = {
+        artista: 'err-artista',
+        nombre: 'err-nombre',
+        fecha: 'err-fecha',
+        lugar: 'err-lugar',
+        region: 'err-region',
+        __all__: 'err-general'
+      };
+      document.querySelectorAll('#modal-nuevo-concierto .error-msg').forEach(function(el) { el.textContent = ''; });
+      document.getElementById('err-general').textContent = '';
+      for (var field in resp.errors) {
+        var elId = errorMap[field];
+        if (elId) {
+          var el = document.getElementById(elId);
+          if (el) el.textContent = resp.errors[field][0];
+        }
+      }
+    }
+  });
+});
+
 function abrirModalEliminarConcierto(url, nombre) {
   document.getElementById('form-eliminar-concierto').action = url;
   document.getElementById('modal-concierto-nombre').textContent = nombre;
@@ -141,4 +352,4 @@ function abrirModalEliminarConcierto(url, nombre) {
 }
 </script>
 {% endblock %}
-{% endblock %}
+

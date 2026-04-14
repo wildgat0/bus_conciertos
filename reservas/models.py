@@ -102,8 +102,16 @@ class Reserva(models.Model):
         ('TRANSFERENCIA', 'Transferencia'),
     ]
 
+    PLATAFORMA_CHOICES = [
+        ('PAGINA', 'Página Web'),
+        ('WHATSAPP', 'WhatsApp'),
+        ('INSTAGRAM', 'Instagram'),
+        ('PRESENCIAL', 'Presencial'),
+    ]
+
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
     pago = models.CharField(max_length=20, choices=PAGO_CHOICES, null=True, blank=True, verbose_name='Pago')
+    plataforma = models.CharField(max_length=20, choices=PLATAFORMA_CHOICES, null=True, blank=True, verbose_name='Plataforma')
     fecha_reserva = models.DateTimeField(auto_now_add=True)
     token_webpay = models.CharField(max_length=255, blank=True, null=True)
     orden_compra = models.CharField(max_length=50, unique=True)
@@ -128,5 +136,5 @@ class Reserva(models.Model):
             import uuid
             self.orden_compra = f'BC-{uuid.uuid4().hex[:10].upper()}'
         if not self.monto:
-            self.monto = self.viaje.precio * self.cantidad
+            self.monto = self.viaje.precio_vuelta * self.cantidad
         super().save(*args, **kwargs)

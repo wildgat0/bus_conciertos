@@ -52,6 +52,7 @@
             <th>Retorno</th>
             <th>Tipo de Pasaje</th>
             <th>Estado</th>
+            <th>Plataforma</th>
             <th>Pago</th>
             <th></th>
           </tr>
@@ -80,6 +81,19 @@
               {% endif %}
             </td>
             <td><span class="badge-estado badge-{{ p.estado }}">{{ p.estado|capfirst }}</span></td>
+            <td>
+              {% if p.pago == 'WEB' %}
+                <span class="badge-estado" style="background:#e8f5e9;color:#1b5e20;"><i class="fa fa-globe"></i> Página</span>
+              {% elif p.plataforma == 'WHATSAPP' %}
+                <span class="badge-estado" style="background:#d4edda;color:#155724;"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+              {% elif p.plataforma == 'INSTAGRAM' %}
+                <span class="badge-estado" style="background:#f3e5f5;color:#6a1b9a;"><i class="fab fa-instagram"></i> Instagram</span>
+              {% elif p.plataforma == 'PRESENCIAL' %}
+                <span class="badge-estado" style="background:#d1ecf1;color:#0c5460;"><i class="fa fa-user"></i> Presencial</span>
+              {% else %}
+                <span style="color:var(--gris-medio);">—</span>
+              {% endif %}
+            </td>
             <td>{{ p.pago|default:"—" }}</td>
             <td>
               <div style="display:flex;gap:0.4rem;">
@@ -95,7 +109,8 @@
                     '{{ p.tipo_pasaje }}',
                     {{ p.monto }},
                     '{{ p.ciudad_vuelta|default:''|escapejs }}',
-                    '{{ p.horario.pk|default:'' }}'
+                    '{{ p.horario.pk|default:'' }}',
+                    '{{ p.plataforma|default:'' }}'
                   )">
                   <i class="fa fa-pencil-alt"></i>
                 </button>
@@ -133,7 +148,7 @@
       <h2 style="margin:0;"><i class="fa fa-user-plus"></i> Agregar Pasajero</h2>
       <button type="button" onclick="document.getElementById('modal-agregar').style.display='none'" style="background:none;border:none;color:var(--gris-medio);font-size:1.5rem;cursor:pointer;">✕</button>
     </div>
-    <p class="subtitulo" style="margin-bottom:1.2rem;">El campo <strong>Pago</strong> se asignará automáticamente como <strong>TRANSFERENCIA</strong>.</p>
+    <p class="subtitulo" style="margin-bottom:1.2rem;">El campo <strong>Pago</strong> se asignará automáticamente como <strong>TRANSFERENCIA</strong>. Selecciona la <strong>Plataforma</strong> por la que se realizó la reserva.</p>
     <form method="POST" action="{% url 'agregar_pasajero_manual' viaje.pk %}">
       {% csrf_token %}
       <div class="form-grid">
@@ -175,6 +190,10 @@
         <div class="form-group" style="grid-column:1/-1;">
           <label>Horario</label>
           {{ form.horario }}
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Plataforma</label>
+          {{ form.plataforma }}
         </div>
       </div>
       <div style="display:flex;gap:0.75rem;margin-top:1.2rem;">
@@ -265,6 +284,15 @@
             {% endfor %}
           </select>
         </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Plataforma</label>
+          <select name="plataforma" id="edit_plataforma" class="form-select">
+            <option value="">— Selecciona plataforma —</option>
+            <option value="WHATSAPP">WhatsApp</option>
+            <option value="INSTAGRAM">Instagram</option>
+            <option value="PRESENCIAL">Presencial</option>
+          </select>
+        </div>
       </div>
       <div style="display:flex;gap:0.75rem;margin-top:1.2rem;">
         <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Guardar</button>
@@ -282,7 +310,7 @@ function abrirModalEliminar(url, nombre) {
   document.getElementById('modal-eliminar').style.display = 'flex';
 }
 
-function abrirModalEditar(action, nombre, rut, contacto, email, cantidad, tipo_pasaje, monto, ciudad_vuelta, horario_pk) {
+function abrirModalEditar(action, nombre, rut, contacto, email, cantidad, tipo_pasaje, monto, ciudad_vuelta, horario_pk, plataforma) {
   document.getElementById('form-editar').action = action;
   document.getElementById('edit_nombre_titular').value = nombre;
   document.getElementById('edit_rut').value = rut;
@@ -295,6 +323,7 @@ function abrirModalEditar(action, nombre, rut, contacto, email, cantidad, tipo_p
   document.getElementById('edit_monto').value = monto ? parseInt(monto, 10).toLocaleString('es-CL') : '';
   document.getElementById('edit_ciudad_vuelta').value = ciudad_vuelta;
   document.getElementById('edit_horario').value = horario_pk;
+  document.getElementById('edit_plataforma').value = plataforma || '';
   document.getElementById('modal-editar').style.display = 'flex';
 }
 
