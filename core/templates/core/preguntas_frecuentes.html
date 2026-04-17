@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block title %}Preguntas Frecuentes{% endblock %}
+
+{% block content %}
+
+<style>
+  @keyframes faq-fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .faq-hero-anim { animation: faq-fadeUp 0.7s ease both; }
+
+  .faq-item {
+    background: var(--blanco);
+    border-radius: var(--radio-lg);
+    box-shadow: var(--sombra);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: faq-fadeUp 0.5s ease forwards;
+  }
+  .faq-item:nth-child(1) { animation-delay: 0.15s; }
+  .faq-item:nth-child(2) { animation-delay: 0.25s; }
+  .faq-item:nth-child(3) { animation-delay: 0.35s; }
+  .faq-item:nth-child(4) { animation-delay: 0.45s; }
+  .faq-item:nth-child(5) { animation-delay: 0.55s; }
+  .faq-item:nth-child(6) { animation-delay: 0.65s; }
+
+  .faq-trigger {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1.4rem 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s;
+  }
+  .faq-trigger:hover { background: #fffbea; }
+  .faq-trigger.open   { background: var(--amarillo); }
+
+  .faq-trigger-text {
+    font-family: 'Barlow', sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--negro);
+    line-height: 1.4;
+  }
+  .faq-trigger.open .faq-trigger-text { color: var(--negro); }
+
+  .faq-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--negro);
+    color: var(--amarillo);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: transform 0.3s, background 0.2s;
+  }
+  .faq-trigger.open .faq-icon {
+    transform: rotate(45deg);
+    background: var(--negro);
+    color: var(--amarillo);
+  }
+
+  .faq-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.2s;
+  }
+  .faq-body.open { max-height: 600px; }
+
+  .faq-body-inner {
+    padding: 0 1.6rem 1.4rem;
+    color: var(--gris-medio);
+    font-size: 0.97rem;
+    line-height: 1.8;
+    border-top: 2px solid var(--amarillo);
+    padding-top: 1rem;
+  }
+
+  .faq-cta {
+    background: var(--negro);
+    border-radius: var(--radio-lg);
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-top: 3rem;
+    animation: faq-fadeUp 0.6s ease both;
+    animation-delay: 0.8s;
+    opacity: 0;
+  }
+  .faq-cta h3 { font-family:'Bebas Neue'; font-size:2rem; color:var(--amarillo); margin-bottom:0.5rem; }
+  .faq-cta p  { color:rgba(255,255,255,0.75); margin-bottom:1.5rem; }
+</style>
+
+<!-- ENCABEZADO -->
+<div class="page-header faq-hero-anim">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Inicio</a><span>›</span> Preguntas Frecuentes</div>
+    <h1><i class="fa fa-question-circle"></i> Preguntas Frecuentes</h1>
+    <p>Encuentra respuestas a las dudas más comunes sobre nuestro servicio</p>
+  </div>
+</div>
+
+<section class="seccion">
+  <div style="max-width:780px; margin:0 auto;">
+
+    {% if preguntas %}
+    <div style="display:flex; flex-direction:column; gap:1rem;">
+      {% for p in preguntas %}
+      <div class="faq-item">
+        <button class="faq-trigger" data-faq="{{ forloop.counter }}">
+          <span class="faq-trigger-text">{{ p.pregunta }}</span>
+          <span class="faq-icon"><i class="fa fa-plus"></i></span>
+        </button>
+        <div class="faq-body" id="faq-body-{{ forloop.counter }}">
+          <div class="faq-body-inner">{{ p.respuesta }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:3rem 0; color:var(--gris-medio);">
+      <i class="fa fa-info-circle" style="font-size:3rem; margin-bottom:1rem; display:block;"></i>
+      No hay preguntas disponibles por el momento.
+    </div>
+    {% endif %}
+
+    <!-- CTA WhatsApp -->
+    <div class="faq-cta">
+      <h3>¿No encontraste tu respuesta?</h3>
+      <p>Nuestro equipo está disponible para ayudarte por WhatsApp</p>
+      <a href="https://wa.me/56998762197?text=Hola,%20tengo%20una%20consulta%20sobre%20Bus%20Conciertos"
+         target="_blank" rel="noopener" class="btn btn-primary btn-lg">
+        <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll('.faq-trigger').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id   = btn.dataset.faq;
+      const body = document.getElementById('faq-body-' + id);
+      const open = btn.classList.contains('open');
+
+      // Cierra todos
+      document.querySelectorAll('.faq-trigger').forEach(b => b.classList.remove('open'));
+      document.querySelectorAll('.faq-body').forEach(b => b.classList.remove('open'));
+
+      // Abre el clickeado si estaba cerrado
+      if (!open) {
+        btn.classList.add('open');
+        body.classList.add('open');
+      }
+    });
+  });
+</script>
+{% endblock %}

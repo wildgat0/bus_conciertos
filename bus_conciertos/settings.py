@@ -90,7 +90,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # WhatsApp de la empresa
-WHATSAPP_NUMBER = '+56912345678'
+WHATSAPP_NUMBER = '+56998762197'
 
 # Email (SMTP)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

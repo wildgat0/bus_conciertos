@@ -216,7 +216,7 @@ Documentación completa: https://www.transbankdevelopers.cl/referencia/webpay
 
 ```python
 # WhatsApp de la empresa
-WHATSAPP_NUMBER = '+56912345678'
+WHATSAPP_NUMBER = '+56998762197'
 
 # Transbank (TEST/LIVE)
 TRANSBANK_COMMERCE_CODE = '597055555532'

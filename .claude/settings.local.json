@@ -47,7 +47,19 @@
       "Bash(python manage.py shell -c \"from django.contrib.auth.models import User; u = User.objects.filter\\(username='pasajero1'\\).first\\(\\); print\\('Existe:', bool\\(u\\)\\); print\\('Activo:', u.is_active if u else 'N/A'\\)\")",
       "Bash(python manage.py shell -c ':*)",
       "Bash(python manage.py makemigrations reservas --name=\"add_pago_to_reserva\")",
-      "Bash(python manage.py makemigrations reservas --name add_plataforma_to_reserva)"
+      "Bash(python manage.py makemigrations reservas --name add_plataforma_to_reserva)",
+      "Bash(python -c \"import reportlab\")",
+      "Bash(python -c \"import fpdf\")",
+      "Bash(python -c \"import weasyprint\")",
+      "Bash(pandoc --version)",
+      "Bash(venv/Scripts/python -c \"from fpdf import FPDF; print\\('ok'\\)\")",
+      "Bash(venv/Scripts/pip list *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(python -m pip install fpdf2)",
+      "Bash(python generar_manual.py)",
+      "Bash(python -c ' *)",
+      "Bash(python -W ignore generar_manual.py)",
+      "Bash(python manage.py makemigrations core --name preguntas_frecuentes)"
     ]
   }
 }

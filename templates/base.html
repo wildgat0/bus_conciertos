@@ -19,8 +19,7 @@
   <div class="navbar-top">
     <div class="navbar-inner">
       <a href="{% url 'inicio' %}" class="brand">
-        <span class="icon-bus">🚌</span>
-        BUS <span>CONCIERTOS</span>
+        <img src="{% static 'img/logo-busconciertos.png' %}" alt="Bus Conciertos" class="brand-logo">
       </a>
       <button class="navbar-toggler" aria-label="Menú">☰</button>
       <div class="nav-actions">
@@ -44,6 +43,9 @@
               {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
                 <a href="{% url 'gestion_usuarios' %}"><i class="fa fa-users-cog"></i> Usuarios</a>
               {% endif %}
+              {% if user.is_superuser or user.groups.all.0.name == 'Administrador' or user.groups.all.0.name == 'Coordinador' %}
+                <a href="{% url 'descargar_manual' %}"><i class="fa fa-file-pdf"></i> Manual de Usuarios</a>
+              {% endif %}
             </div>
           </div>
           {% endif %}
@@ -62,6 +64,7 @@
       <li><a href="{% url 'mis_reservas' %}"><i class="fa fa-list-alt"></i> Mis Reservas</a></li>
       {% endif %}
       <li><a href="{% url 'quienes_somos' %}"><i class="fa fa-users"></i> Quiénes Somos</a></li>
+      <li><a href="{% url 'preguntas_frecuentes' %}"><i class="fa fa-question-circle"></i> Preguntas Frecuentes</a></li>
     </ul>
     <div class="nav-actions-mobile">
       {% if user.is_authenticated %}
@@ -73,6 +76,9 @@
         {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
           <a href="{% url 'gestion_usuarios' %}" class="btn btn-outline btn-sm"><i class="fa fa-users-cog"></i> Usuarios</a>
           <a href="{% url 'auditoria_ganancias' %}" class="btn btn-outline btn-sm"><i class="fa fa-chart-line"></i> Auditoría</a>
+        {% endif %}
+        {% if user.is_superuser or user.groups.all.0.name == 'Administrador' or user.groups.all.0.name == 'Coordinador' %}
+          <a href="{% url 'descargar_manual' %}" class="btn btn-outline btn-sm"><i class="fa fa-file-pdf"></i> Manual de Usuarios</a>
         {% endif %}
         <a href="{% url 'mi_perfil' %}" class="btn btn-outline btn-sm"><i class="fa fa-user"></i> {{ user.first_name|default:user.username }}</a>
         <a href="{% url 'logout' %}" class="btn btn-primary btn-sm"><i class="fa fa-sign-out-alt"></i> Salir</a>
@@ -105,14 +111,13 @@
 <footer>
   <div class="footer-grid">
     <div>
-      <div class="footer-brand">🚌 Bus Conciertos</div>
+      <div class="footer-brand"><img src="{% static 'img/logo-busconciertos.png' %}" alt="Bus Conciertos" style="height:52px;width:auto;"></div>
       <p style="font-size:0.9rem;max-width:300px;line-height:1.7;">
         Tu mejor compañero para llegar a los mejores conciertos de Santiago y Valparaíso. Viaja seguro, cómodo y a tiempo.
       </p>
       <div style="margin-top:1rem;display:flex;gap:0.8rem;">
-        <a href="#" style="color:rgba(255,255,255,0.5);font-size:1.3rem;"><i class="fab fa-instagram"></i></a>
-        <a href="#" style="color:rgba(255,255,255,0.5);font-size:1.3rem;"><i class="fab fa-facebook"></i></a>
-        <a href="#" style="color:rgba(255,255,255,0.5);font-size:1.3rem;"><i class="fab fa-twitter"></i></a>
+        <a href="https://www.instagram.com/busconciertos/" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.5);font-size:1.3rem;"><i class="fab fa-instagram"></i></a>
+        <a href="https://www.facebook.com/busconciertos" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.5);font-size:1.3rem;"><i class="fab fa-facebook"></i></a>
       </div>
     </div>
     <div>
@@ -121,24 +126,25 @@
         <li><a href="{% url 'inicio' %}">Inicio</a></li>
         <li><a href="{% url 'lista_viajes' %}">Reservas de viajes</a></li>
         <li><a href="{% url 'quienes_somos' %}">Quiénes Somos</a></li>
+        <li><a href="{% url 'preguntas_frecuentes' %}">Preguntas Frecuentes</a></li>
       </ul>
     </div>
     <div>
       <h4>Contacto</h4>
       <ul>
-        <li><i class="fa fa-phone"></i> +56 9 1234 5678</li>
+        <li><i class="fa fa-phone"></i> +56 9 9876 2197</li>
         <li><i class="fa fa-envelope"></i> contacto@busconciertos.cl</li>
         <li><i class="fa fa-map-marker-alt"></i> Galería Paseo del Mar - Av. Valparaíso 554, local 96, Viña del Mar</li>
       </ul>
     </div>
   </div>
   <div class="footer-bottom">
-    <p>&copy; {{ "now"|date:"Y" }} ETHOS Corp — Todos los derechos reservados.</p>
+    <p>&copy; {{ "now"|date:"Y" }} Dev. José Leighton — Todos los derechos reservados.</p>
   </div>
 </footer>
 
 <!-- ═══ WHATSAPP FAB ══════════════════════════════════════════ -->
-<a href="https://wa.me/56912345678?text=Hola,%20quiero%20información%20sobre%20los%20viajes%20a%20conciertos"
+<a href="https://wa.me/56998762197?text=Hola,%20quiero%20información%20sobre%20los%20viajes%20a%20conciertos"
    class="whatsapp-fab" target="_blank" rel="noopener" title="Consultas por WhatsApp">
   <i class="fab fa-whatsapp"></i>
   <span class="tooltip-wa">💬 Consultar por WhatsApp</span>

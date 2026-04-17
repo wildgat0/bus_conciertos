@@ -1,8 +1,10 @@
+import os
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, Http404
 from django.utils import timezone
-from .models import Concierto
+from django.contrib.auth.decorators import login_required
+from .models import Concierto, PreguntaFrecuente
 from .forms import ConciertoForm
 from usuarios.decorators import coordinador_required
 
@@ -24,6 +26,11 @@ def inicio(request):
 
 def quienes_somos(request):
     return render(request, 'core/quienes_somos.html')
+
+
+def preguntas_frecuentes(request):
+    preguntas = PreguntaFrecuente.objects.filter(activo=True)
+    return render(request, 'core/preguntas_frecuentes.html', {'preguntas': preguntas})
 
 
 # ─── CALENDARIO DE CONCIERTOS (Coordinador) ──────────────────────────────────
@@ -89,3 +96,14 @@ def eliminar_concierto(request, pk):
         messages.success(request, 'Concierto eliminado del calendario.')
         return redirect('calendario_conciertos')
     return render(request, 'core/confirmar_eliminar_concierto.html', {'concierto': concierto})
+
+
+@login_required
+def descargar_manual(request):
+    grupos = [g.name for g in request.user.groups.all()]
+    if not (request.user.is_superuser or 'Administrador' in grupos or 'Coordinador' in grupos):
+        raise Http404
+    ruta = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Manual_Usuario_BusConciertos.pdf')
+    if not os.path.exists(ruta):
+        raise Http404
+    return FileResponse(open(ruta, 'rb'), as_attachment=True, filename='Manual_Usuario_BusConciertos.pdf')
