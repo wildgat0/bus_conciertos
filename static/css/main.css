@@ -94,7 +94,7 @@ a { text-decoration: none; color: inherit; }
 
 .navbar-bc .brand span { color: var(--blanco); }
 .navbar-bc .brand .icon-bus { font-size: 2rem; }
-.navbar-bc .brand-logo { height: 64px; width: auto; display: block; }
+.navbar-bc .brand-logo { height: 48px; width: auto; display: block; }
 .navbar-bc .brand { padding: 0.3rem 0; }
 
 .navbar-bc .nav-links {
