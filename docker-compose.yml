@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     env_file: .env
     volumes:
-      - sqlite_data:/app/db.sqlite3
+      - sqlite_data:/app/data
       - static_data:/app/staticfiles
       - media_data:/app/media
     expose:
