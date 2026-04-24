@@ -59,7 +59,21 @@
       "Bash(python generar_manual.py)",
       "Bash(python -c ' *)",
       "Bash(python -W ignore generar_manual.py)",
-      "Bash(python manage.py makemigrations core --name preguntas_frecuentes)"
+      "Bash(python manage.py makemigrations core --name preguntas_frecuentes)",
+      "Bash(find /c/Repositorio/bus_conciertos -maxdepth 1 -type f \\\\\\( -name \"*.sh\" -o -name \"*.bat\" \\\\\\) -exec ls -lh {} \\\\;)",
+      "Bash(sshpass -p 'JoseIgnacioLeightonZavala98' ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 root@147.185.238.111 \"echo CONECTADO && uname -a && lsb_release -a\")",
+      "Bash(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o BatchMode=yes root@147.185.238.111 \"echo CONECTADO\")",
+      "Bash(pip install *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python -c \"import paramiko; print\\('ok'\\)\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(c:/Repositorio/bus_conciertos/venv/Scripts/pip install *)",
+      "Bash(c:/Repositorio/bus_conciertos/venv/Scripts/python -c \"import paramiko; print\\('ok'\\)\")",
+      "PowerShell(& \"c:/Repositorio/bus_conciertos/venv/Scripts/pip.exe\" install paramiko 2>&1)",
+      "PowerShell(python -m pip install paramiko 2>&1)",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\install_docker.py)",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"docker --version && docker compose version\")",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"apt-get install -y -q git && git --version\")"
     ]
   }
 }

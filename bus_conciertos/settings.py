@@ -3,11 +3,11 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-bus-conciertos-key-change-in-production-2024'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-bus-conciertos-key-change-in-production-2024')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -93,15 +93,16 @@ LOGOUT_REDIRECT_URL = '/'
 WHATSAPP_NUMBER = '+56998762197'
 
 # Email (SMTP)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+_email_user = os.environ.get('EMAIL_HOST_USER', 'tucorreo@gmail.com')
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' if _email_user != 'tucorreo@gmail.com' else 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'tucorreo@gmail.com'        # Cambiar por el correo real
-EMAIL_HOST_PASSWORD = 'tu_contraseña_app'     # Contraseña de aplicación de Gmail
-DEFAULT_FROM_EMAIL = 'Bus Conciertos <tucorreo@gmail.com>'
+EMAIL_HOST_USER = _email_user
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = f'Bus Conciertos <{_email_user}>'
 
-# Transbank Webpay (ambiente de integración)
-TRANSBANK_COMMERCE_CODE = '597055555532'
-TRANSBANK_API_KEY = '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C'
-TRANSBANK_ENVIRONMENT = 'TEST'  # Cambiar a 'LIVE' en producción
+# Transbank Webpay
+TRANSBANK_COMMERCE_CODE = os.environ.get('TRANSBANK_COMMERCE_CODE', '597055555532')
+TRANSBANK_API_KEY = os.environ.get('TRANSBANK_API_KEY', '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C')
+TRANSBANK_ENVIRONMENT = os.environ.get('TRANSBANK_ENVIRONMENT', 'TEST')

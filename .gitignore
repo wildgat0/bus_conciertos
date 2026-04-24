@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+
+# Django
+db.sqlite3
+staticfiles/
+media/
+
+# Docker / entorno
+.env
+
+# OS
+.DS_Store
+Thumbs.db
