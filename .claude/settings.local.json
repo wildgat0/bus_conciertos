@@ -73,7 +73,19 @@
       "PowerShell(python -m pip install paramiko 2>&1)",
       "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\install_docker.py)",
       "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"docker --version && docker compose version\")",
-      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"apt-get install -y -q git && git --version\")"
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"apt-get install -y -q git && git --version\")",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"cd /opt && git clone https://github.com/wildgat0/bus_conciertos && ls bus_conciertos/\")",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"cd /opt/bus_conciertos && docker compose up -d --build 2>&1\" 300)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"cd /opt/bus_conciertos && git pull && docker compose up -d --build 2>&1\" 300)",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"docker ps && curl -s -o /dev/null -w '%{http_code}' http://localhost:8080\")",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"docker logs bus_conciertos-web-1 2>&1 | tail -20\")",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"sed -i 's/ALLOWED_HOSTS=147.185.238.111/ALLOWED_HOSTS=147.185.238.111,localhost/' /opt/bus_conciertos/.env && docker compose -f /opt/bus_conciertos/docker-compose.yml restart web && sleep 3 && curl -s -o /dev/null -w '%{http_code}' http://localhost:8080\")",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"sleep 3 && curl -sv http://localhost:8080 2>&1 | head -30\")",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"cat /opt/bus_conciertos/.env && echo '---' && docker exec bus_conciertos-web-1 env | grep ALLOWED\")",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"cd /opt/bus_conciertos && docker compose up -d 2>&1 && sleep 3 && curl -s -o /dev/null -w '%{http_code}' http://147.185.238.111:8080\")"
     ]
   }
 }
