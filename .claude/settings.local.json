@@ -85,7 +85,23 @@
       "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"sed -i 's/ALLOWED_HOSTS=147.185.238.111/ALLOWED_HOSTS=147.185.238.111,localhost/' /opt/bus_conciertos/.env && docker compose -f /opt/bus_conciertos/docker-compose.yml restart web && sleep 3 && curl -s -o /dev/null -w '%{http_code}' http://localhost:8080\")",
       "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"sleep 3 && curl -sv http://localhost:8080 2>&1 | head -30\")",
       "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"cat /opt/bus_conciertos/.env && echo '---' && docker exec bus_conciertos-web-1 env | grep ALLOWED\")",
-      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"cd /opt/bus_conciertos && docker compose up -d 2>&1 && sleep 3 && curl -s -o /dev/null -w '%{http_code}' http://147.185.238.111:8080\")"
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\ssh_run.py \"cd /opt/bus_conciertos && docker compose up -d 2>&1 && sleep 3 && curl -s -o /dev/null -w '%{http_code}' http://147.185.238.111:8080\")",
+      "Bash(venv/Scripts/python manage.py dumpdata auth.user usuarios.perfilusuario --indent 2 -o usuarios_export.json)",
+      "Bash(python -c \"import json; d=json.load\\(open\\('usuarios_export.json'\\)\\); print\\(len\\(d\\), 'registros'\\)\")",
+      "Bash(echo \"OK: $\\(python -c \"import json; d=json.load\\(open\\('usuarios_export.json'\\)\\); print\\(len\\(d\\), 'registros'\\)\"\\)\")",
+      "Bash(mkdir -p data)",
+      "Bash(cp db.sqlite3 data/db.sqlite3)",
+      "Bash(venv/Scripts/python -c \"import json; print\\(len\\(json.load\\(open\\('usuarios_export.json'\\)\\)\\), 'registros'\\)\")",
+      "Bash(echo \"Exportados: $\\(venv/Scripts/python -c \"import json; print\\(len\\(json.load\\(open\\('usuarios_export.json'\\)\\)\\), 'registros'\\)\"\\)\")",
+      "Bash(venv/Scripts/python -c ' *)",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\check_users.py)",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\deploy_postgres.py)",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\check_status.py)",
+      "Bash(DJANGO_SETTINGS_MODULE=settings_sqlite_export venv/Scripts/python manage.py dumpdata auth usuarios core reservas --natural-foreign --natural-primary --indent 2)",
+      "Bash(python -c \" import sys, json raw = sys.stdin.buffer.read\\(\\) for enc in ['utf-8','latin-1','cp1252']: try: data = json.loads\\(raw.decode\\(enc\\)\\) print\\(json.dumps\\(data, ensure_ascii=True, indent=2\\), end=''\\) break except: pass \")",
+      "Bash(python -c \"import json; print\\(len\\(json.load\\(open\\('full_export.json'\\)\\)\\), 'registros'\\)\")",
+      "Bash(echo \"Exportados: $\\(python -c \"import json; print\\(len\\(json.load\\(open\\('full_export.json'\\)\\)\\), 'registros'\\)\"\\)\")",
+      "PowerShell(python c:\\\\Repositorio\\\\bus_conciertos\\\\load_data.py)"
     ]
   }
 }
